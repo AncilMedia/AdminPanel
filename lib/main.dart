@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'View/Apps_page/Apps.dart';
 import 'View/Apps_page/Mobile_apps.dart';
 import 'View/Home_page.dart';
+import 'View/Mainlayout.dart';
 import 'View_model/Sidebar_provider.dart';
 
 void main() {
@@ -26,8 +27,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // home: const MainLayout(),
-      home: const Apps(),
+      home: const MainLayout(),
+      // home: const Apps(),
     );
   }
 }
