@@ -26,7 +26,7 @@ class _GivingState extends State<Giving> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(child: Lottie.asset('assets/giving.json')),
+                Center(child: Lottie.asset('assets/gift.json')),
               ],
             ),
           ),
