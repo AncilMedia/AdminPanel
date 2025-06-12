@@ -1,10 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'View/Apps_page/Apps.dart';
-import 'View/Apps_page/Mobile_apps.dart';
-import 'View/Home_page.dart';
 import 'View/Mainlayout.dart';
 import 'View_model/Sidebar_provider.dart';
 
