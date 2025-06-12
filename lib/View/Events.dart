@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'Sidebar.dart'; // Adjust the path if needed
 
 class Events extends StatefulWidget {
@@ -19,14 +20,12 @@ class _EventsState extends State<Events> {
       body: Row(
         children: [
           Expanded(
-            child: Center(
-              child: Text(
-                "Events",
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(child: Lottie.asset('assets/events.json')),
+              ],
             ),
           ),
         ],

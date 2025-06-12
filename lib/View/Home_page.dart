@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'Sidebar.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,11 +21,12 @@ class _HomePageState extends State<HomePage> {
       body: Row(
         children: [
           Expanded(
-            child: Center(
-              child: Text(
-                "Content",
-                style: TextStyle(fontSize: 24),
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(child: Lottie.asset('assets/no_data.json')),
+              ],
             ),
           ),
         ],

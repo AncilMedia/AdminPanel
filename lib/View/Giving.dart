@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 import 'Sidebar.dart';
 
@@ -20,23 +21,13 @@ class _GivingState extends State<Giving> {
       drawer: isLargeScreen ? null : Container( ),
       body: Row(
         children: [
-          // Sidebar on desktop
-          // if (isLargeScreen)
-          //   SizedBox(
-          //     width: 250,
-          //     child: AppSidebar(),
-          //   ),
-          //
-          // // Main content
           Expanded(
-            child: Center(
-              child: Text(
-                "Giving",
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(child: Lottie.asset('assets/giving.json')),
+              ],
             ),
           ),
         ],
