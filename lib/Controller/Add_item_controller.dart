@@ -18,13 +18,6 @@ class AddItemController {
       request.fields['subtitle'] = '';
       request.fields['url'] = '';
 
-      // Set headers if needed (example: ngrok)
-      // request.headers.addAll({
-      //   'ngrok-skip-browser-warning': 'true',
-      //   'Content-Type': 'multipart/form-data',
-      // });
-
-
       // If local image file provided
       if (imageBytes != null) {
         request.files.add(http.MultipartFile.fromBytes(
