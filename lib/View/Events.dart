@@ -1,0 +1,36 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'Sidebar.dart'; // Adjust the path if needed
+
+class Events extends StatefulWidget {
+  const Events({super.key});
+
+  @override
+  State<Events> createState() => _EventsState();
+}
+
+class _EventsState extends State<Events> {
+  @override
+  Widget build(BuildContext context) {
+    final isLargeScreen = MediaQuery.of(context).size.width >= 800;
+
+    return Scaffold(
+      drawer: isLargeScreen ? null : Container(),
+      body: Row(
+        children: [
+          Expanded(
+            child: Center(
+              child: Text(
+                "Events",
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
