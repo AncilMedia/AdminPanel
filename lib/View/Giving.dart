@@ -26,7 +26,7 @@ class _GivingState extends State<Giving> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(child: Lottie.asset('assets/gift.json')),
+                Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1749729390/giving_toodse.json')),
               ],
             ),
           ),
