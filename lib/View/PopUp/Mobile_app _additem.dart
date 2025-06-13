@@ -16,6 +16,7 @@ class AddItemDialog extends StatefulWidget {
 class _AddItemDialogState extends State<AddItemDialog> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
+  final TextEditingController _UrlController = TextEditingController();
 
   Uint8List? imageBytes;
   String? imageName;
@@ -47,6 +48,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
   void dispose() {
     _titleController.dispose();
     _imageUrlController.dispose();
+    _UrlController.dispose();
     super.dispose();
   }
 
@@ -168,6 +170,18 @@ class _AddItemDialogState extends State<AddItemDialog> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _UrlController,
+                        decoration: InputDecoration(
+                          labelText: "External Url",
+                          labelStyle: GoogleFonts.poppins(),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 12),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -221,6 +235,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     : () async {
                   final title = _titleController.text.trim();
                   final imageUrl = _imageUrlController.text.trim();
+                  final externalUrl = _UrlController.text.trim();
 
                   if (title.isEmpty) {
                     debugPrint('[Error] Title is empty');
@@ -239,15 +254,16 @@ class _AddItemDialogState extends State<AddItemDialog> {
                       title: title,
                       imageBytes: imageBytes,
                       imageUrl: imageBytes == null ? imageUrl : null,
+                      externalUrl: externalUrl, // 👈 passed to controller
                     );
 
                     if (uploadedImageUrl != null) {
                       print('[Success] Item uploaded: $uploadedImageUrl');
                       if (context.mounted) {
-
                         Navigator.pop<Map<String, dynamic>>(context, {
                           'title': title,
                           'image': uploadedImageUrl,
+                          'externalUrl': externalUrl, // 👈 returned to caller
                           if (imageName != null) 'imageName': imageName,
                         });
                       }
@@ -260,7 +276,6 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     if (mounted) setState(() => isLoading = false);
                   }
                 },
-
                 child: Container(
                   height: 40,
                   alignment: Alignment.center,

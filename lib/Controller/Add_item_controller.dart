@@ -11,12 +11,13 @@ class AddItemController {
     required String title,
     Uint8List? imageBytes,
     String? imageUrl,
+    String? externalUrl, // 👈 added
   }) async {
     try {
       var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
       request.fields['title'] = title;
-      request.fields['subtitle'] = '';
-      request.fields['url'] = '';
+      request.fields['subtitle'] = ''; // If needed
+      request.fields['url'] = externalUrl ?? ''; // 👈 added externalUrl
 
       // If local image file provided
       if (imageBytes != null) {
@@ -46,7 +47,6 @@ class AddItemController {
     } catch (e) {
       print('Error uploading item: $e');
     }
-
     return null;
   }
 }
