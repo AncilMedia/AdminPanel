@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'View/Login_page.dart';
 import 'View/Mainlayout.dart';
 import 'View_model/Sidebar_provider.dart';
 
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MainLayout(),
+      home: const LoginPage(),
       // home: const Apps(),
     );
   }
