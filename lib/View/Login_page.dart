@@ -1,8 +1,11 @@
 import 'dart:math';
+import 'package:ancilmediaadminpanel/View/Mainlayout.dart';
 import 'package:ancilmediaadminpanel/View/Register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../Controller/Login_controller.dart';
 import '../View_model/Splash_Animation.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,6 +33,38 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     });
   }
 
+  Future<void> _checkIfAlreadyLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('accessToken');
+    final refreshToken = prefs.getString('refreshToken');
+
+    if (accessToken != null && accessToken.isNotEmpty) {
+      print("✅ Access token found. Navigating to MainLayout...");
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainLayout()),
+        );
+      }
+    } else if (refreshToken != null && refreshToken.isNotEmpty) {
+      print("🟡 Only refresh token found. Attempting to refresh...");
+      final newAccessToken = await AuthService().refreshAccessToken();
+      if (newAccessToken != null) {
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainLayout()),
+          );
+        }
+      } else {
+        print("🔴 Refresh token expired or invalid.");
+      }
+    } else {
+      print("❌ No tokens found. Stay on login page.");
+    }
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -43,8 +78,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       setState(() {
         _dotPositions = _generateDotPositions(size.width, size.height, 250);
       });
+      _checkIfAlreadyLoggedIn(); // 🟢 Check token after dot generation
     });
   }
+
 
   @override
   void dispose() {
@@ -52,6 +89,33 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     passwordController.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
+
+    final result = await AuthService().login(username, password);
+
+    if (result != null && result['accessToken'] != null) {
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainLayout()),
+        );
+      }
+    } else {
+      // Show error snackbar
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Login failed. Invalid credentials."),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -196,8 +260,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                             print("Pressed submit button in login page");
                             print("Username: ${usernameController.text}");
                             print("Password: ${passwordController.text}");
+                            _handleLogin();
                           }
                         },
+
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           constraints: BoxConstraints(

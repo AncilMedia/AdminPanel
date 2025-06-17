@@ -1,7 +1,5 @@
-// lib/Controllers/signup_controller.dart
-
 import 'dart:convert';
-import 'package:ancilmediaadminpanel/environmental%20variables.dart';
+import 'package:ancilmediaadminpanel/environmental variables.dart';
 import 'package:http/http.dart' as http;
 
 class SignupController {
@@ -10,24 +8,41 @@ class SignupController {
     required String fullName,
     required String password,
   }) async {
-    final Uri url = Uri.parse("$baseUrl/api/auth/signup");
+    final Uri url = Uri.parse("$baseUrl/api/auth/register");
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': username,
-        'fullName': fullName,
-        'password': password,
-      }),
-    );
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': username,
+          'fullName': fullName,
+          'password': password,
+        }),
+      );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return {'success': true, 'data': jsonDecode(response.body)};
-    } else {
+      print('Signup Response status: ${response.statusCode}');
+      print('Signup Response body: ${response.body}');
+
+      // Try parsing JSON
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Signup failed',
+        };
+      }
+    } catch (e) {
+      print('Signup Error: $e');
       return {
         'success': false,
-        'message': jsonDecode(response.body)['message'] ?? 'Signup failed'
+        'message': 'Unexpected error occurred. Please try again later.',
       };
     }
   }
