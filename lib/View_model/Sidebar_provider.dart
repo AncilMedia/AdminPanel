@@ -1,23 +1,39 @@
+// import 'package:flutter/material.dart';
+//
+// class SidebarProvider with ChangeNotifier {
+//   String _selectedRoute = '/home';
+//   String _selectedAppSubRoute = '';
+//
+//   String get selectedRoute => _selectedRoute;
+//   String get selectedAppSubRoute => _selectedAppSubRoute;
+//
+//   void selectRoute(String route) {
+//     _selectedRoute = route;
+//     // Reset sub-route when main route changes
+//     if (route != '/apps') {
+//       _selectedAppSubRoute = '';
+//     }
+//     notifyListeners();
+//   }
+//
+//   void selectAppSubRoute(String subRoute) {
+//     _selectedAppSubRoute = subRoute;
+//     notifyListeners();
+//   }
+// }
+
+// SubDrawerProvider.dart
 import 'package:flutter/material.dart';
 
-class SidebarProvider with ChangeNotifier {
-  String _selectedRoute = '/home';
-  String _selectedAppSubRoute = '';
+enum SubDrawerItem { mobile, tv, push , home }
 
-  String get selectedRoute => _selectedRoute;
-  String get selectedAppSubRoute => _selectedAppSubRoute;
+class SubDrawerProvider extends ChangeNotifier {
+  SubDrawerItem _selectedItem = SubDrawerItem.mobile; // default here
 
-  void selectRoute(String route) {
-    _selectedRoute = route;
-    // Reset sub-route when main route changes
-    if (route != '/apps') {
-      _selectedAppSubRoute = '';
-    }
-    notifyListeners();
-  }
+  SubDrawerItem get selectedItem => _selectedItem;
 
-  void selectAppSubRoute(String subRoute) {
-    _selectedAppSubRoute = subRoute;
+  void selectItem(SubDrawerItem item) {
+    _selectedItem = item;
     notifyListeners();
   }
 }

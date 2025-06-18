@@ -1,61 +1,110 @@
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:iconsax/iconsax.dart';
+
 import '../../View_model/Sidebar_provider.dart';
+import '../Mainlayout.dart'; // Add this import
 
 class AppSubDrawer extends StatelessWidget {
   const AppSubDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SidebarProvider>(context);
-    String selected = provider.selectedAppSubRoute;
+    final provider = Provider.of<SubDrawerProvider>(context);
+    final selectedItem = provider.selectedItem;
 
-    // ✅ Fix: Avoid calling notifyListeners during build
-    if (selected.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final sidebarProvider = Provider.of<SidebarProvider>(context, listen: false);
-        if (sidebarProvider.selectedAppSubRoute.isEmpty) {
-          sidebarProvider.selectAppSubRoute('/apps/mobileapps');
-          html.window.history.pushState(null, 'Mobile Apps', '/apps/mobileapps');
-        }
-      });
-    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
 
-    return Container(
-      width: 250,
-      color: Colors.grey[200],
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildItem(Iconsax.mobile, "Mobile Apps", "/apps/mobileapps", selected, context),
-          _buildItem(Iconsax.monitor, "TV Apps", "/apps/tvapps", selected, context),
-          _buildItem(Iconsax.notification_bing, "Push Notifications", "/apps/pushnotification", selected, context),
-        ],
-      ),
+        // Optional: Title above the drawer
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            "Apps Menu",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        _buildDrawerTile(
+          context,
+          Iconsax.home,
+          'Home',
+          SubDrawerItem.home,
+          selectedItem,
+        ),
+        _buildDrawerTile(
+          context,
+          Iconsax.mobile,
+          'Mobile Apps',
+          SubDrawerItem.mobile,
+          selectedItem,
+        ),
+        _buildDrawerTile(
+          context,
+          Iconsax.monitor,
+          'TV Apps',
+          SubDrawerItem.tv,
+          selectedItem,
+        ),
+        _buildDrawerTile(
+          context,
+          Iconsax.notification_bing,
+          'Push Notifications',
+          SubDrawerItem.push,
+          selectedItem,
+        ),
+        const Spacer(),
+      ],
     );
   }
 
-  Widget _buildItem(IconData icon, String label, String route, String selected, BuildContext context) {
-    final isSelected = selected == route;
+  Widget _buildDrawerTile(
+      BuildContext context,
+      IconData icon,
+      String label,
+      SubDrawerItem item,
+      SubDrawerItem selectedItem,
+      ) {
+    final isSelected = selectedItem == item;
+    final color = isSelected ? Colors.cyan : Colors.black;
+    final fontWeight = isSelected ? FontWeight.w600 : FontWeight.normal;
+
     return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected ? Colors.blue : Colors.black54,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.blue : Colors.black,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      leading: Icon(icon, color: color),
+      title: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: Text(
+          label,
+          style: GoogleFonts.poppins(
+            textStyle: TextStyle(
+              color: color,
+              fontWeight: fontWeight,
+            ),
+          ),
         ),
       ),
-      tileColor: isSelected ? Colors.blue.shade50 : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       onTap: () {
-        Provider.of<SidebarProvider>(context, listen: false).selectAppSubRoute(route);
-        html.window.history.pushState(null, label, route);
+        final provider = Provider.of<SubDrawerProvider>(context, listen: false);
+
+        if (item == SubDrawerItem.home) {
+          // Navigate to MainLayout when Home is selected
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MainLayout()),
+                (route) => false,
+          );
+        } else {
+          provider.selectItem(item);
+        }
       },
     );
   }

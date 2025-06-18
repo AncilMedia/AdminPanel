@@ -2,8 +2,10 @@ import 'package:ancilmediaadminpanel/View/Login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 
 import '../Controller/Signup_controller.dart';
+import '../View_model/Custom_snackbar.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -18,7 +20,7 @@ class _SignupPageState extends State<SignupPage> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-
+  bool _isLoading = false;
   bool obscureText = true;
   bool obscureConfirmText = true;
 
@@ -67,7 +69,9 @@ class _SignupPageState extends State<SignupPage> {
               constraints: BoxConstraints(
                 minHeight: 400,
                 maxHeight: screenHeight * 0.85,
-                maxWidth: screenWidth < 600 ? screenWidth * 0.85 : screenWidth * 0.25,
+                maxWidth: screenWidth < 600
+                    ? screenWidth * 0.85
+                    : screenWidth * 0.25,
               ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
@@ -103,22 +107,30 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Full name
+                      // Email
                       TextFormField(
                         controller: fullNameController,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Full Name',
+                          labelText: 'Email',
                           filled: true,
                           fillColor: Colors.white,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your full name';
+                            return 'Please enter your email';
                           }
+                          final emailRegex = RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          );
+                          if (!emailRegex.hasMatch(value)) {
+                            return 'Please enter a valid email address';
+                          }
+
                           return null;
                         },
                       ),
+
                       const SizedBox(height: 20),
 
                       // Password
@@ -162,7 +174,9 @@ class _SignupPageState extends State<SignupPage> {
                           fillColor: Colors.white,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              obscureConfirmText ? Iconsax.eye_slash : Iconsax.eye,
+                              obscureConfirmText
+                                  ? Iconsax.eye_slash
+                                  : Iconsax.eye,
                               color: Colors.grey,
                             ),
                             onPressed: () {
@@ -190,32 +204,42 @@ class _SignupPageState extends State<SignupPage> {
                         child: GestureDetector(
                           onTap: () async {
                             if (_formKey.currentState!.validate()) {
+                              setState(() => _isLoading = true);
+
                               final result = await SignupController.signup(
-                                username: usernameController.text,
-                                fullName: fullNameController.text,
+                                username: usernameController.text.trim(),
+                                fullName: fullNameController.text.trim(),
                                 password: passwordController.text,
                               );
 
+                              setState(() => _isLoading = false);
+
                               if (result['success']) {
-                                print("Signup Successful");
-                                // Navigate or show success message
+                                showCustomSnackBar(
+                                  context,
+                                  "Signup successful!",
+                                  true,
+                                );
+                                await Future.delayed(
+                                  const Duration(seconds: 2),
+                                );
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (context) => LoginPage()),
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginPage(),
+                                  ),
                                 );
                               } else {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text("Signup Failed"),
-                                    content: Text(result['message']),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text("OK"),
-                                      )
-                                    ],
-                                  ),
+                                // Print raw for debugging
+                                debugPrint(
+                                  "Signup error response: ${result['raw']}",
+                                );
+
+                                showCustomSnackBar(
+                                  context,
+                                  result['message'] ??
+                                      "Signup failed. Please try again.",
+                                  false,
                                 );
                               }
                             }
@@ -234,15 +258,22 @@ class _SignupPageState extends State<SignupPage> {
                               color: Colors.cyan.shade200,
                             ),
                             child: Center(
-                              child: Text(
-                                'Sign Up',
-                                style: GoogleFonts.poppins(
-                                  textStyle: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
+                              child: _isLoading
+                                  ? Lottie.asset(
+                                      'assets/Circular_moving_dot.json',
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Text(
+                                      'Sign Up',
+                                      style: GoogleFonts.poppins(
+                                        textStyle: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -261,7 +292,12 @@ class _SignupPageState extends State<SignupPage> {
                             child: GestureDetector(
                               onTap: () {
                                 print("Pressed Sign In from Sign Up");
-                                Navigator.push(context, MaterialPageRoute(builder: (context)=>LoginPage()));
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LoginPage(),
+                                  ),
+                                );
                               },
                               child: Text(
                                 "Sign In",
@@ -274,7 +310,7 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),

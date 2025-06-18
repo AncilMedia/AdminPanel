@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'View/Login_page.dart';
+import 'View_model/Drawer_provider.dart';
 import 'View_model/Sidebar_provider.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +11,9 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => SidebarProvider())],
+        ChangeNotifierProvider(create: (_) => SubDrawerProvider()),
+        ChangeNotifierProvider(create: (_) => SidedrawerProvider()),
+      ],
       child: const MyApp(),
     ),
   );

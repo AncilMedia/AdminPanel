@@ -1,176 +1,114 @@
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-//
-// import '../View_model/Sidebar_provider.dart';
-// import '../View/Home_page.dart';
-// import '../View/Events.dart';
-// import '../View/Sermons.dart';
-// import 'Apps_page/App_drawer.dart';
-// import 'Giving.dart';
-// import 'Apps_page/Apps.dart';
-// import 'Responsive/Responsive_page.dart';
-// import 'Sidebar.dart';
-//
-// class MainLayout extends StatelessWidget {
-//   const MainLayout({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final provider = Provider.of<SidebarProvider>(context);
-//     final selectedRoute = provider.selectedRoute;
-//     final isDesktop = Responsive.isDesktop(context);
-//
-//     Widget content;
-//
-//     if (selectedRoute == '/apps') {
-//       content = const Apps();
-//     } else {
-//       content = getSelectedPage(selectedRoute);
-//     }
-//
-//     return Scaffold(
-//       appBar: isDesktop || selectedRoute == '/apps'
-//           ? null
-//           : AppBar(
-//         title: const Text("Dashboard"),
-//         leading: Builder(
-//           builder: (context) => IconButton(
-//             icon: const Icon(Icons.menu),
-//             onPressed: () => Scaffold.of(context).openDrawer(),
-//           ),
-//         ),
-//       ),
-//       drawer: isDesktop || selectedRoute == '/apps'
-//           ? null
-//           : const Drawer(child: AppSidebar()),
-//       body: Row(
-//         children: [
-//           if (isDesktop && selectedRoute != '/apps') const AppSidebar(),
-//           Expanded(
-//             child: AnimatedSwitcher(
-//               duration: const Duration(milliseconds: 300),
-//               child: content,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget getSelectedPage(String route) {
-//     switch (route) {
-//       case '/events':
-//         return const Events();
-//       case '/sermons':
-//         return const Sermons();
-//       case '/giving':
-//         return const Giving();
-//       case '/home':
-//       default:
-//         return const HomePage();
-//     }
-//   }
-// }
-//
-//
-//
-//
-//
-
-
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:iconsax/iconsax.dart';
 
-import '../View_model/Logout.dart';
-import '../View_model/Sidebar_provider.dart';
 import '../View/Home_page.dart';
 import '../View/Events.dart';
+import '../View/Giving.dart';
 import '../View/Sermons.dart';
-import 'Apps_page/App_drawer.dart';
-import 'Giving.dart';
-import 'Apps_page/Apps.dart';
-import 'Login_page.dart';
-import 'Responsive/Responsive_page.dart';
-import 'Sidebar.dart';
-import '../Controller/Login_controller.dart'; // <-- AuthService
+import '../View/Apps_page/Apps.dart';
+import '../View_model/Drawer_provider.dart';
+import '../View_model/Sidebar_provider.dart'; // Import SubDrawerProvider
+import '../View_model/Logout.dart';
 
 class MainLayout extends StatelessWidget {
   const MainLayout({super.key});
 
-  void _handleLogout(BuildContext context) async {
-    await AuthService().logout();
-    if (context.mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-      );
+  Widget _getContent(DrawerItem item) {
+    switch (item) {
+      case DrawerItem.home:
+        return const HomePage();
+      case DrawerItem.events:
+        return const Events();
+      case DrawerItem.sermons:
+        return const Sermons();
+      case DrawerItem.giving:
+        return const Giving();
+      case DrawerItem.apps:
+        return const Apps();
+      default:
+        return const HomePage();
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final provider = Provider.of<SidebarProvider>(context);
-    final selectedRoute = provider.selectedRoute;
-    final isDesktop = Responsive.isDesktop(context);
-
-    Widget content;
-
-    if (selectedRoute == '/apps') {
-      content = const Apps();
-    } else {
-      content = getSelectedPage(selectedRoute);
+  String _getTitle(DrawerItem item) {
+    switch (item) {
+      case DrawerItem.home:
+        return 'Home';
+      case DrawerItem.events:
+        return 'Events';
+      case DrawerItem.sermons:
+        return 'Sermons';
+      case DrawerItem.giving:
+        return 'Giving';
+      case DrawerItem.apps:
+        return 'Apps';
+      default:
+        return 'Ancil Media';
     }
+  }
 
-    return Scaffold(
-      appBar: isDesktop || selectedRoute == '/apps'
-          ? null
-          : AppBar(
-        title: const Text("Dashboard"),
-        actions: [
-          TextButton.icon(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            label: const Text("Logout", style: TextStyle(color: Colors.white)),
-            onPressed: () => _handleLogout(context),
-          ),
-        ],
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-      ),
-      drawer: isDesktop || selectedRoute == '/apps'
-          ? null
-          : Drawer(
-        child: Column(
-          children: const [
-            Expanded(child: AppSidebar()),
-            Divider(),
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: LogoutButton(), // 👈 Add this custom logout widget
+  Widget _buildDrawerTile(
+      BuildContext context,
+      IconData icon,
+      String label,
+      DrawerItem item,
+      bool isDesktop,
+      ) {
+    final provider = Provider.of<SidedrawerProvider>(context);
+    final isSelected = provider.selectedItem == item;
+    final color = isSelected ? Colors.cyan : Colors.black;
+    final fontWeight = isSelected ? FontWeight.w600 : FontWeight.normal;
+
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Padding(
+        padding: const EdgeInsets.only(left: 12.0),
+        child: Text(
+          label,
+          style: GoogleFonts.poppins(
+            textStyle: TextStyle(
+              color: color,
+              fontWeight: fontWeight,
             ),
-          ],
+          ),
         ),
       ),
-      body: Row(
+      onTap: () {
+        if (item == DrawerItem.apps) {
+          Provider.of<SubDrawerProvider>(context, listen: false)
+              .selectItem(SubDrawerItem.mobile); // Reset to Mobile Apps
+
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const Apps()),
+                (route) => false,
+          );
+        } else {
+          provider.selectItem(item);
+          if (!isDesktop) Navigator.pop(context);
+        }
+      },
+    );
+  }
+
+  Widget _buildCurvedDrawerHeader(BuildContext context) {
+    return Container(
+      color: Colors.cyan,
+      height: 150,
+      padding: const EdgeInsets.all(16),
+      child: Row(
         children: [
-          if (isDesktop && selectedRoute != '/apps')
-            Column(
-              children: const [
-                Expanded(child: AppSidebar()),
-                Divider(),
-                Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: LogoutButton(), // 👈 Add this on desktop too
-                ),
-              ],
-            ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: content,
+          const CircleAvatar(
+            radius: 25,
+            foregroundImage: AssetImage('assets/favicon.png'),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Ancil Media',
+            style: GoogleFonts.poppins(
+              textStyle: const TextStyle(color: Colors.white, fontSize: 20),
             ),
           ),
         ],
@@ -178,17 +116,68 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  Widget getSelectedPage(String route) {
-    switch (route) {
-      case '/events':
-        return const Events();
-      case '/sermons':
-        return const Sermons();
-      case '/giving':
-        return const Giving();
-      case '/home':
-      default:
-        return const HomePage();
-    }
+  List<Widget> _buildDrawerItems(BuildContext context, bool isDesktop) {
+    return [
+      _buildCurvedDrawerHeader(context),
+      _buildDrawerTile(context, Iconsax.home, 'Home', DrawerItem.home, isDesktop),
+      _buildDrawerTile(context, Iconsax.book, 'Events', DrawerItem.events, isDesktop),
+      _buildDrawerTile(context, Iconsax.safe_home, 'Sermons', DrawerItem.sermons, isDesktop),
+      _buildDrawerTile(context, Iconsax.card_tick, 'Giving', DrawerItem.giving, isDesktop),
+      _buildDrawerTile(context, Iconsax.element_3, 'Apps', DrawerItem.apps, isDesktop),
+      const Spacer(),
+      Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.01,
+          vertical: MediaQuery.of(context).size.width * 0.01,
+        ),
+        child: const LogoutButton(),
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDesktop = MediaQuery.of(context).size.width >= 1100;
+    final provider = Provider.of<SidedrawerProvider>(context);
+    final selectedItem = provider.selectedItem;
+
+    return Scaffold(
+      appBar: isDesktop
+          ? null
+          : AppBar(
+        title: Text(
+          _getTitle(selectedItem),
+          style: GoogleFonts.poppins(
+            textStyle: const TextStyle(color: Colors.black),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
+      ),
+      drawer: isDesktop
+          ? null
+          : Drawer(
+        width: MediaQuery.of(context).size.width * .8,
+        child: ListView(children: _buildDrawerItems(context, isDesktop)),
+      ),
+      body: Row(
+        children: [
+          if (isDesktop)
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+              child: Container(
+                width: MediaQuery.of(context).size.width * .160,
+                color: Colors.grey.shade100,
+                child: Column(children: _buildDrawerItems(context, isDesktop)),
+              ),
+            ),
+          Expanded(child: _getContent(selectedItem)),
+        ],
+      ),
+    );
   }
 }

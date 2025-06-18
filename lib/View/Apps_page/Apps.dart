@@ -1,3 +1,4 @@
+import 'package:ancilmediaadminpanel/View/Mainlayout.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../View_model/Sidebar_provider.dart';
@@ -9,73 +10,79 @@ import 'Push_Notifications.dart';
 class Apps extends StatelessWidget {
   const Apps({super.key});
 
-  Widget getSelectedSubPage(String route) {
-    switch (route) {
-      case '/apps/mobileapps':
+  Widget _getSelectedPage(SubDrawerItem item) {
+    switch (item) {
+      case SubDrawerItem.mobile:
         return const MobileApps();
-      case '/apps/tvapps':
+      case SubDrawerItem.tv:
         return const TvApps();
-      case '/apps/pushnotification':
+      case SubDrawerItem.push:
         return const PushNotification();
       default:
-        return const Center(child: Text("Please select an app"));
+        return const MainLayout(); // Default fallback
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SidebarProvider>(context);
+    final isLargeScreen = MediaQuery.of(context).size.width >= 1100;
+    final provider = Provider.of<SubDrawerProvider>(context);
+    final selectedItem = provider.selectedItem;
 
-    // Fix: Prevent calling notifyListeners during build
-    if (provider.selectedAppSubRoute.isEmpty) {
+    // If subdrawer was accidentally set to home, reset to mobile
+    if (selectedItem == SubDrawerItem.home) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final sidebarProvider = Provider.of<SidebarProvider>(context, listen: false);
-        if (sidebarProvider.selectedAppSubRoute.isEmpty) {
-          sidebarProvider.selectAppSubRoute('/apps/mobileapps');
-        }
+        provider.selectItem(SubDrawerItem.mobile);
       });
     }
-
-    final selectedSubRoute = provider.selectedAppSubRoute;
-    final isLargeScreen = MediaQuery.of(context).size.width >= 800;
 
     return Scaffold(
       appBar: isLargeScreen
           ? null
           : AppBar(
         title: const Text("Apps"),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (route) {
-              Provider.of<SidebarProvider>(context, listen: false)
-                  .selectAppSubRoute(route);
+              final provider =
+              Provider.of<SubDrawerProvider>(context, listen: false);
+              if (route == 'mobile') {
+                provider.selectItem(SubDrawerItem.mobile);
+              } else if (route == 'tv') {
+                provider.selectItem(SubDrawerItem.tv);
+              } else if (route == 'push') {
+                provider.selectItem(SubDrawerItem.push);
+              }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: '/apps/mobileapps',
+              const PopupMenuItem(
+                value: 'mobile',
                 child: Row(
-                  children: const [
+                  children: [
                     Icon(Icons.phone_android, color: Colors.blue),
                     SizedBox(width: 8),
                     Text("Mobile Apps"),
                   ],
                 ),
               ),
-              PopupMenuItem(
-                value: '/apps/tvapps',
+              const PopupMenuItem(
+                value: 'tv',
                 child: Row(
-                  children: const [
+                  children: [
                     Icon(Icons.tv, color: Colors.deepPurple),
                     SizedBox(width: 8),
                     Text("TV Apps"),
                   ],
                 ),
               ),
-              PopupMenuItem(
-                value: '/apps/pushnotification',
+              const PopupMenuItem(
+                value: 'push',
                 child: Row(
-                  children: const [
+                  children: [
                     Icon(Icons.notifications_active, color: Colors.orange),
                     SizedBox(width: 8),
                     Text("Push Notifications"),
@@ -88,16 +95,19 @@ class Apps extends StatelessWidget {
       ),
       body: Row(
         children: [
-          if (isLargeScreen)
-            const SizedBox(
-              child: AppSubDrawer(),
+          if (isLargeScreen && selectedItem != SubDrawerItem.home)
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+              child: Container(
+                width: MediaQuery.of(context).size.width * .160,
+                color: Colors.grey.shade100,
+                child: const AppSubDrawer(),
+              ),
             ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: getSelectedSubPage(selectedSubRoute),
-            ),
-          ),
+          Expanded(child: _getSelectedPage(selectedItem)),
         ],
       ),
     );
