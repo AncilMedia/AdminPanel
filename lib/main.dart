@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'View/Login_page.dart';
+import 'View_model/Authentication_state.dart';
 import 'View_model/Drawer_provider.dart';
 import 'View_model/Sidebar_provider.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
@@ -13,6 +14,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => SubDrawerProvider()),
         ChangeNotifierProvider(create: (_) => SidedrawerProvider()),
+        ChangeNotifierProvider(create: (_) => AuthState()),
       ],
       child: const MyApp(),
     ),

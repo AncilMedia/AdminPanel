@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
+
 import '../Controller/Login_controller.dart';
 import '../View/Login_page.dart';
+import '../View_model/Authentication_state.dart';
 
 class LogoutButton extends StatefulWidget {
   const LogoutButton({super.key});
@@ -18,7 +21,8 @@ class _LogoutButtonState extends State<LogoutButton> {
       _isLoggingOut = true;
     });
 
-    await AuthService().logout();
+    final authState = Provider.of<AuthState>(context, listen: false);
+    await AuthService().logout(authState);
 
     if (context.mounted) {
       Navigator.of(context).pushAndRemoveUntil(

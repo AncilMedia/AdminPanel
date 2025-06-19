@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'package:ancilmediaadminpanel/View/Mainlayout.dart';
 import 'package:ancilmediaadminpanel/View/Register_page.dart';
+import 'package:ancilmediaadminpanel/View_model/Authentication_state.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Controller/Login_controller.dart';
 import '../View_model/Custom_snackbar.dart';
@@ -17,15 +19,15 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
-    with SingleTickerProviderStateMixin {
-  final identifierController = TextEditingController(); // Updated
+class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+  final identifierController = TextEditingController();
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool obscureText = true;
   List<Offset> _dotPositions = [];
   late AnimationController _controller;
   bool _isLoading = false;
+  late AuthState authState; // ✅ Moved authState to class scope
 
   List<Offset> _generateDotPositions(double width, double height, int count) {
     final random = Random();
@@ -47,7 +49,7 @@ class _LoginPageState extends State<LoginPage>
         );
       }
     } else if (refreshToken != null && refreshToken.isNotEmpty) {
-      final newAccessToken = await AuthService().refreshAccessToken();
+      final newAccessToken = await AuthService().refreshAccessToken(authState);
       if (newAccessToken != null) {
         if (context.mounted) {
           Navigator.pushReplacement(
@@ -62,6 +64,7 @@ class _LoginPageState extends State<LoginPage>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
@@ -72,13 +75,16 @@ class _LoginPageState extends State<LoginPage>
       setState(() {
         _dotPositions = _generateDotPositions(size.width, size.height, 250);
       });
+
+      // ✅ Initialize AuthState here
+      authState = Provider.of<AuthState>(context, listen: false);
       _checkIfAlreadyLoggedIn();
     });
   }
 
   @override
   void dispose() {
-    identifierController.dispose(); // Updated
+    identifierController.dispose();
     passwordController.dispose();
     _controller.dispose();
     super.dispose();
@@ -89,10 +95,10 @@ class _LoginPageState extends State<LoginPage>
       _isLoading = true;
     });
 
-    final identifier = identifierController.text.trim(); // Updated
+    final identifier = identifierController.text.trim();
     final password = passwordController.text;
 
-    final result = await AuthService().login(identifier, password); // Updated
+    final result = await AuthService().login(identifier, password);
 
     setState(() {
       _isLoading = false;
@@ -111,11 +117,7 @@ class _LoginPageState extends State<LoginPage>
     } else {
       if (!context.mounted) return;
 
-      final errorMessage =
-          parsed['error'] ??
-              parsed['message'] ??
-              "Login failed. Please try again.";
-
+      final errorMessage = parsed['error'] ?? parsed['message'] ?? "Login failed. Please try again.";
       showCustomSnackBar(context, errorMessage, false);
     }
   }
@@ -200,12 +202,11 @@ class _LoginPageState extends State<LoginPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Identifier Field (email or phone)
                     TextFormField(
                       controller: identifierController,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        labelText: 'Email or Phone', // Updated
+                        labelText: 'Email or Phone',
                         filled: true,
                         fillColor: Colors.white,
                       ),
@@ -217,8 +218,6 @@ class _LoginPageState extends State<LoginPage>
                       },
                     ),
                     const SizedBox(height: 25),
-
-                    // Password Field
                     TextFormField(
                       controller: passwordController,
                       obscureText: obscureText,
@@ -232,9 +231,7 @@ class _LoginPageState extends State<LoginPage>
                             obscureText ? Iconsax.eye_slash : Iconsax.eye,
                             color: Colors.grey,
                           ),
-                          tooltip: obscureText
-                              ? 'Show password'
-                              : 'Hide password',
+                          tooltip: obscureText ? 'Show password' : 'Hide password',
                           onPressed: () {
                             setState(() {
                               obscureText = !obscureText;
@@ -255,25 +252,18 @@ class _LoginPageState extends State<LoginPage>
                         ? SizedBox(
                       height: 50,
                       width: 50,
-                      child: Lottie.asset(
-                        'assets/signin_button.json',
-                        fit: BoxFit.cover,
-                      ),
+                      child: Lottie.asset('assets/signin_button.json'),
                     )
                         : MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: GestureDetector(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
-                            setState(() {
-                              _isLoading = true;
-                            });
                             _handleLogin();
                           }
                         },
                         child: Container(
-                          padding:
-                          const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           constraints: BoxConstraints(
                             minWidth: 120,
                             maxWidth: screenWidth < 600
@@ -315,9 +305,7 @@ class _LoginPageState extends State<LoginPage>
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SignupPage(),
-                                ),
+                                MaterialPageRoute(builder: (_) => const SignupPage()),
                               );
                             },
                             child: Text(
