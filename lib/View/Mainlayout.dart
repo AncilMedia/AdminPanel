@@ -1,15 +1,15 @@
+import 'package:ancilmediaadminpanel/View/User.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
-
 import '../View/Home_page.dart';
 import '../View/Events.dart';
 import '../View/Giving.dart';
 import '../View/Sermons.dart';
 import '../View/Apps_page/Apps.dart';
 import '../View_model/Drawer_provider.dart';
-import '../View_model/Sidebar_provider.dart'; // Import SubDrawerProvider
+import '../View_model/Sidebar_provider.dart';
 import '../View_model/Logout.dart';
 
 class MainLayout extends StatelessWidget {
@@ -27,6 +27,8 @@ class MainLayout extends StatelessWidget {
         return const Giving();
       case DrawerItem.apps:
         return const Apps();
+      case DrawerItem.user:
+        return const UserPage();
       default:
         return const HomePage();
     }
@@ -44,6 +46,8 @@ class MainLayout extends StatelessWidget {
         return 'Giving';
       case DrawerItem.apps:
         return 'Apps';
+      case DrawerItem.user:
+        return 'User';
       default:
         return 'Ancil Media';
     }
@@ -124,6 +128,7 @@ class MainLayout extends StatelessWidget {
       _buildDrawerTile(context, Iconsax.safe_home, 'Sermons', DrawerItem.sermons, isDesktop),
       _buildDrawerTile(context, Iconsax.card_tick, 'Giving', DrawerItem.giving, isDesktop),
       _buildDrawerTile(context, Iconsax.element_3, 'Apps', DrawerItem.apps, isDesktop),
+      _buildDrawerTile(context, Iconsax.profile_circle, 'User', DrawerItem.user, isDesktop),
       const Spacer(),
       Padding(
         padding: EdgeInsets.symmetric(

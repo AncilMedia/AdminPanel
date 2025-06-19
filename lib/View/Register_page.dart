@@ -208,7 +208,7 @@ class _SignupPageState extends State<SignupPage> {
 
                               final result = await SignupController.signup(
                                 username: usernameController.text.trim(),
-                                fullName: fullNameController.text.trim(),
+                                email: fullNameController.text.trim(),
                                 password: passwordController.text,
                               );
 

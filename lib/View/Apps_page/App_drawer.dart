@@ -19,17 +19,20 @@ class AppSubDrawer extends StatelessWidget {
       children: [
         const SizedBox(height: 24),
 
-        // Optional: Title above the drawer
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            "Apps Menu",
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-          ),
+          child: IconButton(
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MainLayout()),
+                  );
+                }
+              },
+              icon: Icon(Iconsax.arrow_left_2)),
         ),
 
         const SizedBox(height: 16),
