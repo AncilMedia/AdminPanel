@@ -1,5 +1,6 @@
 import 'package:ancilmediaadminpanel/View/Login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
@@ -19,6 +20,7 @@ class _SignupPageState extends State<SignupPage> {
   final fullNameController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool obscureText = true;
@@ -133,6 +135,30 @@ class _SignupPageState extends State<SignupPage> {
 
                       const SizedBox(height: 20),
 
+                      TextFormField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\+?[0-9]*$')),
+                        ],
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Phone Number',
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)) {
+                            return 'Enter a valid phone number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
                       // Password
                       TextFormField(
                         controller: passwordController,
@@ -209,6 +235,7 @@ class _SignupPageState extends State<SignupPage> {
                               final result = await SignupController.signup(
                                 username: usernameController.text.trim(),
                                 email: fullNameController.text.trim(),
+                                phone: phoneController.text.trim(),
                                 password: passwordController.text,
                               );
 
@@ -230,8 +257,7 @@ class _SignupPageState extends State<SignupPage> {
                                   ),
                                 );
                               } else {
-                                // Print raw for debugging
-                                debugPrint(
+                                print(
                                   "Signup error response: ${result['raw']}",
                                 );
 

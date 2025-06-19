@@ -19,7 +19,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
-  final usernameController = TextEditingController();
+  final identifierController = TextEditingController(); // Updated
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool obscureText = true;
@@ -40,7 +40,6 @@ class _LoginPageState extends State<LoginPage>
     final refreshToken = prefs.getString('refreshToken');
 
     if (accessToken != null && accessToken.isNotEmpty) {
-      print("Access token found. Navigating to MainLayout...");
       if (context.mounted) {
         Navigator.pushReplacement(
           context,
@@ -48,7 +47,6 @@ class _LoginPageState extends State<LoginPage>
         );
       }
     } else if (refreshToken != null && refreshToken.isNotEmpty) {
-      print("Only refresh token found. Attempting to refresh...");
       final newAccessToken = await AuthService().refreshAccessToken();
       if (newAccessToken != null) {
         if (context.mounted) {
@@ -57,11 +55,7 @@ class _LoginPageState extends State<LoginPage>
             MaterialPageRoute(builder: (_) => const MainLayout()),
           );
         }
-      } else {
-        print("Refresh token expired or invalid.");
       }
-    } else {
-      print("No tokens found. Stay on login page.");
     }
   }
 
@@ -84,7 +78,7 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   void dispose() {
-    usernameController.dispose();
+    identifierController.dispose(); // Updated
     passwordController.dispose();
     _controller.dispose();
     super.dispose();
@@ -95,10 +89,10 @@ class _LoginPageState extends State<LoginPage>
       _isLoading = true;
     });
 
-    final username = usernameController.text.trim();
+    final identifier = identifierController.text.trim(); // Updated
     final password = passwordController.text;
 
-    final result = await AuthService().login(username, password);
+    final result = await AuthService().login(identifier, password); // Updated
 
     setState(() {
       _isLoading = false;
@@ -119,8 +113,8 @@ class _LoginPageState extends State<LoginPage>
 
       final errorMessage =
           parsed['error'] ??
-          parsed['message'] ??
-          "Login failed. Please try again.";
+              parsed['message'] ??
+              "Login failed. Please try again.";
 
       showCustomSnackBar(context, errorMessage, false);
     }
@@ -168,7 +162,6 @@ class _LoginPageState extends State<LoginPage>
             ),
           ),
 
-          // Animated Splash Painter (only on wide screens)
           if (isWideScreen)
             AnimatedBuilder(
               animation: _controller,
@@ -207,18 +200,18 @@ class _LoginPageState extends State<LoginPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Username Field
+                    // Identifier Field (email or phone)
                     TextFormField(
-                      controller: usernameController,
+                      controller: identifierController,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        labelText: 'Username',
+                        labelText: 'Email or Phone', // Updated
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your username';
+                          return 'Please enter your email or phone number';
                         }
                         return null;
                       },
@@ -257,55 +250,55 @@ class _LoginPageState extends State<LoginPage>
                       },
                     ),
                     const SizedBox(height: 25),
+
                     _isLoading
                         ? SizedBox(
-                            height: 50,
-                            width: 50,
-                            child: Lottie.asset(
-                              'assets/signin_button.json',
-                              fit: BoxFit.cover,
-                            ),
-                          )
+                      height: 50,
+                      width: 50,
+                      child: Lottie.asset(
+                        'assets/signin_button.json',
+                        fit: BoxFit.cover,
+                      ),
+                    )
                         : MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: GestureDetector(
-                              onTap: () {
-                                if (_formKey.currentState!.validate()) {
-                                  setState(() {
-                                    _isLoading = true;
-                                  });
-                                  _handleLogin();
-                                }
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                constraints: BoxConstraints(
-                                  minWidth: 120,
-                                  maxWidth: screenWidth < 600
-                                      ? double.infinity
-                                      : screenWidth * 0.2,
-                                ),
-                                height: 45,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(15),
-                                  color: Colors.cyan.shade200,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Sign In',
-                                    style: GoogleFonts.poppins(
-                                      textStyle: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ),
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            _handleLogin();
+                          }
+                        },
+                        child: Container(
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 16),
+                          constraints: BoxConstraints(
+                            minWidth: 120,
+                            maxWidth: screenWidth < 600
+                                ? double.infinity
+                                : screenWidth * 0.2,
+                          ),
+                          height: 45,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Colors.cyan.shade200,
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Sign In',
+                              style: GoogleFonts.poppins(
+                                textStyle: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
                                 ),
                               ),
                             ),
                           ),
+                        ),
+                      ),
+                    ),
 
                     const SizedBox(height: 25),
                     Wrap(
@@ -313,25 +306,24 @@ class _LoginPageState extends State<LoginPage>
                         Text(
                           "Don't Have an Account?",
                           style: GoogleFonts.poppins(
-                            textStyle: TextStyle(fontSize: 16),
+                            textStyle: const TextStyle(fontSize: 16),
                           ),
                         ),
                         MouseRegion(
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
                             onTap: () {
-                              print("Pressed signup in login");
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => SignupPage(),
+                                  builder: (context) => const SignupPage(),
                                 ),
                               );
                             },
                             child: Text(
                               "SignUp",
                               style: GoogleFonts.poppins(
-                                textStyle: TextStyle(
+                                textStyle: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.purple,
                                   fontWeight: FontWeight.w600,
