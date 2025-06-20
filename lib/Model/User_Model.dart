@@ -3,9 +3,10 @@ class UserModel {
   final String username;
   final String email;
   final String phone;
-  bool? approved;
-  final bool blocked;
-  final String role;
+
+  bool? approved; // nullable & mutable
+  bool blocked;   // mutable
+  String role;    // mutable
 
   UserModel({
     required this.id,
@@ -23,7 +24,7 @@ class UserModel {
       username: json['username'],
       email: json['email'],
       phone: json['phone'] ?? '',
-      approved: json['approved'], // ✅ may be null
+      approved: json['approved'],
       blocked: json['blocked'] ?? false,
       role: json['role'] ?? '',
     );

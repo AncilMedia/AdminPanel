@@ -99,7 +99,13 @@ class MainLayout extends StatelessWidget {
 
   Widget _buildCurvedDrawerHeader(BuildContext context) {
     return Container(
-      color: Colors.cyan,
+      decoration: BoxDecoration(
+          color: Colors.cyan,
+          borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(35),
+          bottomRight: Radius.circular(35),
+        )
+      ),
       height: 150,
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -130,12 +136,23 @@ class MainLayout extends StatelessWidget {
       _buildDrawerTile(context, Iconsax.element_3, 'Apps', DrawerItem.apps, isDesktop),
       _buildDrawerTile(context, Iconsax.profile_circle, 'User', DrawerItem.user, isDesktop),
       const Spacer(),
-      Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: MediaQuery.of(context).size.width * 0.01,
-          vertical: MediaQuery.of(context).size.width * 0.01,
+      Container(
+        // color: Colors.cyan.shade300,
+        decoration: BoxDecoration(
+            color: Colors.cyan.shade300,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(15),
+              topRight: Radius.circular(15),
+            )
         ),
-        child: const LogoutButton(),
+        width: MediaQuery.of(context).size.width,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.01,
+            vertical: MediaQuery.of(context).size.width * 0.01,
+          ),
+          child: const LogoutButton(),
+        ),
       ),
     ];
   }

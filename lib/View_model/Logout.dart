@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
@@ -49,10 +50,15 @@ class _LogoutButtonState extends State<LogoutButton> {
         ),
       )
           : const Icon(Icons.logout),
-      label: Text(_isLoggingOut ? 'Logging out...' : 'Logout'),
+      label: Text(_isLoggingOut ? 'Logging out...' : 'Logout',style: GoogleFonts.poppins(
+        textStyle: TextStyle(
+          fontWeight: FontWeight.w400,
+          fontSize: 14
+        )
+      ),),
       onPressed: _isLoggingOut ? null : () => _logout(context),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red.shade600,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
