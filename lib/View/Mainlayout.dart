@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
+import '../Controller/Profile_controller.dart';
 import '../View/Home_page.dart';
 import '../View/Events.dart';
 import '../View/Giving.dart';
@@ -11,9 +12,38 @@ import '../View/Apps_page/Apps.dart';
 import '../View_model/Drawer_provider.dart';
 import '../View_model/Sidebar_provider.dart';
 import '../View_model/Logout.dart';
+import 'Profile_page.dart';
+import '../Services/api_client.dart';
 
-class MainLayout extends StatelessWidget {
+class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
+
+  @override
+  State<MainLayout> createState() => _MainLayoutState();
+}
+
+class _MainLayoutState extends State<MainLayout> {
+  String orgName = 'Loading...';
+  String? orgImage;
+  ProfileController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    loadOrgInfo();
+  }
+
+  void loadOrgInfo() async {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    final controller = ProfileController(apiClient);
+    final data = await controller.fetchProfile();
+    if (data != null) {
+      setState(() {
+        orgName = data['username'] ?? 'Unknown';
+        orgImage = data['image'];
+      });
+    }
+  }
 
   Widget _getContent(DrawerItem item) {
     switch (item) {
@@ -29,6 +59,8 @@ class MainLayout extends StatelessWidget {
         return const Apps();
       case DrawerItem.user:
         return const UserPage();
+      case DrawerItem.profile:
+        return const Profile();
       default:
         return const HomePage();
     }
@@ -48,18 +80,14 @@ class MainLayout extends StatelessWidget {
         return 'Apps';
       case DrawerItem.user:
         return 'User';
+      case DrawerItem.profile:
+        return 'Profile';
       default:
         return 'Ancil Media';
     }
   }
 
-  Widget _buildDrawerTile(
-      BuildContext context,
-      IconData icon,
-      String label,
-      DrawerItem item,
-      bool isDesktop,
-      ) {
+  Widget _buildDrawerTile(BuildContext context, IconData icon, String label, DrawerItem item, bool isDesktop) {
     final provider = Provider.of<SidedrawerProvider>(context);
     final isSelected = provider.selectedItem == item;
     final color = isSelected ? Colors.cyan : Colors.black;
@@ -81,9 +109,7 @@ class MainLayout extends StatelessWidget {
       ),
       onTap: () {
         if (item == DrawerItem.apps) {
-          Provider.of<SubDrawerProvider>(context, listen: false)
-              .selectItem(SubDrawerItem.mobile); // Reset to Mobile Apps
-
+          Provider.of<SubDrawerProvider>(context, listen: false).selectItem(SubDrawerItem.mobile);
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const Apps()),
@@ -99,26 +125,31 @@ class MainLayout extends StatelessWidget {
 
   Widget _buildCurvedDrawerHeader(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-          color: Colors.cyan,
-          borderRadius: BorderRadius.only(
+      decoration: const BoxDecoration(
+        color: Colors.cyan,
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(35),
           bottomRight: Radius.circular(35),
-        )
+        ),
       ),
       height: 150,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 25,
-            foregroundImage: AssetImage('assets/favicon.png'),
+            backgroundImage: orgImage != null
+                ? NetworkImage(orgImage!)
+                : const AssetImage('assets/favicon.png') as ImageProvider,
           ),
           const SizedBox(width: 10),
-          Text(
-            'Ancil Media',
-            style: GoogleFonts.poppins(
-              textStyle: const TextStyle(color: Colors.white, fontSize: 20),
+          Expanded(
+            child: Text(
+              orgName,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                textStyle: const TextStyle(color: Colors.white, fontSize: 20),
+              ),
             ),
           ),
         ],
@@ -132,18 +163,18 @@ class MainLayout extends StatelessWidget {
       _buildDrawerTile(context, Iconsax.home, 'Home', DrawerItem.home, isDesktop),
       _buildDrawerTile(context, Iconsax.book, 'Events', DrawerItem.events, isDesktop),
       _buildDrawerTile(context, Iconsax.safe_home, 'Sermons', DrawerItem.sermons, isDesktop),
-      _buildDrawerTile(context, Iconsax.card_tick, 'Giving', DrawerItem.giving, isDesktop),
+      _buildDrawerTile(context, Iconsax.wallet_money, 'Giving', DrawerItem.giving, isDesktop),
       _buildDrawerTile(context, Iconsax.element_3, 'Apps', DrawerItem.apps, isDesktop),
-      _buildDrawerTile(context, Iconsax.profile_circle, 'User', DrawerItem.user, isDesktop),
+      _buildDrawerTile(context, Iconsax.profile_2user, 'User', DrawerItem.user, isDesktop),
+      _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
       const Spacer(),
       Container(
-        // color: Colors.cyan.shade300,
         decoration: BoxDecoration(
-            color: Colors.cyan.shade300,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(15),
-              topRight: Radius.circular(15),
-            )
+          color: Colors.cyan.shade300,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(15),
+            topRight: Radius.circular(15),
+          ),
         ),
         width: MediaQuery.of(context).size.width,
         child: Padding(

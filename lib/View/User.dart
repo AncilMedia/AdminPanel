@@ -1,4 +1,5 @@
 import 'package:ancilmediaadminpanel/View/PopUp/Add_user.dart';
+import 'package:ancilmediaadminpanel/View/PopUp/User_block_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -433,39 +434,7 @@ class _UserPageState extends State<UserPage> {
                                 onTap: () {
                                   showDialog(
                                     context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(
-                                        user.blocked ? 'Unblock User' : 'Block User',
-                                      ),
-                                      content: Text(
-                                        user.blocked
-                                            ? 'Are you sure you want to unblock this user?'
-                                            : 'Are you sure you want to block this user?',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          child: const Text("Close"),
-                                        ),
-                                        TextButton(
-                                          onPressed: () async {
-                                            final success = await UserController.updateBlockStatus(
-                                              authState: Provider.of<AuthState>(
-                                                context,
-                                                listen: false,
-                                              ),
-                                              userId: user.id,
-                                              block: !user.blocked,
-                                            );
-                                            if (success) _fetchUsers();
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text(
-                                            user.blocked ? "Yes, Unblock" : "Yes, Block",
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    builder: (context) => Block_User(user: user, onSave: _fetchUsers),
                                   );
                                 },
                                 child: Container(
@@ -480,11 +449,13 @@ class _UserPageState extends State<UserPage> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        const Icon(
+                                         Icon(
                                           Icons.block_rounded,
-                                          color: Colors.orangeAccent,
+                                          color:  user.blocked
+                                              ? Colors.red
+                                              : Colors.orangeAccent,
                                         ),
-                                        const SizedBox(width: 5),
+                                        const SizedBox(width: 10),
                                         Text(
                                           user.blocked ? "Unblock" : "Block",
                                           style: TextStyle(
