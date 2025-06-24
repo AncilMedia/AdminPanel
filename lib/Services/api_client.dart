@@ -179,6 +179,26 @@ class ApiClient {
         Uri.parse(endpoint), headers: {...?await authHeader(), ...?headers}));
   }
 
+  // Future<http.Response> _withAuthRetry(Future<http.Response> Function() requestFn) async {
+  //   http.Response response = await requestFn();
+  //
+  //   if (response.statusCode == 403) {
+  //     print('[⚠️] Access token expired. Trying refresh...');
+  //     final newToken = await _authService.refreshAccessToken(authState);
+  //
+  //     if (newToken != null) {
+  //       print('[✅] Token refreshed, retrying request...');
+  //       response = await requestFn();
+  //     } else {
+  //       print('[❌] Refresh failed. Logging out...');
+  //       await _authService.logout(authState);
+  //     }
+  //   }
+  //
+  //   return response;
+  // }
+
+
   Future<http.Response> _withAuthRetry(Future<http.Response> Function() requestFn) async {
     http.Response response = await requestFn();
 
@@ -188,6 +208,7 @@ class ApiClient {
 
       if (newToken != null) {
         print('[✅] Token refreshed, retrying request...');
+        // Rebuild headers after refresh
         response = await requestFn();
       } else {
         print('[❌] Refresh failed. Logging out...');
@@ -197,6 +218,7 @@ class ApiClient {
 
     return response;
   }
+
   dynamic decodeJson(http.Response response) {
     try {
       return jsonDecode(response.body);

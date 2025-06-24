@@ -12,8 +12,10 @@ import '../View/Apps_page/Apps.dart';
 import '../View_model/Drawer_provider.dart';
 import '../View_model/Sidebar_provider.dart';
 import '../View_model/Logout.dart';
+import 'Notifications/Notification_page.dart';
 import 'Profile_page.dart';
 import '../Services/api_client.dart';
+import 'Notifications/notification_bell.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -25,7 +27,7 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   String orgName = 'Loading...';
   String? orgImage;
-  ProfileController? _controller;
+  String role = '';
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _MainLayoutState extends State<MainLayout> {
       setState(() {
         orgName = data['username'] ?? 'Unknown';
         orgImage = data['image'];
+        role = data['role'] ?? ''; // ✅ Store role from backend
       });
     }
   }
@@ -61,6 +64,8 @@ class _MainLayoutState extends State<MainLayout> {
         return const UserPage();
       case DrawerItem.profile:
         return const Profile();
+      case DrawerItem.notification:
+        return const NotificationPage();
       default:
         return const HomePage();
     }
@@ -81,6 +86,8 @@ class _MainLayoutState extends State<MainLayout> {
       case DrawerItem.user:
         return 'User';
       case DrawerItem.profile:
+        return 'Profile';
+      case DrawerItem.notification:
         return 'Profile';
       default:
         return 'Ancil Media';
@@ -152,6 +159,7 @@ class _MainLayoutState extends State<MainLayout> {
               ),
             ),
           ),
+          NotificationIconDropdown()
         ],
       ),
     );
@@ -165,8 +173,13 @@ class _MainLayoutState extends State<MainLayout> {
       _buildDrawerTile(context, Iconsax.safe_home, 'Sermons', DrawerItem.sermons, isDesktop),
       _buildDrawerTile(context, Iconsax.wallet_money, 'Giving', DrawerItem.giving, isDesktop),
       _buildDrawerTile(context, Iconsax.element_3, 'Apps', DrawerItem.apps, isDesktop),
-      _buildDrawerTile(context, Iconsax.profile_2user, 'User', DrawerItem.user, isDesktop),
+
+      if (role == 'admin')
+        _buildDrawerTile(context, Iconsax.profile_2user, 'User', DrawerItem.user, isDesktop),
+
       _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
+      _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
+
       const Spacer(),
       Container(
         decoration: BoxDecoration(

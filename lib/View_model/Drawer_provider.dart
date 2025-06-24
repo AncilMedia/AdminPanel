@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Define the items in your sidebar
-enum DrawerItem { home, events, sermons, giving, apps, user, profile }
+enum DrawerItem { home, events, sermons, giving, apps, user, profile, notification }
 
 /// SidebarProvider handles which drawer item is selected
 class SidedrawerProvider with ChangeNotifier {

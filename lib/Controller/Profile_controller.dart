@@ -16,7 +16,7 @@ class ProfileController {
     final res = await apiClient.get('$baseUrl/api/settings');
     if (res.statusCode == 200) {
       final data = Map<String, dynamic>.from(await apiClient.decodeJson(res));
-      print('[ℹ️] Profile data fetched: $data'); // 🔍 print to console
+      print('[ℹ️] Profile data fetched: $data');
       return data;
     } else {
       print('[❌] Failed to fetch profile: ${res.statusCode} - ${res.body}');

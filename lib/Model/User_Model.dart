@@ -1,5 +1,6 @@
 class UserModel {
-  final String id;
+  final String id;         // MongoDB _id
+  final String userId;     // Custom ID like "U0624012"
   final String username;
   final String email;
   final String phone;
@@ -10,6 +11,7 @@ class UserModel {
 
   UserModel({
     required this.id,
+    required this.userId,
     required this.username,
     required this.email,
     required this.phone,
@@ -21,6 +23,7 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['_id'],
+      userId: json['userId'] ?? '',
       username: json['username'],
       email: json['email'],
       phone: json['phone'] ?? '',

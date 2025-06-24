@@ -48,6 +48,7 @@ dependencies:
   mime: ^2.0.0
   rive: ^0.13.20
   shared_preferences: ^2.5.3
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
