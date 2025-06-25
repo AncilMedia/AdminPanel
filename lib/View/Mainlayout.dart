@@ -159,7 +159,8 @@ class _MainLayoutState extends State<MainLayout> {
               ),
             ),
           ),
-          NotificationIconDropdown()
+          if (role == 'admin')
+            NotificationIconDropdown()
         ],
       ),
     );
@@ -173,12 +174,11 @@ class _MainLayoutState extends State<MainLayout> {
       _buildDrawerTile(context, Iconsax.safe_home, 'Sermons', DrawerItem.sermons, isDesktop),
       _buildDrawerTile(context, Iconsax.wallet_money, 'Giving', DrawerItem.giving, isDesktop),
       _buildDrawerTile(context, Iconsax.element_3, 'Apps', DrawerItem.apps, isDesktop),
-
       if (role == 'admin')
         _buildDrawerTile(context, Iconsax.profile_2user, 'User', DrawerItem.user, isDesktop),
-
+      if (role == 'admin')
+        _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
       _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
-      _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
 
       const Spacer(),
       Container(

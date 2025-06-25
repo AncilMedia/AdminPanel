@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import '../../Controller/Notification_controller.dart';
 import '../../View_model/Authentication_state.dart';
@@ -55,9 +56,14 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('All Notifications')),
+      appBar: AppBar(title: Text('Notifications',style: GoogleFonts.poppins(
+        textStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600
+        )
+      ),)),
       body: notifications.isEmpty
-          ? const Center(child: Text('No notifications'))
+          ?  Center(child: Lottie.asset('assets/Mailpc.json'))
           : ListView.builder(
         itemCount: notifications.length,
         itemBuilder: (_, i) {
