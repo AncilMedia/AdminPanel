@@ -1,20 +1,24 @@
-import 'package:ancilmediaadminpanel/View/User.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
+
 import '../Controller/Profile_controller.dart';
+import '../Services/api_client.dart';
+import '../View_model/Drawer_provider.dart';
+import '../View_model/Sidebar_provider.dart';
+import '../View_model/Logout.dart';
+import '../View_model/Socket_Service.dart';
+import '../View_model/Notification_dropdown_state.dart';
+
+import '../View/User.dart';
 import '../View/Home_page.dart';
 import '../View/Events.dart';
 import '../View/Giving.dart';
 import '../View/Sermons.dart';
 import '../View/Apps_page/Apps.dart';
-import '../View_model/Drawer_provider.dart';
-import '../View_model/Sidebar_provider.dart';
-import '../View_model/Logout.dart';
 import 'Notifications/Notification_page.dart';
 import 'Profile_page.dart';
-import '../Services/api_client.dart';
 import 'Notifications/notification_bell.dart';
 
 class MainLayout extends StatefulWidget {
@@ -28,11 +32,25 @@ class _MainLayoutState extends State<MainLayout> {
   String orgName = 'Loading...';
   String? orgImage;
   String role = '';
+  bool hasSubscribedToSocket = false;
 
   @override
   void initState() {
     super.initState();
     loadOrgInfo();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final socketService = Provider.of<SocketService>(context, listen: false);
+
+      if (socketService.isConnected) {
+        socketService.socket.emit("test_event", {"msg": "Hello from Flutter"});
+        socketService.socket.on("test_event", (data) {
+          debugPrint("🎯 Received test_event: $data");
+        });
+      } else {
+        debugPrint("⚠️ Socket not connected yet");
+      }
+    });
   }
 
   void loadOrgInfo() async {
@@ -43,7 +61,7 @@ class _MainLayoutState extends State<MainLayout> {
       setState(() {
         orgName = data['username'] ?? 'Unknown';
         orgImage = data['image'];
-        role = data['role'] ?? ''; // ✅ Store role from backend
+        role = data['role'] ?? '';
       });
     }
   }
@@ -88,17 +106,22 @@ class _MainLayoutState extends State<MainLayout> {
       case DrawerItem.profile:
         return 'Profile';
       case DrawerItem.notification:
-        return 'Profile';
+        return 'Notification';
       default:
         return 'Ancil Media';
     }
   }
 
-  Widget _buildDrawerTile(BuildContext context, IconData icon, String label, DrawerItem item, bool isDesktop) {
+  Widget _buildDrawerTile(
+      BuildContext context,
+      IconData icon,
+      String label,
+      DrawerItem item,
+      bool isDesktop,
+      ) {
     final provider = Provider.of<SidedrawerProvider>(context);
     final isSelected = provider.selectedItem == item;
     final color = isSelected ? Colors.cyan : Colors.black;
-    final fontWeight = isSelected ? FontWeight.w600 : FontWeight.normal;
 
     return ListTile(
       leading: Icon(icon, color: color),
@@ -109,14 +132,15 @@ class _MainLayoutState extends State<MainLayout> {
           style: GoogleFonts.poppins(
             textStyle: TextStyle(
               color: color,
-              fontWeight: fontWeight,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
         ),
       ),
       onTap: () {
         if (item == DrawerItem.apps) {
-          Provider.of<SubDrawerProvider>(context, listen: false).selectItem(SubDrawerItem.mobile);
+          Provider.of<SubDrawerProvider>(context, listen: false)
+              .selectItem(SubDrawerItem.mobile);
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const Apps()),
@@ -159,8 +183,7 @@ class _MainLayoutState extends State<MainLayout> {
               ),
             ),
           ),
-          if (role == 'admin')
-            NotificationIconDropdown()
+          if (role == 'admin') const NotificationIconDropdown(),
         ],
       ),
     );
@@ -179,15 +202,11 @@ class _MainLayoutState extends State<MainLayout> {
       if (role == 'admin')
         _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
       _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
-
       const Spacer(),
       Container(
         decoration: BoxDecoration(
           color: Colors.cyan.shade300,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(15),
-            topRight: Radius.circular(15),
-          ),
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
         ),
         width: MediaQuery.of(context).size.width,
         child: Padding(
@@ -204,19 +223,13 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final bool isDesktop = MediaQuery.of(context).size.width >= 1100;
-    final provider = Provider.of<SidedrawerProvider>(context);
-    final selectedItem = provider.selectedItem;
+    final selectedItem = context.watch<SidedrawerProvider>().selectedItem;
 
     return Scaffold(
       appBar: isDesktop
           ? null
           : AppBar(
-        title: Text(
-          _getTitle(selectedItem),
-          style: GoogleFonts.poppins(
-            textStyle: const TextStyle(color: Colors.black),
-          ),
-        ),
+        title: Text(_getTitle(selectedItem), style: GoogleFonts.poppins(color: Colors.black)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
@@ -231,10 +244,7 @@ class _MainLayoutState extends State<MainLayout> {
         children: [
           if (isDesktop)
             ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
+              borderRadius: const BorderRadius.only(topRight: Radius.circular(30), bottomRight: Radius.circular(30)),
               child: Container(
                 width: MediaQuery.of(context).size.width * .160,
                 color: Colors.grey.shade100,
