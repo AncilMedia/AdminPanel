@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "391319281811",
+    "project_id": "node-project-49c19",
+    "storage_bucket": "node-project-49c19.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:391319281811:android:7dc6ac493d2ef19f876d66",
+        "android_client_info": {
+          "package_name": "com.example.ancilmediaadminpanel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg6W7b7hq6djAGr8bF6h7a0gYjzIcRmMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

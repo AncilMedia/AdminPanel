@@ -39,19 +39,28 @@ class _MainLayoutState extends State<MainLayout> {
     super.initState();
     loadOrgInfo();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final socketService = Provider.of<SocketService>(context, listen: false);
 
-      if (socketService.isConnected) {
-        socketService.socket.emit("test_event", {"msg": "Hello from Flutter"});
-        socketService.socket.on("test_event", (data) {
-          debugPrint("🎯 Received test_event: $data");
-        });
-      } else {
-        debugPrint("⚠️ Socket not connected yet");
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final socketService = Provider.of<SocketService>(context, listen: false);
+    //
+    //   // Register listener
+    //   socketService.on("test_event", (data) {
+    //     debugPrint("📥 Received in MainLayout: $data");
+    //   });
+    //
+    //   // ✅ Wait for a second before emitting
+    //   Future.delayed(const Duration(seconds: 1), () {
+    //     if (socketService.isConnected) {
+    //       socketService.emit("test_event", {"msg": "Hello from Flutter"});
+    //     } else {
+    //       debugPrint("⚠️ Socket not connected yet in MainLayout");
+    //     }
+    //   });
+    // });
   }
+
+
+
 
   void loadOrgInfo() async {
     final apiClient = Provider.of<ApiClient>(context, listen: false);
@@ -222,6 +231,8 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final socketService = SocketService(); // ✅ create instance
+
     final bool isDesktop = MediaQuery.of(context).size.width >= 1100;
     final selectedItem = context.watch<SidedrawerProvider>().selectedItem;
 
@@ -251,6 +262,14 @@ class _MainLayoutState extends State<MainLayout> {
                 child: Column(children: _buildDrawerItems(context, isDesktop)),
               ),
             ),
+
+          ElevatedButton(
+            onPressed: () {
+              socketService.triggerTestNotificationViaHttp();
+            },
+            child: const Text("Send Test Notification"),
+          ),
+
           Expanded(child: _getContent(selectedItem)),
         ],
       ),

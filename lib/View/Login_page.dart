@@ -8,6 +8,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../Controller/Login_controller.dart';
 import '../View_model/Custom_snackbar.dart';
 import '../View_model/Splash_Animation.dart';
@@ -27,7 +29,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   List<Offset> _dotPositions = [];
   late AnimationController _controller;
   bool _isLoading = false;
-  late AuthState authState; // ✅ Moved authState to class scope
+  late AuthState authState;
 
   List<Offset> _generateDotPositions(double width, double height, int count) {
     final random = Random();
@@ -43,19 +45,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     if (accessToken != null && accessToken.isNotEmpty) {
       if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainLayout()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainLayout()));
       }
     } else if (refreshToken != null && refreshToken.isNotEmpty) {
       final newAccessToken = await AuthService().refreshAccessToken(authState);
       if (newAccessToken != null) {
         if (context.mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const MainLayout()),
-          );
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainLayout()));
         }
       }
     }
@@ -64,7 +60,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
@@ -76,7 +71,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         _dotPositions = _generateDotPositions(size.width, size.height, 250);
       });
 
-      // ✅ Initialize AuthState here
       authState = Provider.of<AuthState>(context, listen: false);
       _checkIfAlreadyLoggedIn();
     });
@@ -109,17 +103,53 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     if (status == 200 && parsed['accessToken'] != null) {
       if (!context.mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainLayout()),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainLayout()));
     } else {
       if (!context.mounted) return;
-
       final errorMessage = parsed['error'] ?? parsed['message'] ?? "Login failed. Please try again.";
       showCustomSnackBar(context, errorMessage, false);
     }
+  }
+
+  Future<void> _sendPasswordResetEmail(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      showCustomSnackBar(context, 'Reset link sent to $email', true);
+    } on FirebaseAuthException catch (e) {
+      showCustomSnackBar(context, e.message ?? 'Password reset failed', false);
+    }
+  }
+
+  Widget _buildResetPasswordDialog() {
+    final TextEditingController emailController = TextEditingController();
+
+    return AlertDialog(
+      title: const Text('Reset Password'),
+      content: TextField(
+        controller: emailController,
+        keyboardType: TextInputType.emailAddress,
+        decoration: const InputDecoration(
+          labelText: 'Enter your email',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            final email = emailController.text.trim();
+            if (email.isNotEmpty) {
+              Navigator.pop(context);
+              _sendPasswordResetEmail(email);
+            }
+          },
+          child: const Text('Send'),
+        ),
+      ],
+    );
   }
 
   @override
@@ -163,7 +193,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               ),
             ),
           ),
-
           if (isWideScreen)
             AnimatedBuilder(
               animation: _controller,
@@ -193,10 +222,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   ),
                 ],
               ),
-              height: screenHeight * 0.5,
-              width: screenWidth < 600
-                  ? screenWidth * 0.85
-                  : screenWidth * 0.25,
+              height: screenHeight * 0.55,
+              width: screenWidth < 600 ? screenWidth * 0.85 : screenWidth * 0.25,
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -246,8 +273,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         return null;
                       },
                     ),
-                    const SizedBox(height: 25),
-
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => _buildResetPasswordDialog(),
+                          );
+                        },
+                        child: const Text('Forgot Password?'),
+                      ),
+                    ),
                     _isLoading
                         ? SizedBox(
                       height: 50,
@@ -289,7 +326,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 25),
                     Wrap(
                       children: [
@@ -309,7 +345,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               );
                             },
                             child: Text(
-                              "SignUp",
+                              " SignUp",
                               style: GoogleFonts.poppins(
                                 textStyle: const TextStyle(
                                   fontSize: 16,

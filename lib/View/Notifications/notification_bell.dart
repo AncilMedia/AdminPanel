@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../View_model/Authentication_state.dart';
 import '../../Controller/Notification_controller.dart';
 import '../../View_model/Notification_dropdown_state.dart';
+import '../../View_model/Socket_Service.dart';
 import 'Notification_dialog.dart';
 import 'Notification_page.dart';
 
@@ -17,42 +18,43 @@ class NotificationIconDropdown extends StatefulWidget {
 }
 
 class _NotificationIconDropdownState extends State<NotificationIconDropdown> {
-  List<dynamic> unread = [];
-
   @override
   void initState() {
     super.initState();
-    loadUnread();
+    _loadInitialUnread(); // Initial fetch to sync with server on start
   }
 
-  Future<void> loadUnread() async {
+  Future<void> _loadInitialUnread() async {
     final authState = Provider.of<AuthState>(context, listen: false);
+    final socket = Provider.of<SocketService>(context, listen: false);
     final data = await NotificationController.getUnread(authState);
-    if (mounted) {
-      unread = data.take(5).toList();
-      Provider.of<NotificationState>(context, listen: false).updateCount(data.length);
-      setState(() {});
-    }
+    socket.setInitialUnread(data); // Populate socket's unread list
+    Provider.of<NotificationState>(context, listen: false).updateCount(data.length);
   }
 
   Future<void> _markAndShow(dynamic notif) async {
     final authState = Provider.of<AuthState>(context, listen: false);
+    final socket = Provider.of<SocketService>(context, listen: false);
+
     if (!(notif['read'] ?? false)) {
       await NotificationController.markAsRead(authState, notif['_id']);
-      unread.removeWhere((n) => n['_id'] == notif['_id']);
-      Provider.of<NotificationState>(context, listen: false).updateCount(unread.length);
-      setState(() {});
+      socket.markAsRead(notif['_id']);
     }
-    showDialog(context: context, builder: (_) => UserDetailDialog(notif: notif));
+
+    showDialog(
+      context: context,
+      builder: (_) => UserDetailDialog(notif: notif),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final socket = Provider.of<SocketService>(context);
     return Consumer<NotificationState>(
       builder: (_, state, __) => PopupMenuButton<dynamic>(
         icon: Stack(
           children: [
-            const Icon(Iconsax.notification,color: Colors.white,),
+            const Icon(Iconsax.notification, color: Colors.white),
             if (state.unreadCount > 0)
               Positioned(
                 right: 0,
@@ -62,28 +64,40 @@ class _NotificationIconDropdownState extends State<NotificationIconDropdown> {
                     color: Colors.red,
                     shape: BoxShape.circle,
                   ),
-                  child: Text('${state.unreadCount}', style: const TextStyle(fontSize: 10, color: Colors.white)),
+                  child: Text(
+                    '${state.unreadCount}',
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                  ),
                 ),
               ),
           ],
         ),
         onSelected: (notif) async {
           if (notif == 'show_all') {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationPage())).then((_) => loadUnread());
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationPage()),
+            ).then((_) => _loadInitialUnread());
           } else {
             await _markAndShow(notif);
           }
         },
         itemBuilder: (context) => [
-          ...unread.map((notif) => PopupMenuItem(
-            value: notif,
-            child: ListTile(
-              title: Text(notif['title'] ?? 'New user'),
-              subtitle: Text(DateFormat('yMMMd – h:mm a').format(DateTime.parse(notif['createdAt']))),
+          ...socket.unread.take(5).map(
+                (notif) => PopupMenuItem(
+              value: notif,
+              child: ListTile(
+                title: Text(notif['title'] ?? 'New user'),
+                subtitle: Text(
+                  DateFormat('yMMMd – h:mm a').format(
+                    DateTime.parse(notif['createdAt']),
+                  ),
+                ),
+              ),
             ),
-          )),
-          if (unread.length >= 5) const PopupMenuDivider(),
-          if (unread.length >= 5)
+          ),
+          if (socket.unread.length >= 5) const PopupMenuDivider(),
+          if (socket.unread.length >= 5)
             const PopupMenuItem(
               value: 'show_all',
               child: Text('Show All'),
