@@ -7,19 +7,21 @@ import 'package:lottie/lottie.dart';
 class HomeContent extends StatelessWidget {
   final BoxConstraints constraints;
   final List<Map<String, dynamic>> items;
-  final void Function() onAddItem;
+  // final void Function() onAddItem;
   final void Function(int index) onShowItemDetails;
   final void Function(int oldIndex, int newIndex) onReorder;
   final void Function(int index) onRemoveItem;
+  final void Function() onOpenDrawer; // 👈 Callback to open drawer
 
   const HomeContent({
     super.key,
     required this.constraints,
     required this.items,
-    required this.onAddItem,
+    // required this.onAddItem,
     required this.onShowItemDetails,
     required this.onReorder,
     required this.onRemoveItem,
+    required this.onOpenDrawer, // 👈 Required callback
   });
 
   @override
@@ -46,8 +48,10 @@ class HomeContent extends StatelessWidget {
                     style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const Divider(),
+
+                  // 👉 "Add Item" with drawer opener
                   InkWell(
-                    onTap: onAddItem,
+                    onTap: onOpenDrawer, // 👈 Trigger drawer
                     child: Row(
                       children: [
                         const Icon(Iconsax.add_circle),
@@ -60,6 +64,8 @@ class HomeContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // 👉 Empty / List Section
                   if (items.isEmpty)
                     Center(
                       child: Lottie.asset('assets/Animation - 1749442430422.json'),
@@ -94,7 +100,6 @@ class HomeContent extends StatelessWidget {
                           color: Colors.grey.shade300,
                           child: const Icon(Icons.image_not_supported),
                         ));
-
 
                         return ListTile(
                           key: ValueKey('item_$index'),

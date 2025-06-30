@@ -1,7 +1,9 @@
+import 'package:ancilmediaadminpanel/View/Apps_page/Apps.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'Services/api_client.dart';
 import 'View/Login_page.dart';
+import 'View/PopUp/Right_drawer.dart';
 import 'View_model/Authentication_state.dart';
 import 'View_model/Drawer_provider.dart';
 import 'View_model/Notification_dropdown_state.dart';
@@ -36,7 +38,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home:  LoginPage(),
+      home:  Apps(),
       // home: const Apps(),
     );
   }

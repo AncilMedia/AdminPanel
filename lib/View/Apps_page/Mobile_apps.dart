@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-
 import '../../Controller/Get_all_item_controller.dart';
 import '../../Model/Item_Model.dart';
 import '../PopUp/Add_item_mobapp.dart';
 import '../PopUp/Mobile_app _additem.dart';
+import '../PopUp/Right_drawer.dart';
 import 'Home_mobapp.dart';
 
 class MobileApps extends StatefulWidget {
@@ -16,6 +16,7 @@ class MobileApps extends StatefulWidget {
 }
 
 class _MobileAppsState extends State<MobileApps> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String selectedLabel = "Home";
   List<ItemModel> items = [];
 
@@ -54,7 +55,7 @@ class _MobileAppsState extends State<MobileApps> {
       context: context,
       builder: (context) => ItemDetailsDialog(
         item: {
-          '_id': items[index].id, // ✅ Include ID here
+          '_id': items[index].id,
           'title': items[index].title,
           'subtitle': items[index].subtitle,
           'url': items[index].url,
@@ -78,11 +79,25 @@ class _MobileAppsState extends State<MobileApps> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      endDrawer: CustomRightDrawer(
+        onAddItemToHome: (title, subtitle) {
+          setState(() {
+            items.add(ItemModel(
+              id: DateTime.now().toString(),
+              title: title,
+              subtitle: subtitle,
+              image: null,
+              url: '',
+              imageName: '',
+            ));
+          });
+        },
+      ),
+
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -220,7 +235,7 @@ class _MobileAppsState extends State<MobileApps> {
         'title': item.title,
         'image': item.image ?? '',
       }).toList(),
-      onAddItem: () => showAddItemDialog(context),
+      // onAddItem: () => showAddItemDialog(context),
       onShowItemDetails: (index) => showItemDetailsDialog(context, index),
       onReorder: (oldIndex, newIndex) async {
         if (newIndex > oldIndex) newIndex -= 1;
@@ -235,7 +250,6 @@ class _MobileAppsState extends State<MobileApps> {
           debugPrint('Failed to update order: $e');
         }
       },
-
       onRemoveItem: (index) async {
         try {
           await ItemService.deleteItem(items[index].id);
@@ -246,6 +260,7 @@ class _MobileAppsState extends State<MobileApps> {
           debugPrint('Failed to delete item: $e');
         }
       },
+      onOpenDrawer: () => _scaffoldKey.currentState?.openEndDrawer(), // 👈 Right-side drawer
     );
   }
 
