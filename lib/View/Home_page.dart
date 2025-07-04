@@ -15,7 +15,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final bool isLargeScreen = MediaQuery.of(context).size.width >= 800;
-
     return Scaffold(
       appBar: isLargeScreen ? null : AppBar(title: const Text("Home")),
       body: Row(
