@@ -9,6 +9,8 @@ class ListModel {
   final DateTime? updatedAt;
   final int? v;
 
+  int index; // 👈 Add this (not final)
+
   ListModel({
     required this.id,
     required this.title,
@@ -19,6 +21,7 @@ class ListModel {
     this.createdAt,
     this.updatedAt,
     this.v,
+    required this.index, // 👈 Make sure index is required
   });
 
   factory ListModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +35,7 @@ class ListModel {
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       v: json['__v'],
+      index: json['index'] ?? 0, // 👈 Parse index from backend
     );
   }
 
@@ -45,5 +49,6 @@ class ListModel {
     'createdAt': createdAt?.toIso8601String(),
     'updatedAt': updatedAt?.toIso8601String(),
     '__v': v,
+    'index': index, // 👈 Include in serialization
   };
 }

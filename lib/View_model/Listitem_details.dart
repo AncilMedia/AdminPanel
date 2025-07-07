@@ -1,9 +1,13 @@
+// ✅ ListItemDetailsPage
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../Model/Item_Model.dart';
 import '../../Controller/Get_all_item_controller.dart';
+import '../Controller/right_drawer_controller.dart';
 import '../View/PopUp/Right_drawer.dart';
 
 class ListItemDetailsPage extends StatefulWidget {
@@ -29,6 +33,9 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
   @override
   void initState() {
     super.initState();
+    print(
+      '📥 Entered ListItemDetailsPage with parentItem ID: ${widget.parentItem.id}',
+    );
     rootItem = widget.rootItem ?? widget.parentItem;
     _resolveRootItem();
     _loadSubItems();
@@ -50,11 +57,26 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
   Future<void> _loadSubItems() async {
     setState(() => isLoading = true);
     try {
-      final fetched = await ItemService.fetchItems(parentId: widget.parentItem.id);
-      setState(() => subItems = fetched);
-    } catch (e, stackTrace) {
+      final fetchedLists = await ListController.fetchLists(
+        parentId: widget.parentItem.id,
+      );
+
+      setState(() {
+        subItems = fetchedLists
+            .map(
+              (list) => ItemModel(
+                id: list.id,
+                title: list.title,
+                subtitle: list.subtitle,
+                image: list.image,
+                type: 'list',
+                parentId: list.parentId,
+              ),
+            )
+            .toList();
+      });
+    } catch (e) {
       debugPrint('Failed to fetch subitems: $e');
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       setState(() => isLoading = false);
     }
@@ -62,46 +84,86 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
 
   void _onReorder(int oldIndex, int newIndex) async {
     if (newIndex > oldIndex) newIndex--;
-    final filtered = subItems.where((i) => i.parentId == widget.parentItem.id).toList();
+
+    final parentId = widget.parentItem.id;
+
+    // ✅ Get sublists that match this parent
+    final filtered = subItems
+        .where((i) => i.parentId == parentId)
+        .toList();
+
     final item = filtered.removeAt(oldIndex);
     filtered.insert(newIndex, item);
 
+    // ✅ Reassign indexes
+    for (int i = 0; i < filtered.length; i++) {
+      filtered[i].index = i;
+    }
+
+    // ✅ Recombine with other items (not strictly needed here but keeps list complete)
     setState(() {
       subItems = [
-        ...subItems.where((i) => i.parentId != widget.parentItem.id),
+        ...subItems.where((i) => i.parentId != parentId),
         ...filtered,
       ];
     });
 
     try {
-      await ItemService.reorderItems(filtered);
-    } catch (e, stackTrace) {
-      debugPrint('Failed to reorder: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      // ✅ Map ItemModel → Map<String, dynamic> (because ListController expects ListModel)
+      final payload = filtered.map((item) {
+        return {
+          "_id": item.id,
+          "index": item.index,
+        };
+      }).toList();
+
+      await ListController.reorderLists(payload);
+      debugPrint("✅ Reordered successfully");
+    } catch (e) {
+      debugPrint('❌ Failed to reorder: $e');
     }
   }
 
   Future<void> _onRemoveItem(int index) async {
-    final filtered = subItems.where((i) => i.parentId == widget.parentItem.id).toList();
+    final filtered = subItems
+        .where((i) => i.parentId == widget.parentItem.id)
+        .toList();
+    final toDelete = filtered[index];
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Confirm Delete"),
         content: const Text("Are you sure you want to delete this item?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Delete")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete"),
+          ),
         ],
       ),
     );
 
     if (confirm == true) {
-      final toDelete = filtered[index];
       try {
-        await ItemService.deleteItem(toDelete.id);
+        if (toDelete.type == 'list') {
+          // 🗑️ Delete recursively via ListController
+          await ListController.deleteList(toDelete.id);
+        } else {
+          // 🗑️ Delete other item types via ItemService
+          await ItemService.deleteItem(toDelete.id);
+        }
+
         setState(() => subItems.removeWhere((i) => i.id == toDelete.id));
       } catch (e) {
         debugPrint('Delete failed: $e');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error deleting item: $e')));
       }
     }
   }
@@ -118,38 +180,40 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final parent = widget.parentItem;
-    final filteredSubItems = subItems.where((i) => i.parentId == parent.id).toList();
+    final filteredSubItems = subItems
+        .where((i) => i.parentId == parent.id)
+        .toList();
 
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: CustomRightDrawer(
+        isInSublist: true,
         parentId: parent.id,
         rootItem: rootItem,
-        onAddItemToHome: (newItem) {
-          setState(() {
-            subItems.insert(0, newItem);
-          });
-        },
+        onAddItemToHome: _addSubItem,
       ),
       body: Row(
         children: [
-          // Sidebar
           Container(
             width: 250,
             color: Colors.grey.shade100,
             child: Column(
               children: [
                 const SizedBox(height: 24),
-                Text("List: ${parent.title}", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                Text(
+                  "List: ${parent.title}",
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                ),
                 const Divider(),
-                const Expanded(child: Center(child: Text("Sidebar widgets here"))),
+                const Expanded(
+                  child: Center(child: Text("Sidebar widgets here")),
+                ),
               ],
             ),
           ),
-
-          // Main content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -161,22 +225,36 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 4),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Basic Info", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(
+                          "Basic Info",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 12),
                         TextFormField(
                           initialValue: parent.title,
-                          decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: 'Title',
+                            border: OutlineInputBorder(),
+                          ),
                           readOnly: true,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           initialValue: parent.subtitle,
-                          decoration: const InputDecoration(labelText: 'Subtitle', border: OutlineInputBorder()),
+                          decoration: const InputDecoration(
+                            labelText: 'Subtitle',
+                            border: OutlineInputBorder(),
+                          ),
                           readOnly: true,
                         ),
                       ],
@@ -197,7 +275,13 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                             children: [
                               const Icon(Iconsax.document),
                               const SizedBox(width: 8),
-                              Text("Items in ${parent.title}", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
+                              Text(
+                                "Items in ${parent.title}",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                           const Divider(),
@@ -208,44 +292,80 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                               children: [
                                 const Icon(Iconsax.add_circle),
                                 const SizedBox(width: 8),
-                                Text("Add Item", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w500)),
+                                Text(
+                                  "Add Item",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 16),
                           Expanded(
                             child: isLoading
-                                ? const Center(child: CircularProgressIndicator())
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
                                 : filteredSubItems.isEmpty
                                 ? const Center(child: Text("No items found"))
                                 : ReorderableListView.builder(
-                              itemCount: filteredSubItems.length,
-                              onReorder: _onReorder,
+                                    buildDefaultDragHandles: false,
+                                    itemCount: filteredSubItems.length,
+                                    onReorder: _onReorder,
                               itemBuilder: (context, index) {
                                 final item = filteredSubItems[index];
+                                final imageWidget = item.image is Uint8List
+                                    ? Image.memory(item.image as Uint8List, height: 50, width: 50, fit: BoxFit.cover)
+                                    : (item.image!.isNotEmpty
+                                    ? Image.network(
+                                  Uri.decodeFull(item.image.toString()),
+                                  height: 50,
+                                  width: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    width: 50,
+                                    height: 50,
+                                    color: Colors.grey.shade300,
+                                    child: const Icon(Icons.broken_image),
+                                  ),
+                                )
+                                    : Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.grey.shade300,
+                                  child: const Icon(Icons.image_not_supported),
+                                ));
+
                                 return ListTile(
                                   key: ValueKey(item.id),
-                                  leading: const Icon(Iconsax.element_3),
-                                  title: Text(item.title, style: GoogleFonts.poppins()),
-                                  subtitle: Text(item.subtitle ?? '', style: GoogleFonts.poppins(fontSize: 12)),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                                  title: Row(
                                     children: [
-                                      if (item.type == 'list')
-                                        IconButton(
-                                          icon: const Icon(Iconsax.arrow_right_34),
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => ListItemDetailsPage(
-                                                  parentItem: item,
-                                                  rootItem: rootItem,
-                                                ),
+                                      ReorderableDragStartListener(
+                                        index: index,
+                                        child: const Icon(Iconsax.element_3, size: 20),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: imageWidget,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(item.title, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                                            if (item.subtitle != null && item.subtitle!.isNotEmpty)
+                                              Text(
+                                                item.subtitle!,
+                                                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
                                               ),
-                                            ).then((_) => _loadSubItems());
-                                          },
+                                          ],
                                         ),
+                                      ),
                                       IconButton(
                                         icon: const Icon(Iconsax.trash),
                                         onPressed: () => _onRemoveItem(index),
@@ -254,7 +374,7 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                                   ),
                                 );
                               },
-                            ),
+                                  ),
                           ),
                         ],
                       ),

@@ -7,7 +7,6 @@ import '../../Controller/Get_all_item_controller.dart';
 import '../../Model/Item_Model.dart';
 import '../../View_model/Listitem_details.dart';
 import '../PopUp/Add_item_mobapp.dart';
-import '../PopUp/Mobile_app _additem.dart';
 import '../PopUp/Right_drawer.dart';
 import 'Home_mobapp.dart';
 
@@ -74,6 +73,9 @@ class _MobileAppsState extends State<MobileApps> {
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: CustomRightDrawer(
+        isInSublist: false,  // Because this is the root "Home" page
+        parentId: null,      // No parent ID at root level
+        rootItem: null,      // No rootItem at the root level
         onAddItemToHome: (ItemModel newItem) {
           setState(() {
             items.add(newItem);
@@ -96,7 +98,6 @@ class _MobileAppsState extends State<MobileApps> {
       ),
     );
   }
-
 
   Widget _buildTopCards(BuildContext context) {
     final cardLabels = [
@@ -211,95 +212,6 @@ class _MobileAppsState extends State<MobileApps> {
     }
   }
 
-  // Widget _buildHomeContent(BoxConstraints constraints) {
-  //   return HomeContent(
-  //     constraints: constraints,
-  //     items: items.map((item) => {
-  //       'title': item.title,
-  //       'image': item.image ?? '',
-  //     }).toList(),
-  //     onShowItemDetails: (index) => showItemDetailsDialog(context, index),
-  //     onReorder: (oldIndex, newIndex) async {
-  //       if (newIndex > oldIndex) newIndex -= 1;
-  //       setState(() {
-  //         final item = items.removeAt(oldIndex);
-  //         items.insert(newIndex, item);
-  //       });
-  //
-  //       try {
-  //         await ItemService.reorderItems(items);
-  //       } catch (e) {
-  //         debugPrint('Failed to update order: $e');
-  //       }
-  //     },
-  //     onRemoveItem: (index) async {
-  //       try {
-  //         await ItemService.deleteItem(items[index].id);
-  //         setState(() {
-  //           items.removeAt(index);
-  //         });
-  //       } catch (e) {
-  //         debugPrint('Failed to delete item: $e');
-  //       }
-  //     },
-  //     onOpenDrawer: () => _scaffoldKey.currentState?.openEndDrawer(),
-  //   );
-  // }
-
-  // Widget _buildHomeContent(BoxConstraints constraints) {
-  //   return HomeContent(
-  //     constraints: constraints,
-  //     items: items.map((item) => {
-  //       '_id': item.id,
-  //       'title': item.title,
-  //       'subtitle': item.subtitle ?? '',
-  //       'url': item.url ?? '',
-  //       'image': item.image ?? '',
-  //       'imageName': item.imageName ?? '',
-  //       'type': item.type ?? '',
-  //     }).toList(),
-  //     onShowItemDetails: (index) {
-  //       final item = items[index];
-  //       if (item.type == 'list') {
-  //         print('${item.id}');
-  //
-  //         Navigator.push(
-  //           context,
-  //           MaterialPageRoute(
-  //             builder: (context) => ListItemDetailsPage(parentItem: item),
-  //           ),
-  //         );
-  //       } else {
-  //         showItemDetailsDialog(context, index);
-  //       }
-  //     },
-  //     onReorder: (oldIndex, newIndex) async {
-  //       if (newIndex > oldIndex) newIndex -= 1;
-  //       setState(() {
-  //         final item = items.removeAt(oldIndex);
-  //         items.insert(newIndex, item);
-  //       });
-  //
-  //       try {
-  //         await ItemService.reorderItems(items);
-  //       } catch (e) {
-  //         debugPrint('Failed to update order: $e');
-  //       }
-  //     },
-  //     onRemoveItem: (index) async {
-  //       try {
-  //         await ItemService.deleteItem(items[index].id);
-  //         setState(() {
-  //           items.removeAt(index);
-  //         });
-  //       } catch (e) {
-  //         debugPrint('Failed to delete item: $e');
-  //       }
-  //     },
-  //     onOpenDrawer: () => _scaffoldKey.currentState?.openEndDrawer(),
-  //   );
-  // }
-
   Widget _buildHomeContent(BoxConstraints constraints) {
     return HomeContent(
       constraints: constraints,
@@ -344,7 +256,6 @@ class _MobileAppsState extends State<MobileApps> {
       onOpenDrawer: () => _scaffoldKey.currentState?.openEndDrawer(),
     );
   }
-
 
   Widget _buildServiceTimeContent() {
     return const Padding(

@@ -69,6 +69,24 @@ class ListController {
     }
   }
 
+  // ✅ Delete a list (recursively)
+  static Future<void> deleteList(String id) async {
+    final url = '$baseUrl/api/lists/$id';
+    print('DELETE $url');
+
+    final res = await http.delete(Uri.parse(url));
+
+    print('Response status: ${res.statusCode}');
+    print('Response body: ${res.body}');
+
+    if (res.statusCode == 200) {
+      print('List deleted successfully');
+    } else {
+      throw Exception('Failed to delete list: ${res.body}');
+    }
+  }
+
+
   // ✅ Get recursive tree of list
   static Future<ListModel> fetchTreeById(String id) async {
     final url = '$baseUrl/api/lists/tree/$id';
@@ -83,6 +101,25 @@ class ListController {
       return ListModel.fromJson(json.decode(res.body));
     } else {
       throw Exception('Failed to load list tree');
+    }
+  }
+
+  // ✅ Reorder items by sending array of {_id, index}
+// ✅ Reorder lists
+  static Future<void> reorderLists(List<Map<String, dynamic>> items) async {
+    final url = '$baseUrl/api/lists/reorder';
+    final res = await http.put(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({"items": items}),
+    );
+
+    print('PUT $url');
+    print('Payload: ${json.encode({"items": items})}');
+    print('Response: ${res.statusCode} ${res.body}');
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to reorder lists: ${res.body}');
     }
   }
 
