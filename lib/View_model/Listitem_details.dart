@@ -1,10 +1,7 @@
-// ✅ ListItemDetailsPage
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-
 import '../../Model/Item_Model.dart';
 import '../../Controller/Get_all_item_controller.dart';
 import '../Controller/right_drawer_controller.dart';
@@ -202,12 +199,6 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
             color: Colors.grey.shade100,
             child: Column(
               children: [
-                const SizedBox(height: 24),
-                Text(
-                  "List: ${parent.title}",
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                ),
-                const Divider(),
                 const Expanded(
                   child: Center(child: Text("Sidebar widgets here")),
                 ),

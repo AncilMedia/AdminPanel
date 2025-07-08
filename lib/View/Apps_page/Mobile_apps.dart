@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:ancilmediaadminpanel/View/PopUp/Mobile_app%20_additem.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -212,6 +213,50 @@ class _MobileAppsState extends State<MobileApps> {
     }
   }
 
+  // Widget _buildHomeContent(BoxConstraints constraints) {
+  //   return HomeContent(
+  //     constraints: constraints,
+  //     items: items.map((itm) => {
+  //       '_id': itm.id,
+  //       'title': itm.title,
+  //       'subtitle': itm.subtitle ?? '',
+  //       'image': itm.image ?? '',
+  //       'type': itm.type ?? '',
+  //     }).toList(),
+  //     onShowItemDetails: (idx) {
+  //       final it = items[idx];
+  //       if (it.type == 'list') {
+  //         Navigator.push(context, MaterialPageRoute(
+  //           builder: (_) => ListItemDetailsPage(parentItem: it),
+  //         ));
+  //       }
+  //     },
+  //     onReorder: (oldIndex, newIndex) async {
+  //       if (newIndex > oldIndex) newIndex -= 1;
+  //       setState(() {
+  //         final item = items.removeAt(oldIndex);
+  //         items.insert(newIndex, item);
+  //       });
+  //
+  //       try {
+  //         await ItemService.reorderItems(items);
+  //       } catch (e) {
+  //         debugPrint('Failed to update order: $e');
+  //       }
+  //     },
+  //     onRemoveItem: (index) async {
+  //       try {
+  //         await ItemService.deleteItem(items[index].id);
+  //         setState(() {
+  //           items.removeAt(index);
+  //         });
+  //       } catch (e) {
+  //         debugPrint('Failed to delete item: $e');
+  //       }
+  //     },
+  //     onOpenDrawer: () => _scaffoldKey.currentState?.openEndDrawer(),
+  //   );
+  // }
   Widget _buildHomeContent(BoxConstraints constraints) {
     return HomeContent(
       constraints: constraints,
@@ -222,12 +267,48 @@ class _MobileAppsState extends State<MobileApps> {
         'image': itm.image ?? '',
         'type': itm.type ?? '',
       }).toList(),
-      onShowItemDetails: (idx) {
+      onShowItemDetails: (idx) async {
         final it = items[idx];
-        if (it.type == 'list') {
-          Navigator.push(context, MaterialPageRoute(
-            builder: (_) => ListItemDetailsPage(parentItem: it),
-          ));
+        final type = it.type ?? 'list';
+
+        if (type == 'list') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ListItemDetailsPage(parentItem: it),
+            ),
+          );
+        } else {
+          final result = await showDialog<Map<String, dynamic>>(
+            context: context,
+            builder: (_) => AddItemDialog(
+              initialTitle: it.title,
+              initialSubtitle: it.subtitle ?? '',
+              initialImage: it.image ?? '',
+              initialUrl: it.url ?? '',
+              initialType: it.type ?? 'link',
+              itemId: it.id,
+            ),
+          );
+
+          if (result != null) {
+            // Handle updated values
+            setState(() {
+              it.title = result['title'];
+              it.subtitle = result['subtitle'];
+              it.image = result['image'];
+              it.type = result['type'];
+              it.url = result['externalUrl']; // Ensure this is passed correctly
+              it.imageName = result['imageName'];
+            });
+
+            // Optional: send update to backend
+            try {
+              await ItemService.updateItem(it); // ← Implement this if needed
+            } catch (e) {
+              debugPrint('Failed to update item: $e');
+            }
+          }
         }
       },
       onReorder: (oldIndex, newIndex) async {

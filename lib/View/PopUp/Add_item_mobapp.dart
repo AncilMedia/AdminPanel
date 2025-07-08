@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 
-import '../../Controller/Item_controller_add.dart'; // ✅ Your API controller
+import '../../Controller/Item_controller_add.dart';
 
 class ItemDetailsDialog extends StatefulWidget {
   final Map<String, dynamic> item;

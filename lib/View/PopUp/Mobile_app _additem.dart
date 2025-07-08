@@ -3,29 +3,54 @@ import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../../Controller/Add_item_controller.dart';
 
 class AddItemDialog extends StatefulWidget {
-  const AddItemDialog({super.key});
+  final String? initialTitle;
+  final String? initialSubtitle;
+  final String? initialImage;
+  final String? initialUrl;
+  final String? initialType;
+  final String? itemId;
+
+  const AddItemDialog({
+    super.key,
+    this.initialTitle,
+    this.initialSubtitle,
+    this.initialImage,
+    this.initialUrl,
+    this.initialType,
+    required this.itemId,
+  });
 
   @override
   State<AddItemDialog> createState() => _AddItemDialogState();
 }
 
 class _AddItemDialogState extends State<AddItemDialog> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _imageUrlController = TextEditingController();
-  final TextEditingController _UrlController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _subtitleController;
+  late final TextEditingController _imageUrlController;
+  late final TextEditingController _urlController;
 
   Uint8List? imageBytes;
   String? imageName;
   bool isLoading = false;
+  late String selectedType;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.initialTitle ?? '');
+    _subtitleController = TextEditingController(text: widget.initialSubtitle ?? '');
+    _imageUrlController = TextEditingController(text: widget.initialImage ?? '');
+    _urlController = TextEditingController(text: widget.initialUrl ?? '');
+    selectedType = widget.initialType ?? 'link';
+  }
 
   void pickImageWeb() {
     final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
     uploadInput.click();
-
     uploadInput.onChange.listen((event) {
       final file = uploadInput.files?.first;
       if (file != null) {
@@ -36,7 +61,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
             setState(() {
               imageBytes = reader.result as Uint8List;
               imageName = file.name;
-              _imageUrlController.clear(); // Clear URL input if file is picked
+              _imageUrlController.clear();
             });
           }
         });
@@ -47,14 +72,16 @@ class _AddItemDialogState extends State<AddItemDialog> {
   @override
   void dispose() {
     _titleController.dispose();
+    _subtitleController.dispose();
     _imageUrlController.dispose();
-    _UrlController.dispose();
+    _urlController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final hasUrl = _imageUrlController.text.trim().isNotEmpty;
+
     final imageWidget = imageBytes != null
         ? Stack(
       children: [
@@ -62,8 +89,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
           borderRadius: BorderRadius.circular(12),
           child: Image.memory(
             imageBytes!,
-            height: 100,
-            width: 100,
+            height: 160,
+            width: 160,
             fit: BoxFit.cover,
           ),
         ),
@@ -85,11 +112,10 @@ class _AddItemDialogState extends State<AddItemDialog> {
           borderRadius: BorderRadius.circular(12),
           child: Image.network(
             _imageUrlController.text.trim(),
-            height: 100,
-            width: 100,
+            height: 160,
+            width: 160,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-            const Icon(Icons.broken_image, size: 40),
+            errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 50),
           ),
         ),
         Positioned(
@@ -104,62 +130,44 @@ class _AddItemDialogState extends State<AddItemDialog> {
       ],
     )
         : const SizedBox(
-      width: 100,
-      height: 100,
+      width: 160,
+      height: 160,
       child: Center(
-        child: Icon(Icons.image, size: 40, color: Colors.grey),
+        child: Icon(Icons.image, size: 50, color: Colors.grey),
       ),
     );
 
     return AlertDialog(
       backgroundColor: const Color(0xFFEAE7DD),
       title: Text(
-        "Add New Item",
+        "Update ${selectedType == 'link' ? 'Link' : 'Event'}",
         style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16),
       ),
       content: SizedBox(
-        width: 550,
+        width: 750,
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Form
+              // Left: Form Fields
               Expanded(
                 child: AbsorbPointer(
                   absorbing: isLoading,
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: InputDecoration(
-                          labelText: "Title",
-                          labelStyle: GoogleFonts.poppins(),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 12),
-                        ),
-                      ),
+                      _buildLabel("Title"),
+                      _buildTextField(_titleController),
                       const SizedBox(height: 8),
+                      _buildLabel("Subtitle"),
+                      _buildTextField(_subtitleController),
+                      const SizedBox(height: 8),
+                      _buildLabel("Image URL"),
                       Row(
                         children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _imageUrlController,
-                              decoration: InputDecoration(
-                                labelText: "Image URL",
-                                labelStyle: GoogleFonts.poppins(),
-                                border: const OutlineInputBorder(),
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 12),
-                              ),
-                              onChanged: (_) => setState(() {
-                                imageBytes = null;
-                              }),
-                            ),
-                          ),
+                          Expanded(child: _buildTextField(_imageUrlController, onChanged: (_) {
+                            setState(() => imageBytes = null);
+                          })),
                           const SizedBox(width: 8),
                           IconButton(
                             icon: const Icon(Icons.upload_file),
@@ -171,23 +179,14 @@ class _AddItemDialogState extends State<AddItemDialog> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _UrlController,
-                        decoration: InputDecoration(
-                          labelText: "External Url",
-                          labelStyle: GoogleFonts.poppins(),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 12),
-                        ),
-                      ),
+                      _buildLabel("External URL"),
+                      _buildTextField(_urlController),
                     ],
                   ),
                 ),
               ),
               const SizedBox(width: 16),
-              // Image Preview
+              // Right: Image Preview
               imageWidget,
             ],
           ),
@@ -196,7 +195,6 @@ class _AddItemDialogState extends State<AddItemDialog> {
       actions: [
         Row(
           children: [
-            // Cancel
             Expanded(
               child: InkWell(
                 onTap: () {
@@ -212,14 +210,12 @@ class _AddItemDialogState extends State<AddItemDialog> {
                   ),
                   child: Text(
                     "Cancel",
-                    style: GoogleFonts.poppins(
-                        fontSize: 16, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 16),
-            // Add
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -233,45 +229,50 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 onPressed: isLoading
                     ? null
                     : () async {
-                  final title = _titleController.text.trim();
-                  final imageUrl = _imageUrlController.text.trim();
-                  final externalUrl = _UrlController.text.trim();
-
-                  if (title.isEmpty) {
-                    debugPrint('[Error] Title is empty');
-                    return;
-                  }
-
-                  if (imageBytes == null && imageUrl.isEmpty) {
-                    debugPrint('[Error] No image provided');
+                  if (widget.itemId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Error: Missing item ID")),
+                    );
                     return;
                   }
 
                   setState(() => isLoading = true);
 
+                  final title = _titleController.text.trim();
+                  final subtitle = _subtitleController.text.trim();
+                  final imageUrl = _imageUrlController.text.trim();
+                  final externalUrl = _urlController.text.trim();
+
                   try {
                     final uploadedImageUrl = await AddItemController.uploadItem(
+                      itemId: widget.itemId!,
                       title: title,
+                      subtitle: subtitle,
                       imageBytes: imageBytes,
                       imageUrl: imageBytes == null ? imageUrl : null,
-                      externalUrl: externalUrl, // 👈 passed to controller
+                      externalUrl: externalUrl,
+                      type: selectedType,
                     );
 
-                    if (uploadedImageUrl != null) {
-                      print('[Success] Item uploaded: $uploadedImageUrl');
-                      if (context.mounted) {
-                        Navigator.pop<Map<String, dynamic>>(context, {
-                          'title': title,
-                          'image': uploadedImageUrl,
-                          'externalUrl': externalUrl, // 👈 returned to caller
-                          if (imageName != null) 'imageName': imageName,
-                        });
-                      }
+                    if (uploadedImageUrl != null && context.mounted) {
+                      Navigator.pop<Map<String, dynamic>>(context, {
+                        'title': title,
+                        'subtitle': subtitle,
+                        'image': uploadedImageUrl,
+                        'externalUrl': externalUrl,
+                        'type': selectedType,
+                        if (imageName != null) 'imageName': imageName,
+                      });
                     } else {
-                      print('[Error] Upload failed: returned null');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Failed to update item")),
+                      );
                     }
                   } catch (e) {
-                    print('[Exception] Upload error: $e');
+                    debugPrint('[Upload error] $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
                   } finally {
                     if (mounted) setState(() => isLoading = false);
                   }
@@ -286,9 +287,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                       : Text(
-                    "Add",
-                    style: GoogleFonts.poppins(
-                        fontSize: 16, fontWeight: FontWeight.w500),
+                    "Update",
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
@@ -296,6 +296,25 @@ class _AddItemDialogState extends State<AddItemDialog> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, {Function(String)? onChanged}) {
+    return TextFormField(
+      controller: controller,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        border: const OutlineInputBorder(),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      ),
     );
   }
 }

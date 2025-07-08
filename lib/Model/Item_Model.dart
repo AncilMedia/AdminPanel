@@ -1,16 +1,13 @@
 class ItemModel {
-  final String id;
-  final String title;
-  final String? subtitle;
-  final String? image;
-  final String? type;
-  final String? parentId;
-
-  // ✅ Make this mutable
+  String id;
+  String title;
+  String? subtitle;
+  String? image;
+  String? type;
+  String? parentId;
   int? index;
-
-  final String? url;
-  final String? imageName;
+  String? url;
+  String? imageName;
 
   ItemModel({
     required this.id,
@@ -19,7 +16,7 @@ class ItemModel {
     this.image,
     this.type,
     this.parentId,
-    this.index,         // ✅ keep in constructor
+    this.index,
     this.url,
     this.imageName,
   });
@@ -32,7 +29,7 @@ class ItemModel {
       image: json['image'],
       type: json['type'],
       parentId: json['parentId'],
-      index: json['index'],           // ✅ support from API
+      index: json['index'],
       url: json['url'],
       imageName: json['imageName'],
     );
