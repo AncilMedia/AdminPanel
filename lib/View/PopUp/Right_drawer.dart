@@ -1,8 +1,10 @@
+// imports unchanged
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import '../../Controller/right_drawer_controller.dart';
 import '../../Controller/Get_all_item_controller.dart';
 import '../../Model/list_model.dart';
@@ -12,8 +14,41 @@ import '../../View_model/Listitem_details.dart';
 enum DrawerSelection { list, link, event }
 
 extension StringCasing on String {
-  String capitalize() =>
-      length > 0 ? '${this[0].toUpperCase()}${substring(1)}' : this;
+  String capitalize() => length > 0 ? '${this[0].toUpperCase()}${substring(1)}' : this;
+}
+
+extension DrawerSelectionExtension on DrawerSelection {
+  bool get isList => this == DrawerSelection.list;
+  bool get isLink => this == DrawerSelection.link;
+  bool get isEvent => this == DrawerSelection.event;
+}
+
+void showCustomSnackBar(BuildContext context, String message, bool isSuccess) {
+  final screenWidth = MediaQuery.of(context).size.width;
+
+  final snackBar = SnackBar(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    behavior: SnackBarBehavior.floating,
+    content: Center(
+      child: Container(
+        width: screenWidth * 1,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        decoration: BoxDecoration(
+          color: isSuccess ? Colors.green : Colors.red,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ),
+    ),
+    duration: const Duration(seconds: 3),
+  );
+
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
 
 class CustomRightDrawer extends StatefulWidget {
@@ -34,8 +69,7 @@ class CustomRightDrawer extends StatefulWidget {
   State<CustomRightDrawer> createState() => _CustomRightDrawerState();
 }
 
-class _CustomRightDrawerState extends State<CustomRightDrawer>
-    with SingleTickerProviderStateMixin {
+class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTickerProviderStateMixin {
   DrawerSelection selected = DrawerSelection.list;
   List<ListModel> recentLists = [];
   bool showCreateForm = false;
@@ -44,9 +78,8 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
   String newUrl = '';
   Uint8List? pickedImage;
   bool isLoading = false;
+  bool isSaving = false;
   String searchQuery = '';
-
-  // Animation flags
   bool animateButton = false;
 
   @override
@@ -62,28 +95,24 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
     setState(() => isLoading = true);
     try {
       if (widget.isInSublist) {
-        final lists = await ListController.fetchLists(
-          parentId: widget.parentId,
-        );
-        final filtered = lists.where((l) => l.type == selected.name).toList();
-        setState(() => recentLists = filtered);
+        final lists = await ListController.fetchLists(parentId: widget.parentId);
+        setState(() => recentLists = lists.where((l) => l.type == selected.name).toList());
       } else {
-        final items = await ItemService.fetchItems();
-        final lists = items
-            .where((i) => i.type == selected.name)
-            .map(
-              (i) => ListModel(
-                id: i.id,
-                title: i.title,
-                subtitle: i.subtitle,
-                image: i.image ?? '',
-                parentId: i.parentId,
-                index: i.index ?? 0,
-                type: i.type,
-              ),
-            )
-            .toList();
-        setState(() => recentLists = lists);
+        final items = await ItemService.fetchItems(parentId: null); // ✅ FIXED
+        setState(() {
+          recentLists = items
+              .where((i) => i.type == selected.name)
+              .map((i) => ListModel(
+            id: i.id,
+            title: i.title,
+            subtitle: i.subtitle,
+            image: i.image ?? '',
+            parentId: i.parentId,
+            index: i.index ?? 0,
+            type: i.type,
+          ))
+              .toList();
+        });
       }
     } catch (e) {
       debugPrint('Failed to load items: $e');
@@ -93,53 +122,89 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
   }
 
   Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      withData: true,
-    );
+    final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
     if (result != null && result.files.single.bytes != null) {
       setState(() => pickedImage = result.files.single.bytes!);
     }
   }
 
+  // Future<void> _handleCreateNewList() async {
+  //   if (newTitle.trim().isEmpty) {
+  //     showCustomSnackBar(context, 'Title is required', false);
+  //     return;
+  //   }
+  //   setState(() => isSaving = true);
+  //   try {
+  //     ListModel newList;
+  //     if (widget.isInSublist && selected.isList) {
+  //       newList = await ListController.createList(
+  //         newTitle.trim(),
+  //         newSubtitle.trim(),
+  //         imageBytes: pickedImage,
+  //         parentId: widget.parentId,
+  //       );
+  //     } else {
+  //       final item = await ItemService.createItem(
+  //         title: newTitle.trim(),
+  //         subtitle: newSubtitle.trim(),
+  //         url: selected.isLink ? newUrl.trim() : '',
+  //         type: selected.name,
+  //         imageBytes: pickedImage,
+  //         parentId: widget.isInSublist ? widget.parentId : null,
+  //       );
+  //       newList = ListModel(
+  //         id: item.id,
+  //         title: item.title,
+  //         subtitle: item.subtitle,
+  //         image: item.image ?? '',
+  //         parentId: item.parentId,
+  //         index: item.index ?? 0,
+  //         type: item.type,
+  //       );
+  //     }
+  //
+  //     final newItem = ItemModel(
+  //       id: newList.id,
+  //       title: newList.title,
+  //       subtitle: newList.subtitle,
+  //       image: newList.image,
+  //       type: newList.type ?? selected.name,
+  //       parentId: newList.parentId,
+  //       index: newList.index,
+  //     );
+  //
+  //     widget.onAddItemToHome?.call(newItem);
+  //     setState(() {
+  //       showCreateForm = false;
+  //       newTitle = '';
+  //       newSubtitle = '';
+  //       newUrl = '';
+  //       pickedImage = null;
+  //     });
+  //     showCustomSnackBar(context, "Item created successfully!", true);
+  //     await _loadLists();
+  //   } catch (e) {
+  //     debugPrint("Create item failed: $e");
+  //     showCustomSnackBar(context, "Failed to save", false);
+  //   } finally {
+  //     setState(() => isSaving = false);
+  //   }
+  // }
   Future<void> _handleCreateNewList() async {
     if (newTitle.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Title is required')));
+      showCustomSnackBar(context, 'Title is required', false);
       return;
     }
-
+    setState(() => isSaving = true);
     try {
-      ListModel newList;
-
-      if (widget.isInSublist && selected == DrawerSelection.list) {
-        newList = await ListController.createList(
-          newTitle.trim(),
-          newSubtitle.trim(),
-          imageBytes: pickedImage,
-          parentId: widget.parentId,
-        );
-      } else {
-        final item = await ItemService.createItem(
-          title: newTitle.trim(),
-          subtitle: newSubtitle.trim(),
-          url: selected == DrawerSelection.link ? newUrl.trim() : '',
-          type: selected.name,
-          imageBytes: pickedImage,
-          parentId: widget.isInSublist ? widget.parentId : null,
-        );
-
-        newList = ListModel(
-          id: item.id,
-          title: item.title,
-          subtitle: item.subtitle,
-          image: item.image ?? '',
-          parentId: item.parentId,
-          index: item.index ?? 0,
-          type: item.type,
-        );
-      }
+      final newList = await ListController.createList(
+        newTitle.trim(),
+        newSubtitle.trim(),
+        imageBytes: pickedImage,
+        parentId: widget.isInSublist ? widget.parentId : null,
+        type: selected.name,
+        url: selected.isLink ? newUrl.trim() : null,
+      );
 
       final newItem = ItemModel(
         id: newList.id,
@@ -152,7 +217,6 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
       );
 
       widget.onAddItemToHome?.call(newItem);
-
       setState(() {
         showCreateForm = false;
         newTitle = '';
@@ -160,23 +224,20 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
         newUrl = '';
         pickedImage = null;
       });
-
+      showCustomSnackBar(context, "Item created successfully!", true);
       await _loadLists();
     } catch (e) {
       debugPrint("Create item failed: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      showCustomSnackBar(context, "Failed to save", false);
+    } finally {
+      setState(() => isSaving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final filteredLists = recentLists
-        .where(
-          (list) =>
-              list.title.toLowerCase().contains(searchQuery.toLowerCase()),
-        )
+        .where((list) => list.title.toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
 
     return SizedBox(
@@ -186,9 +247,7 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: showCreateForm
-                ? _buildCreateForm()
-                : _buildMainDrawer(filteredLists),
+            child: showCreateForm ? _buildCreateForm() : _buildMainDrawer(filteredLists),
           ),
         ),
       ),
@@ -199,10 +258,7 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Select Type:",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
+        Text("Select Type:", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         for (var option in DrawerSelection.values)
           RadioListTile<DrawerSelection>(
             title: Text(option.name.capitalize(), style: GoogleFonts.poppins()),
@@ -225,162 +281,111 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
           onChanged: (val) => setState(() => searchQuery = val),
         ),
         const SizedBox(height: 10),
-
-        /// ⏬ Animated divider + button combo
-        AnimatedSize(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-          child: Column(
-            children: [
-              // Top divider
-              Row(
-                children: [
-                  Expanded(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      height: 1,
-                      color: Colors.grey,
-                      margin: EdgeInsets.only(
-                        right: animateButton
-                            ? 8
-                            : MediaQuery.of(context).size.width * 0.05,
-                      ),
-                    ),
+        Row(
+          children: [
+            Expanded(child: Divider(color: Colors.grey)),
+            const SizedBox(width: 10),
+            Expanded(child: Divider(color: Colors.grey)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 600),
+          opacity: animateButton ? 1.0 : 0.0,
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 600),
+            scale: animateButton ? 1.0 : 0.8,
+            curve: Curves.easeOutBack,
+            child: GestureDetector(
+              onTap: () => setState(() => showCreateForm = true),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Container(
+                  height: MediaQuery.of(context).size.height * .0400,
+                  width: MediaQuery.of(context).size.width * .110,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.purpleAccent.shade100,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      height: 1,
-                      color: Colors.grey,
-                      margin: EdgeInsets.only(
-                        left: animateButton
-                            ? 8
-                            : MediaQuery.of(context).size.width * 0.05,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              // Button animation
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 600),
-                opacity: animateButton ? 1.0 : 0.0,
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 600),
-                  scale: animateButton ? 1.0 : 0.8,
-                  curve: Curves.easeOutBack,
-                  child: GestureDetector(
-                    onTap: () => setState(() => showCreateForm = true),
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: Container(
-                        height: MediaQuery.of(context).size.height * .0400,
-                        width: MediaQuery.of(context).size.width * .110,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.purpleAccent.shade100,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Iconsax.add_circle),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Create ${selected.name.capitalize()}",
-                              style: GoogleFonts.poppins(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Iconsax.add_circle),
+                      const SizedBox(width: 8),
+                      Text("Create ${selected.name.capitalize()}", style: GoogleFonts.poppins()),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeInOut,
-                child: Divider(thickness: 2, color: Colors.purple.shade200),
-              ),
-              const SizedBox(height: 16),
-
-              if (isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (filteredLists.isEmpty)
-                Text(
-                  "No items found",
-                  style: GoogleFonts.poppins(color: Colors.grey),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredLists.length,
-                  itemBuilder: (context, index) {
-                    final list = filteredLists[index];
-                    return FallingListItem(
-                      delay: Duration(milliseconds: 100 * index),
-                      child: ListTile(
-                        leading: list.image.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  list.image,
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      const Icon(Icons.image_not_supported),
-                                ),
-                              )
-                            : const Icon(Iconsax.image, size: 30),
-                        title: Text(list.title, style: GoogleFonts.poppins()),
-                        subtitle: Text(
-                          list.subtitle ?? '',
-                          style: GoogleFonts.poppins(fontSize: 12),
-                        ),
-                        onTap: () {
-                          if ((list.type ?? 'list') == 'list') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ListItemDetailsPage(
-                                  parentItem: ItemModel(
-                                    id: list.id,
-                                    title: list.title,
-                                    subtitle: list.subtitle,
-                                    image: list.image,
-                                    type: 'list',
-                                    parentId: list.parentId,
-                                    index: list.index,
-                                  ),
-                                  rootItem:
-                                      widget.rootItem ??
-                                      ItemModel(
-                                        id: list.id,
-                                        title: list.title,
-                                        subtitle: list.subtitle,
-                                        image: list.image,
-                                        type: 'list',
-                                        parentId: list.parentId,
-                                        index: list.index,
-                                      ),
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-            ],
+            ),
           ),
         ),
+        const SizedBox(height: 8),
+        Divider(thickness: 2, color: Colors.purple.shade200),
+        const SizedBox(height: 16),
+        if (isLoading)
+          Center(child: Lottie.asset('assets/Loading star.json'))
+        else if (filteredLists.isEmpty)
+          Text("No items found", style: GoogleFonts.poppins(color: Colors.grey))
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: filteredLists.length,
+            itemBuilder: (context, index) {
+              final list = filteredLists[index];
+              return FallingListItem(
+                delay: Duration(milliseconds: 100 * index),
+                child: ListTile(
+                  leading: list.image.isNotEmpty
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      list.image,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.image_not_supported),
+                    ),
+                  )
+                      : const Icon(Iconsax.image, size: 30),
+                  title: Text(list.title, style: GoogleFonts.poppins()),
+                  subtitle: Text(list.subtitle ?? '', style: GoogleFonts.poppins(fontSize: 12)),
+                  onTap: () {
+                    if ((list.type ?? 'list') == 'list') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ListItemDetailsPage(
+                            parentItem: ItemModel(
+                              id: list.id,
+                              title: list.title,
+                              subtitle: list.subtitle,
+                              image: list.image,
+                              type: 'list',
+                              parentId: list.parentId,
+                              index: list.index,
+                            ),
+                            rootItem: widget.rootItem ??
+                                ItemModel(
+                                  id: list.id,
+                                  title: list.title,
+                                  subtitle: list.subtitle,
+                                  image: list.image,
+                                  type: 'list',
+                                  parentId: list.parentId,
+                                  index: list.index,
+                                ),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              );
+            },
+          ),
       ],
     );
   }
@@ -403,10 +408,7 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
             ),
             Text(
               "Create New ${selected.name.capitalize()}",
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -426,14 +428,12 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
           ),
           onChanged: (val) => setState(() => newSubtitle = val),
         ),
-        if (selected == DrawerSelection.link) ...[
+        if (selected.isLink) ...[
           const SizedBox(height: 12),
           TextFormField(
             decoration: InputDecoration(
               labelText: 'URL',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onChanged: (val) => setState(() => newUrl = val),
           ),
@@ -450,16 +450,11 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
               color: Colors.grey.shade100,
             ),
             child: pickedImage == null
-                ? Center(
-                    child: Text(
-                      "Tap to pick image",
-                      style: GoogleFonts.poppins(),
-                    ),
-                  )
+                ? Center(child: Text("Tap to pick image", style: GoogleFonts.poppins()))
                 : ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.memory(pickedImage!, fit: BoxFit.cover),
-                  ),
+              borderRadius: BorderRadius.circular(10),
+              child: Image.memory(pickedImage!, fit: BoxFit.cover),
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -467,9 +462,15 @@ class _CustomRightDrawerState extends State<CustomRightDrawer>
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                icon: const Icon(Iconsax.save_2),
-                onPressed: _handleCreateNewList,
-                label: Text("Save", style: GoogleFonts.poppins()),
+                icon: isSaving
+                    ? SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Lottie.asset('assets/Bouncing_dots.json'),
+                )
+                    : const Icon(Iconsax.save_2),
+                onPressed: isSaving || newTitle.trim().isEmpty ? null : _handleCreateNewList,
+                label: Text(isSaving ? "Saving..." : "Save", style: GoogleFonts.poppins()),
               ),
             ),
             const SizedBox(width: 12),
@@ -503,8 +504,7 @@ class FallingListItem extends StatefulWidget {
   State<FallingListItem> createState() => _FallingListItemState();
 }
 
-class _FallingListItemState extends State<FallingListItem>
-    with SingleTickerProviderStateMixin {
+class _FallingListItemState extends State<FallingListItem> with SingleTickerProviderStateMixin {
   bool _visible = false;
 
   @override

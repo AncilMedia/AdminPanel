@@ -2,9 +2,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 import '../../Model/Item_Model.dart';
 import '../../Controller/Get_all_item_controller.dart';
 import '../Controller/right_drawer_controller.dart';
+import '../View/PopUp/Mobile_app _additem.dart';
 import '../View/PopUp/Right_drawer.dart';
 
 class ListItemDetailsPage extends StatefulWidget {
@@ -30,9 +32,7 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
   @override
   void initState() {
     super.initState();
-    print(
-      '📥 Entered ListItemDetailsPage with parentItem ID: ${widget.parentItem.id}',
-    );
+    print('📥 Entered ListItemDetailsPage with parentItem ID: ${widget.parentItem.id}');
     rootItem = widget.rootItem ?? widget.parentItem;
     _resolveRootItem();
     _loadSubItems();
@@ -60,16 +60,16 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
 
       setState(() {
         subItems = fetchedLists
-            .map(
-              (list) => ItemModel(
-                id: list.id,
-                title: list.title,
-                subtitle: list.subtitle,
-                image: list.image,
-                type: 'list',
-                parentId: list.parentId,
-              ),
-            )
+            .map((list) => ItemModel(
+          id: list.id,
+          title: list.title,
+          subtitle: list.subtitle,
+          image: list.image,
+          type: list.type,
+          parentId: list.parentId,
+          url: list.url,
+          index: list.index,
+        ))
             .toList();
       });
     } catch (e) {
@@ -81,39 +81,24 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
 
   void _onReorder(int oldIndex, int newIndex) async {
     if (newIndex > oldIndex) newIndex--;
-
     final parentId = widget.parentItem.id;
-
-    // ✅ Get sublists that match this parent
-    final filtered = subItems
-        .where((i) => i.parentId == parentId)
-        .toList();
-
+    final filtered = subItems.where((i) => i.parentId == parentId).toList();
     final item = filtered.removeAt(oldIndex);
     filtered.insert(newIndex, item);
-
-    // ✅ Reassign indexes
     for (int i = 0; i < filtered.length; i++) {
       filtered[i].index = i;
     }
-
-    // ✅ Recombine with other items (not strictly needed here but keeps list complete)
     setState(() {
       subItems = [
         ...subItems.where((i) => i.parentId != parentId),
         ...filtered,
       ];
     });
-
     try {
-      // ✅ Map ItemModel → Map<String, dynamic> (because ListController expects ListModel)
-      final payload = filtered.map((item) {
-        return {
-          "_id": item.id,
-          "index": item.index,
-        };
+      final payload = filtered.map((item) => {
+        "_id": item.id,
+        "index": item.index,
       }).toList();
-
       await ListController.reorderLists(payload);
       debugPrint("✅ Reordered successfully");
     } catch (e) {
@@ -122,11 +107,8 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
   }
 
   Future<void> _onRemoveItem(int index) async {
-    final filtered = subItems
-        .where((i) => i.parentId == widget.parentItem.id)
-        .toList();
+    final filtered = subItems.where((i) => i.parentId == widget.parentItem.id).toList();
     final toDelete = filtered[index];
-
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -147,20 +129,13 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
 
     if (confirm == true) {
       try {
-        if (toDelete.type == 'list') {
-          // 🗑️ Delete recursively via ListController
-          await ListController.deleteList(toDelete.id);
-        } else {
-          // 🗑️ Delete other item types via ItemService
-          await ItemService.deleteItem(toDelete.id);
-        }
-
+        await ListController.deleteList(toDelete.id);
         setState(() => subItems.removeWhere((i) => i.id == toDelete.id));
       } catch (e) {
         debugPrint('Delete failed: $e');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error deleting item: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting item: $e')),
+        );
       }
     }
   }
@@ -177,12 +152,9 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final parent = widget.parentItem;
-    final filteredSubItems = subItems
-        .where((i) => i.parentId == parent.id)
-        .toList();
+    final filteredSubItems = subItems.where((i) => i.parentId == parent.id).toList();
 
     return Scaffold(
       key: _scaffoldKey,
@@ -197,11 +169,9 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
           Container(
             width: 250,
             color: Colors.grey.shade100,
-            child: Column(
+            child: const Column(
               children: [
-                const Expanded(
-                  child: Center(child: Text("Sidebar widgets here")),
-                ),
+                Expanded(child: Center(child: Text("Sidebar widgets here"))),
               ],
             ),
           ),
@@ -216,20 +186,16 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 4),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Basic Info",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        Text("Basic Info",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            )),
                         const SizedBox(height: 12),
                         TextFormField(
                           initialValue: parent.title,
@@ -283,44 +249,46 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                               children: [
                                 const Icon(Iconsax.add_circle),
                                 const SizedBox(width: 8),
-                                Text(
-                                  "Add Item",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                                Text("Add Item",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                    )),
                               ],
                             ),
                           ),
                           const SizedBox(height: 16),
                           Expanded(
                             child: isLoading
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
+                                ? Center(
+                              child: SizedBox(
+                                  height: MediaQuery.of(context).size.height * .2,
+                                  child: Lottie.asset('assets/Bouncing_dots.json')),
+                            )
                                 : filteredSubItems.isEmpty
                                 ? const Center(child: Text("No items found"))
                                 : ReorderableListView.builder(
-                                    buildDefaultDragHandles: false,
-                                    itemCount: filteredSubItems.length,
-                                    onReorder: _onReorder,
+                              buildDefaultDragHandles: false,
+                              itemCount: filteredSubItems.length,
+                              onReorder: _onReorder,
                               itemBuilder: (context, index) {
                                 final item = filteredSubItems[index];
                                 final imageWidget = item.image is Uint8List
-                                    ? Image.memory(item.image as Uint8List, height: 50, width: 50, fit: BoxFit.cover)
+                                    ? Image.memory(item.image as Uint8List,
+                                    height: 50, width: 50, fit: BoxFit.cover)
                                     : (item.image!.isNotEmpty
                                     ? Image.network(
                                   Uri.decodeFull(item.image.toString()),
                                   height: 50,
                                   width: 50,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Container(
-                                    width: 50,
-                                    height: 50,
-                                    color: Colors.grey.shade300,
-                                    child: const Icon(Icons.broken_image),
-                                  ),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        width: 50,
+                                        height: 50,
+                                        color: Colors.grey.shade300,
+                                        child: const Icon(Icons.broken_image),
+                                      ),
                                 )
                                     : Container(
                                   width: 50,
@@ -331,7 +299,34 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
 
                                 return ListTile(
                                   key: ValueKey(item.id),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                                  contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                                  onTap: () {
+                                    final itemType = (item.type ?? '').toLowerCase();
+                                    if (itemType == 'list') {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ListItemDetailsPage(
+                                            parentItem: item,
+                                            rootItem: rootItem,
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => AddItemDialog(
+                                          initialTitle: item.title,
+                                          initialSubtitle: item.subtitle ?? '',
+                                          initialImage: item.image ?? '',
+                                          initialUrl: item.url ?? '',
+                                          initialType: item.type ?? 'link',
+                                          itemId: item.id,
+                                        ),
+                                      );
+                                    }
+                                  },
                                   title: Row(
                                     children: [
                                       ReorderableDragStartListener(
@@ -348,11 +343,16 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(item.title, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-                                            if (item.subtitle != null && item.subtitle!.isNotEmpty)
+                                            Text(item.title,
+                                                style: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.w500)),
+                                            if (item.subtitle != null &&
+                                                item.subtitle!.isNotEmpty)
                                               Text(
                                                 item.subtitle!,
-                                                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                                                style: GoogleFonts.poppins(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[600]),
                                               ),
                                           ],
                                         ),
@@ -365,7 +365,7 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                                   ),
                                 );
                               },
-                                  ),
+                            ),
                           ),
                         ],
                       ),

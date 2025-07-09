@@ -25,10 +25,10 @@ class ItemService {
   // ✅ Create item (with optional image or parentId)
   static Future<ItemModel> createItem({
     required String title,
-    required String subtitle,
-    required String url,
+    String? subtitle,
+    String? url,
     required String type,
-    String? parentId,             // 👈 For nested items
+    String? parentId,
     Uint8List? imageBytes,
     String? imageUrl,
   }) async {
@@ -37,14 +37,14 @@ class ItemService {
 
     // Required fields
     request.fields['title'] = title;
-    request.fields['subtitle'] = subtitle;
-    request.fields['url'] = url;
     request.fields['type'] = type;
 
-    // Optional fields
-    if (parentId != null) {
-      request.fields['parentId'] = parentId;
-    }
+    // ✅ Optional fields
+    if (subtitle != null) request.fields['subtitle'] = subtitle;
+    if (url != null && url.isNotEmpty) request.fields['url'] = url;
+    if (parentId != null) request.fields['parentId'] = parentId;
+    if (imageUrl != null && imageUrl.isNotEmpty) request.fields['image'] = imageUrl;
+
     if (imageBytes != null) {
       request.files.add(http.MultipartFile.fromBytes(
         'imageFile',
@@ -52,16 +52,13 @@ class ItemService {
         filename: 'image.jpg',
       ));
     }
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      request.fields['image'] = imageUrl;
-    }
 
     final response = await request.send();
 
     if (response.statusCode == 201) {
       final responseBody = await response.stream.bytesToString();
       final Map<String, dynamic> jsonData = json.decode(responseBody);
-      return ItemModel.fromJson(jsonData);
+      return ItemModel.fromJson(jsonData['data']);
     } else {
       final errorBody = await response.stream.bytesToString();
       throw Exception('Failed to create item: ${response.statusCode} $errorBody');
@@ -79,7 +76,7 @@ class ItemService {
   // ✅ Reorder items or sub-items
   static Future<void> reorderItems(List<ItemModel> items) async {
     final body = json.encode({
-      'order': items.asMap().entries.map((entry) => {
+      'items': items.asMap().entries.map((entry) => {
         '_id': entry.value.id,
         'index': entry.key,
       }).toList(),
@@ -109,7 +106,6 @@ class ItemService {
       throw Exception('Failed to fetch item by ID: ${response.statusCode}');
     }
   }
-
 
   // ✅ Update item
   static Future<ItemModel> updateItem(ItemModel item) async {

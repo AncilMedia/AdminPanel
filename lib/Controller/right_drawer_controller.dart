@@ -6,37 +6,40 @@ import '../Model/list_model.dart';
 import '../environmental variables.dart';
 
 class ListController {
-  // ✅ Fetch flat lists (optionally by parentId)
+  // ✅ Fetch items (list/link/event) from `lists` collection by parentId
   static Future<List<ListModel>> fetchLists({String? parentId}) async {
     final url = parentId == null
         ? '$baseUrl/api/lists/all'
         : '$baseUrl/api/lists/all?parentId=$parentId';
 
-    print('GET $url');
     final res = await http.get(Uri.parse(url));
-
-    print('Response status: ${res.statusCode}');
-    print('Response body: ${res.body}');
-
     if (res.statusCode == 200) {
-      final List jsonList = json.decode(res.body);
-      return jsonList.map((json) => ListModel.fromJson(json)).toList();
+      final List decoded = json.decode(res.body);
+      return decoded.map((item) => ListModel.fromJson(item)).toList();
     } else {
-      throw Exception('Failed to load lists');
+      throw Exception('Failed to fetch lists: ${res.body}');
     }
   }
 
-  // ✅ Create a list (with optional image and parentId)
+  // ✅ Create a new list/link/event (unified)
   static Future<ListModel> createList(
       String title,
       String subtitle, {
         Uint8List? imageBytes,
         String? parentId,
+        String type = 'list', // 👈 list, link, or event
+        String? url,
       }) async {
     final uri = Uri.parse('$baseUrl/api/lists');
-    final request = http.MultipartRequest('POST', uri)
-      ..fields['title'] = title
-      ..fields['subtitle'] = subtitle;
+    final request = http.MultipartRequest('POST', uri);
+
+    request.fields['title'] = title;
+    request.fields['subtitle'] = subtitle;
+    request.fields['type'] = type;
+
+    if (url != null && url.isNotEmpty) {
+      request.fields['url'] = url;
+    }
 
     if (parentId != null && parentId.isNotEmpty) {
       request.fields['parentId'] = parentId;
@@ -51,52 +54,35 @@ class ListController {
       ));
     }
 
-    print('POST $uri');
-    print('Request fields: ${request.fields}');
-    if (imageBytes != null) print('Image bytes length: ${imageBytes.length}');
-
     final streamedRes = await request.send();
     final res = await http.Response.fromStream(streamedRes);
 
-    print('Response status: ${res.statusCode}');
-    print('Response body: ${res.body}');
-
     if (res.statusCode == 201) {
-      final Map<String, dynamic> data = json.decode(res.body);
-      return ListModel.fromJson(data['data']);
+      final jsonBody = json.decode(res.body);
+      final data = jsonBody['data'] ?? jsonBody;
+      if (data is Map<String, dynamic>) {
+        return ListModel.fromJson(data);
+      } else {
+        throw Exception('Invalid response format: ${res.body}');
+      }
     } else {
       throw Exception('Failed to create list: ${res.body}');
     }
   }
 
-  // ✅ Delete a list (recursively)
+  // ✅ Delete a list or sub-item (recursive on backend)
   static Future<void> deleteList(String id) async {
     final url = '$baseUrl/api/lists/$id';
-    print('DELETE $url');
-
     final res = await http.delete(Uri.parse(url));
-
-    print('Response status: ${res.statusCode}');
-    print('Response body: ${res.body}');
-
-    if (res.statusCode == 200) {
-      print('List deleted successfully');
-    } else {
+    if (res.statusCode != 200) {
       throw Exception('Failed to delete list: ${res.body}');
     }
   }
 
-
-  // ✅ Get recursive tree of list
+  // ✅ Fetch a tree of nested items by ID
   static Future<ListModel> fetchTreeById(String id) async {
     final url = '$baseUrl/api/lists/tree/$id';
-    print('GET $url');
-
     final res = await http.get(Uri.parse(url));
-
-    print('Response status: ${res.statusCode}');
-    print('Response body: ${res.body}');
-
     if (res.statusCode == 200) {
       return ListModel.fromJson(json.decode(res.body));
     } else {
@@ -104,8 +90,7 @@ class ListController {
     }
   }
 
-  // ✅ Reorder items by sending array of {_id, index}
-// ✅ Reorder lists
+  // ✅ Reorder a group of items (pass array of { _id, index })
   static Future<void> reorderLists(List<Map<String, dynamic>> items) async {
     final url = '$baseUrl/api/lists/reorder';
     final res = await http.put(
@@ -114,30 +99,21 @@ class ListController {
       body: json.encode({"items": items}),
     );
 
-    print('PUT $url');
-    print('Payload: ${json.encode({"items": items})}');
-    print('Response: ${res.statusCode} ${res.body}');
-
     if (res.statusCode != 200) {
       throw Exception('Failed to reorder lists: ${res.body}');
     }
   }
 
-  // ✅ Optional: Get all list trees (if route exists)
+  // Optional: Fetch all top-level trees (if supported by backend)
   static Future<List<ListModel>> fetchAllTrees() async {
     final url = '$baseUrl/api/lists/trees';
-    print('GET $url');
-
     final res = await http.get(Uri.parse(url));
-
-    print('Response status: ${res.statusCode}');
-    print('Response body: ${res.body}');
 
     if (res.statusCode == 200) {
       final List jsonList = json.decode(res.body);
       return jsonList.map((json) => ListModel.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to load list trees');
+      throw Exception('Failed to load all trees');
     }
   }
 }

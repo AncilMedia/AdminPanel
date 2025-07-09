@@ -3,6 +3,7 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../Controller/Item_controller_add.dart';
 
@@ -228,7 +229,7 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> {
                       context: context,
                       barrierDismissible: false,
                       builder: (_) =>
-                          const Center(child: CircularProgressIndicator()),
+                           Center(child: Lottie.asset('assets/Loading star.json')),
                     );
 
                     final updatedItem = {
