@@ -6,7 +6,7 @@ import 'package:lottie/lottie.dart';
 import '../../Model/Item_Model.dart';
 import '../../Controller/Get_all_item_controller.dart';
 import '../Controller/right_drawer_controller.dart';
-import '../View/PopUp/Mobile_app _additem.dart';
+import '../View/PopUp/Mobile_app_additem.dart';
 import '../View/PopUp/Right_drawer.dart';
 
 class ListItemDetailsPage extends StatefulWidget {

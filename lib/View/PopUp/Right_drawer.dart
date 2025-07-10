@@ -296,24 +296,26 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
             duration: const Duration(milliseconds: 600),
             scale: animateButton ? 1.0 : 0.8,
             curve: Curves.easeOutBack,
-            child: GestureDetector(
-              onTap: () => setState(() => showCreateForm = true),
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  height: MediaQuery.of(context).size.height * .0400,
-                  width: MediaQuery.of(context).size.width * .110,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.purpleAccent.shade100,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Iconsax.add_circle),
-                      const SizedBox(width: 8),
-                      Text("Create ${selected.name.capitalize()}", style: GoogleFonts.poppins()),
-                    ],
+            child: Center(
+              child: GestureDetector(
+                onTap: () => setState(() => showCreateForm = true),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * .0400,
+                    width: MediaQuery.of(context).size.width * .110,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.purpleAccent.shade100,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Iconsax.add_circle),
+                        const SizedBox(width: 8),
+                        Text("Create ${selected.name.capitalize()}", style: GoogleFonts.poppins()),
+                      ],
+                    ),
                   ),
                 ),
               ),

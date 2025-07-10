@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
       //     index: null,
       //   ),
       // ),
-      home: Apps(),
+      home: LoginPage(),
 
       // home: const Apps(),
     );
