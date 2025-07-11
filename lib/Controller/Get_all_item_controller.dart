@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../Model/Item_Model.dart';
 import '../environmental variables.dart';
 
@@ -32,17 +33,25 @@ class ItemService {
     String? imageUrl,
   }) async {
     final uri = Uri.parse('$baseUrl/api/item');
-    final request = http.MultipartRequest('POST', uri);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('accessToken');
+    final organizationId = prefs.getString('organizationId'); // 👈 Fetch org ID
 
-    request.fields['title'] = title;
-    request.fields['type'] = type;
+    if (token == null) throw Exception('Not authenticated: No access token');
+    if (organizationId == null) throw Exception('No organization ID found');
 
-    if (subtitle != null) request.fields['subtitle'] = subtitle;
-    if (url != null && url.isNotEmpty) request.fields['url'] = url;
-    if (parentId != null) request.fields['parentId'] = parentId;
-    if (imageUrl != null && imageUrl.isNotEmpty) request.fields['image'] = imageUrl;
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..fields['title'] = title
+      ..fields['type'] = type
+      ..fields['organizationId'] = organizationId; // ✅ Send organization ID
 
-    if (imageBytes != null) {
+    if (subtitle?.isNotEmpty ?? false) request.fields['subtitle'] = subtitle!;
+    if (url?.isNotEmpty ?? false) request.fields['url'] = url!;
+    if (parentId?.isNotEmpty ?? false) request.fields['parentId'] = parentId!;
+    if (imageUrl?.isNotEmpty ?? false) request.fields['image'] = imageUrl!;
+
+    if (imageBytes != null && imageBytes.isNotEmpty) {
       request.files.add(http.MultipartFile.fromBytes(
         'imageFile',
         imageBytes,
@@ -58,7 +67,7 @@ class ItemService {
       final data = jsonData['data'] ?? jsonData;
 
       if (data is! Map<String, dynamic>) {
-        throw Exception('Invalid response format: $data');
+        throw Exception('Invalid response format');
       }
 
       return ItemModel.fromJson(data);

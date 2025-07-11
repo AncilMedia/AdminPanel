@@ -17,14 +17,27 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final usernameController = TextEditingController();
-  final fullNameController = TextEditingController();
+  final orgnameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final phoneController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool obscureText = true;
   bool obscureConfirmText = true;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    orgnameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +47,7 @@ class _SignupPageState extends State<SignupPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Decorative circles
+          // Decorative background
           Positioned(
             top: -100,
             left: -100,
@@ -100,18 +113,33 @@ class _SignupPageState extends State<SignupPage> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your username';
-                          }
-                          return null;
-                        },
+                        validator: (value) =>
+                        value == null || value.isEmpty
+                            ? 'Please enter your username'
+                            : null,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Organization
+                      TextFormField(
+                        controller: orgnameController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Organization',
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        validator: (value) =>
+                        value == null || value.isEmpty
+                            ? 'Please enter your organization name'
+                            : null,
                       ),
                       const SizedBox(height: 20),
 
                       // Email
                       TextFormField(
-                        controller: fullNameController,
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           labelText: 'Email',
@@ -123,23 +151,22 @@ class _SignupPageState extends State<SignupPage> {
                             return 'Please enter your email';
                           }
                           final emailRegex = RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          );
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                           if (!emailRegex.hasMatch(value)) {
                             return 'Please enter a valid email address';
                           }
-
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 20),
 
+                      // Phone
                       TextFormField(
                         controller: phoneController,
                         keyboardType: TextInputType.phone,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\+?[0-9]*$')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\+?[0-9]*$')),
                         ],
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
@@ -147,15 +174,13 @@ class _SignupPageState extends State<SignupPage> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your phone number';
-                          }
-                          if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)) {
-                            return 'Enter a valid phone number';
-                          }
-                          return null;
-                        },
+                        validator: (value) =>
+                        value == null || value.isEmpty
+                            ? 'Please enter your phone number'
+                            : !RegExp(r'^\+?[0-9]{10,15}$')
+                            .hasMatch(value)
+                            ? 'Enter a valid phone number'
+                            : null,
                       ),
                       const SizedBox(height: 20),
 
@@ -170,26 +195,23 @@ class _SignupPageState extends State<SignupPage> {
                           fillColor: Colors.white,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              obscureText ? Iconsax.eye_slash : Iconsax.eye,
+                              obscureText
+                                  ? Iconsax.eye_slash
+                                  : Iconsax.eye,
                               color: Colors.grey,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                obscureText = !obscureText;
-                              });
-                            },
+                            onPressed: () =>
+                                setState(() => obscureText = !obscureText),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          return null;
-                        },
+                        validator: (value) =>
+                        value == null || value.isEmpty
+                            ? 'Please enter your password'
+                            : null,
                       ),
                       const SizedBox(height: 20),
 
-                      // Confirm password
+                      // Confirm Password
                       TextFormField(
                         controller: confirmPasswordController,
                         obscureText: obscureConfirmText,
@@ -205,11 +227,8 @@ class _SignupPageState extends State<SignupPage> {
                                   : Iconsax.eye,
                               color: Colors.grey,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                obscureConfirmText = !obscureConfirmText;
-                              });
-                            },
+                            onPressed: () => setState(() =>
+                            obscureConfirmText = !obscureConfirmText),
                           ),
                         ),
                         validator: (value) {
@@ -224,17 +243,23 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 25),
 
-                      // Submit button
+                      // Submit Button
                       MouseRegion(
                         cursor: SystemMouseCursors.click,
                         child: GestureDetector(
                           onTap: () async {
+                            if (_isLoading) return;
+
                             if (_formKey.currentState!.validate()) {
                               setState(() => _isLoading = true);
 
-                              final result = await SignupController.signup(
-                                username: usernameController.text.trim(),
-                                email: fullNameController.text.trim(),
+                              final result =
+                              await SignupController.signup(
+                                username:
+                                usernameController.text.trim(),
+                                organization:
+                                orgnameController.text.trim(),
+                                email: emailController.text.trim(),
                                 phone: phoneController.text.trim(),
                                 password: passwordController.text,
                               );
@@ -242,25 +267,24 @@ class _SignupPageState extends State<SignupPage> {
                               setState(() => _isLoading = false);
 
                               if (result['success']) {
+                                final user = result['user'];
+                                final org = user['organization'];
+                                print(
+                                    "Signup Success: Org ID: ${org['orgId']}, Created At: ${org['createdAt']}");
+
                                 showCustomSnackBar(
-                                  context,
-                                  "Signup successful!",
-                                  true,
-                                );
+                                    context, "Signup successful!", true);
+
                                 await Future.delayed(
-                                  const Duration(seconds: 2),
-                                );
+                                    const Duration(seconds: 2));
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const LoginPage(),
-                                  ),
+                                      builder: (context) =>
+                                      const LoginPage()),
                                 );
                               } else {
-                                print(
-                                  "Signup error response: ${result['raw']}",
-                                );
-
+                                print("Signup error response: ${result['message']}");
                                 showCustomSnackBar(
                                   context,
                                   result['message'] ??
@@ -271,7 +295,8 @@ class _SignupPageState extends State<SignupPage> {
                             }
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding:
+                            const EdgeInsets.symmetric(horizontal: 16),
                             constraints: BoxConstraints(
                               minWidth: 120,
                               maxWidth: screenWidth < 600
@@ -286,27 +311,27 @@ class _SignupPageState extends State<SignupPage> {
                             child: Center(
                               child: _isLoading
                                   ? Lottie.asset(
-                                      'assets/Circular_moving_dot.json',
-                                      width: 40,
-                                      height: 40,
-                                      fit: BoxFit.cover,
-                                    )
+                                'assets/Circular_moving_dot.json',
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                              )
                                   : Text(
-                                      'Sign Up',
-                                      style: GoogleFonts.poppins(
-                                        textStyle: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                    ),
+                                'Sign Up',
+                                style: GoogleFonts.poppins(
+                                  textStyle: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 20),
 
-                      // Already have an account? Sign In
+                      // Sign in prompt
                       Wrap(
                         children: [
                           Text(
@@ -317,12 +342,11 @@ class _SignupPageState extends State<SignupPage> {
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
                               onTap: () {
-                                print("Pressed Sign In from Sign Up");
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => LoginPage(),
-                                  ),
+                                      builder: (context) =>
+                                      const LoginPage()),
                                 );
                               },
                               child: Text(

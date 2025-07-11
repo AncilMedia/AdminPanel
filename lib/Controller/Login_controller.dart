@@ -19,13 +19,25 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
+
+        // 🔐 Tokens
         await prefs.setString('accessToken', responseData['accessToken']);
         await prefs.setString('refreshToken', responseData['refreshToken']);
 
-        if (responseData.containsKey('user')) {
-          await prefs.setString('userRole', responseData['user']['role'] ?? '');
-          await prefs.setString('username', responseData['user']['username'] ?? '');
-          await prefs.setString('userId', responseData['user']['userId'] ?? '');
+        // 👤 User Info
+        final user = responseData['user'];
+        if (user != null) {
+          await prefs.setString('userRole', user['role'] ?? '');
+          await prefs.setString('username', user['username'] ?? '');
+          await prefs.setString('userId', user['userId'] ?? '');
+
+          // 🏢 Organization Info
+          final org = user['organization'];
+          if (org != null) {
+            await prefs.setString('organizationId', org['_id'] ?? '');
+            await prefs.setString('organizationName', org['name'] ?? '');
+            await prefs.setString('orgUniqueId', org['orgId'] ?? '');
+          }
 
           // ✅ Debug log all saved data
           print("✅ Stored in SharedPreferences:");
@@ -34,6 +46,9 @@ class AuthService {
           print("👤 Username: ${prefs.getString('username')}");
           print("🆔 User ID: ${prefs.getString('userId')}");
           print("🛡️ Role: ${prefs.getString('userRole')}");
+          print("🏢 Org ID: ${prefs.getString('organizationId')}");
+          print("🏷️ Org Name: ${prefs.getString('organizationName')}");
+          print("📛 Org Unique ID: ${prefs.getString('orgUniqueId')}");
         }
       }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../Model/list_model.dart';
 import '../environmental variables.dart';
 
@@ -30,11 +31,19 @@ class ListController {
         String? url,
       }) async {
     final uri = Uri.parse('$baseUrl/api/lists');
-    final request = http.MultipartRequest('POST', uri);
 
+    final prefs = await SharedPreferences.getInstance();
+    final organizationId = prefs.getString('organizationId');
+
+    if (organizationId == null) {
+      throw Exception('Organization ID not found in SharedPreferences');
+    }
+
+    final request = http.MultipartRequest('POST', uri);
     request.fields['title'] = title;
     request.fields['subtitle'] = subtitle;
     request.fields['type'] = type;
+    request.fields['organizationId'] = organizationId; // ✅ Include organization
 
     if (url != null && url.isNotEmpty) {
       request.fields['url'] = url;
@@ -69,6 +78,7 @@ class ListController {
       throw Exception('Failed to create list: ${res.body}');
     }
   }
+
 
 
   // ✅ Delete a list or sub-item (recursive on backend)
