@@ -195,28 +195,45 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
       showCustomSnackBar(context, 'Title is required', false);
       return;
     }
-    setState(() => isSaving = true);
-    try {
-      final newList = await ListController.createList(
-        newTitle.trim(),
-        newSubtitle.trim(),
-        imageBytes: pickedImage,
-        parentId: widget.isInSublist ? widget.parentId : null,
-        type: selected.name,
-        url: selected.isLink ? newUrl.trim() : null,
-      );
 
-      final newItem = ItemModel(
-        id: newList.id,
-        title: newList.title,
-        subtitle: newList.subtitle,
-        image: newList.image,
-        type: newList.type ?? selected.name,
-        parentId: newList.parentId,
-        index: newList.index,
-      );
+    setState(() => isSaving = true);
+
+    try {
+      ItemModel newItem;
+
+      if (widget.isInSublist) {
+        // ✅ Create sublist item (ListController)
+        final newList = await ListController.createList(
+          newTitle.trim(),
+          newSubtitle.trim(),
+          imageBytes: pickedImage,
+          parentId: widget.parentId,
+          type: selected.name,
+          url: selected.isLink ? newUrl.trim() : null,
+        );
+
+        newItem = ItemModel(
+          id: newList.id,
+          title: newList.title,
+          subtitle: newList.subtitle,
+          image: newList.image,
+          type: newList.type ?? selected.name,
+          parentId: newList.parentId,
+          index: newList.index,
+        );
+      } else {
+        // ✅ Create top-level item (ItemService)
+        newItem = await ItemService.createItem(
+          title: newTitle.trim(),
+          subtitle: newSubtitle.trim(),
+          imageBytes: pickedImage,
+          type: selected.name,
+          url: selected.isLink ? newUrl.trim() : null,
+        );
+      }
 
       widget.onAddItemToHome?.call(newItem);
+
       setState(() {
         showCreateForm = false;
         newTitle = '';
@@ -224,6 +241,7 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
         newUrl = '';
         pickedImage = null;
       });
+
       showCustomSnackBar(context, "Item created successfully!", true);
       await _loadLists();
     } catch (e) {

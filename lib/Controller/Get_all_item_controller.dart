@@ -22,7 +22,6 @@ class ItemService {
     }
   }
 
-  // ✅ Create item (with optional image or parentId)
   static Future<ItemModel> createItem({
     required String title,
     String? subtitle,
@@ -35,11 +34,9 @@ class ItemService {
     final uri = Uri.parse('$baseUrl/api/item');
     final request = http.MultipartRequest('POST', uri);
 
-    // Required fields
     request.fields['title'] = title;
     request.fields['type'] = type;
 
-    // ✅ Optional fields
     if (subtitle != null) request.fields['subtitle'] = subtitle;
     if (url != null && url.isNotEmpty) request.fields['url'] = url;
     if (parentId != null) request.fields['parentId'] = parentId;
@@ -54,14 +51,19 @@ class ItemService {
     }
 
     final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
 
     if (response.statusCode == 201) {
-      final responseBody = await response.stream.bytesToString();
-      final Map<String, dynamic> jsonData = json.decode(responseBody);
-      return ItemModel.fromJson(jsonData['data']);
+      final jsonData = json.decode(responseBody);
+      final data = jsonData['data'] ?? jsonData;
+
+      if (data is! Map<String, dynamic>) {
+        throw Exception('Invalid response format: $data');
+      }
+
+      return ItemModel.fromJson(data);
     } else {
-      final errorBody = await response.stream.bytesToString();
-      throw Exception('Failed to create item: ${response.statusCode} $errorBody');
+      throw Exception('Failed to create item: $responseBody');
     }
   }
 

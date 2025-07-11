@@ -21,13 +21,12 @@ class ListController {
     }
   }
 
-  // ✅ Create a new list/link/event (unified)
   static Future<ListModel> createList(
       String title,
       String subtitle, {
         Uint8List? imageBytes,
         String? parentId,
-        String type = 'list', // 👈 list, link, or event
+        String type = 'list',
         String? url,
       }) async {
     final uri = Uri.parse('$baseUrl/api/lists');
@@ -60,15 +59,17 @@ class ListController {
     if (res.statusCode == 201) {
       final jsonBody = json.decode(res.body);
       final data = jsonBody['data'] ?? jsonBody;
-      if (data is Map<String, dynamic>) {
-        return ListModel.fromJson(data);
-      } else {
-        throw Exception('Invalid response format: ${res.body}');
+
+      if (data is! Map<String, dynamic>) {
+        throw Exception('Invalid response format: $data');
       }
+
+      return ListModel.fromJson(data);
     } else {
       throw Exception('Failed to create list: ${res.body}');
     }
   }
+
 
   // ✅ Delete a list or sub-item (recursive on backend)
   static Future<void> deleteList(String id) async {
