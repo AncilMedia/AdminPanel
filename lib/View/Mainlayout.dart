@@ -1,3 +1,4 @@
+import 'package:ancilmediaadminpanel/View/Organization.dart';
 import 'package:ancilmediaadminpanel/View/User.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,6 +63,8 @@ class _MainLayoutState extends State<MainLayout> {
         return const Apps();
       case DrawerItem.user:
         return const UserPage();
+      case DrawerItem.organization:
+        return const Organization();
       case DrawerItem.profile:
         return const Profile();
       case DrawerItem.notification:
@@ -85,6 +88,8 @@ class _MainLayoutState extends State<MainLayout> {
         return 'Apps';
       case DrawerItem.user:
         return 'User';
+      case DrawerItem.organization:
+        return 'Organization';
       case DrawerItem.profile:
         return 'Profile';
       case DrawerItem.notification:
@@ -176,6 +181,8 @@ class _MainLayoutState extends State<MainLayout> {
       _buildDrawerTile(context, Iconsax.element_3, 'Apps', DrawerItem.apps, isDesktop),
       if (role == 'admin')
         _buildDrawerTile(context, Iconsax.profile_2user, 'User', DrawerItem.user, isDesktop),
+      if (role == 'admin')
+        _buildDrawerTile(context, Iconsax.building, 'Organization', DrawerItem.organization, isDesktop),
       if (role == 'admin')
         _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
       _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
