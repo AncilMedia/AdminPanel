@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Controller/Item_controller_add.dart';
 
@@ -21,12 +22,16 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> {
   late TextEditingController _titleController;
   late TextEditingController _subtitleController;
 
+  String? userId;
+  String? organizationId;
+
   Uint8List? _imageBytes;
   String? _imageName;
 
   @override
   void initState() {
     super.initState();
+    _loadPrefs();
     _titleController = TextEditingController(text: widget.item['title'] ?? '');
     _subtitleController = TextEditingController(
       text: widget.item['subtitle'] ?? '',
@@ -36,6 +41,14 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> {
     if (widget.item['image'] is Uint8List) {
       _imageBytes = widget.item['image'];
     }
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('userId');
+      organizationId = prefs.getString('organizationId');
+    });
   }
 
   @override
@@ -165,11 +178,11 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> {
                         ? Image.memory(_imageBytes!, fit: BoxFit.cover)
                         : widget.item['image'] is String
                         ? Image.network(
-                            widget.item['image'],
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(child: Text("Image not found")),
-                          )
+                      widget.item['image'],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                      const Center(child: Text("Image not found")),
+                    )
                         : const Center(child: Text("Tap to upload image")),
                   ),
                 ),
@@ -228,8 +241,8 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> {
                     showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (_) =>
-                           Center(child: Lottie.asset('assets/Loading star.json')),
+                      builder: (_) => Center(
+                          child: Lottie.asset('assets/Loading star.json')),
                     );
 
                     final updatedItem = {
@@ -237,6 +250,7 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> {
                       'title': title,
                       'subtitle': _subtitleController.text.trim(),
                       'url': _urlController.text.trim(),
+                      'organizationId': organizationId,
                     };
 
                     try {
@@ -244,6 +258,7 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> {
                         updatedItem,
                         _imageBytes,
                         _imageName,
+                        userId!,
                       );
                       debugPrint('[Success] Item saved: $updatedItem');
 
