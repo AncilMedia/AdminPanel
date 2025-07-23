@@ -13,6 +13,7 @@ import '../View/Apps_page/Apps.dart';
 import '../View_model/Drawer_provider.dart';
 import '../View_model/Sidebar_provider.dart';
 import '../View_model/Logout.dart';
+import 'Application_page.dart';
 import 'Notifications/Notification_page.dart';
 import 'Profile_page.dart';
 import '../Services/api_client.dart';
@@ -65,6 +66,8 @@ class _MainLayoutState extends State<MainLayout> {
         return const UserPage();
       case DrawerItem.organization:
         return const Organization();
+      case DrawerItem.applications:
+        return const ApplicationPage();
       case DrawerItem.profile:
         return const Profile();
       case DrawerItem.notification:
@@ -90,6 +93,8 @@ class _MainLayoutState extends State<MainLayout> {
         return 'User';
       case DrawerItem.organization:
         return 'Organization';
+      case DrawerItem.applications:
+        return 'Application';
       case DrawerItem.profile:
         return 'Profile';
       case DrawerItem.notification:
@@ -184,7 +189,8 @@ class _MainLayoutState extends State<MainLayout> {
       if (role == 'admin')
         _buildDrawerTile(context, Iconsax.building, 'Organization', DrawerItem.organization, isDesktop),
       if (role == 'admin')
-        _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
+        _buildDrawerTile(context, Iconsax.box_2, 'Applications', DrawerItem.applications, isDesktop),
+      _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
       _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
 
       const Spacer(),

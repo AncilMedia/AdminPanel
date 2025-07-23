@@ -289,6 +289,7 @@ class _OrganizationState extends State<Organization> {
                 Expanded(flex: columnFlex[1], child: _headerItem("Block Status")),
                 Expanded(flex: columnFlex[1], child: _headerItem("Approval Status")),
                 Expanded(flex: columnFlex[2], child: _headerItem("Actions")),
+                Expanded(flex: columnFlex[2], child: _headerItem("Apps")),
                 Expanded(flex: columnFlex[4], child: _headerItem("Created At")),
               ],
             ),
