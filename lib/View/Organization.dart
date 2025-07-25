@@ -286,7 +286,7 @@ class _OrganizationState extends State<Organization> {
             child: Row(
               children: [
                 Expanded(flex: columnFlex[0], child: _headerItem("Name")),
-                Expanded(flex: columnFlex[1], child: _headerItem("Block Status")),
+                // Expanded(flex: columnFlex[1], child: _headerItem("Block Status")),
                 Expanded(flex: columnFlex[1], child: _headerItem("Approval Status")),
                 Expanded(flex: columnFlex[2], child: _headerItem("Actions")),
                 Expanded(flex: columnFlex[2], child: _headerItem("Apps")),
