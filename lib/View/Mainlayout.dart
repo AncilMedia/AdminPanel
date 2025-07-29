@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
+
 import '../Controller/Profile_controller.dart';
 import '../View/Home_page.dart';
 import '../View/Events.dart';
@@ -45,7 +46,7 @@ class _MainLayoutState extends State<MainLayout> {
       setState(() {
         orgName = data['username'] ?? 'Unknown';
         orgImage = data['image'];
-        role = data['role'] ?? ''; // ✅ Store role from backend
+        role = data['role'] ?? '';
       });
     }
   }
@@ -177,7 +178,7 @@ class _MainLayoutState extends State<MainLayout> {
   }
 
   List<Widget> _buildDrawerItems(BuildContext context, bool isDesktop) {
-    return [
+    final List<Widget> items = [
       _buildCurvedDrawerHeader(context),
       _buildDrawerTile(context, Iconsax.home, 'Home', DrawerItem.home, isDesktop),
       _buildDrawerTile(context, Iconsax.book, 'Events', DrawerItem.events, isDesktop),
@@ -192,26 +193,29 @@ class _MainLayoutState extends State<MainLayout> {
         _buildDrawerTile(context, Iconsax.box_2, 'Applications', DrawerItem.applications, isDesktop),
       _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
       _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
+    ];
 
-      const Spacer(),
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.cyan.shade300,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(15),
-            topRight: Radius.circular(15),
-          ),
-        ),
-        width: MediaQuery.of(context).size.width,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * 0.01,
-            vertical: MediaQuery.of(context).size.width * 0.01,
-          ),
-          child: const LogoutButton(),
+    return items;
+  }
+
+  Widget _buildLogoutSection(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.cyan.shade300,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(15),
+          topRight: Radius.circular(15),
         ),
       ),
-    ];
+      width: MediaQuery.of(context).size.width,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.01,
+          vertical: MediaQuery.of(context).size.width * 0.01,
+        ),
+        child: const LogoutButton(),
+      ),
+    );
   }
 
   @override
@@ -238,7 +242,16 @@ class _MainLayoutState extends State<MainLayout> {
           ? null
           : Drawer(
         width: MediaQuery.of(context).size.width * .8,
-        child: ListView(children: _buildDrawerItems(context, isDesktop)),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                children: _buildDrawerItems(context, false),
+              ),
+            ),
+            _buildLogoutSection(context),
+          ],
+        ),
       ),
       body: Row(
         children: [
@@ -251,7 +264,13 @@ class _MainLayoutState extends State<MainLayout> {
               child: Container(
                 width: MediaQuery.of(context).size.width * .160,
                 color: Colors.grey.shade100,
-                child: Column(children: _buildDrawerItems(context, isDesktop)),
+                child: Column(
+                  children: [
+                    ..._buildDrawerItems(context, true),
+                    const Spacer(),
+                    _buildLogoutSection(context),
+                  ],
+                ),
               ),
             ),
           Expanded(child: _getContent(selectedItem)),
