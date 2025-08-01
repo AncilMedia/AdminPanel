@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
+import '../View/PopUp/Right_drawer.dart';
 import '../controller/organization_controller.dart';
 import '../controller/app_controller.dart';
 
@@ -28,7 +29,7 @@ class _OrganizationRowState extends State<OrganizationRow> {
   final AppService _appService = AppService();
 
   List<dynamic> _apps = [];
-  String? selectedAppId;
+  Set<String> assignedAppIds = {};
   bool _isLoading = true;
   bool _isAssigning = false;
 
@@ -37,12 +38,10 @@ class _OrganizationRowState extends State<OrganizationRow> {
     super.initState();
     org = widget.organization;
 
-    // Extract appId properly
-    selectedAppId = (org['apps'] != null &&
-        org['apps'].isNotEmpty &&
-        org['apps'][0]['appId'] != null)
-        ? org['apps'][0]['appId']
-        : null;
+    assignedAppIds = {
+      if (org['apps'] != null)
+        for (var app in org['apps']) if (app['appId'] != null) app['appId']
+    };
 
     _fetchApps();
   }
@@ -53,18 +52,92 @@ class _OrganizationRowState extends State<OrganizationRow> {
       setState(() {
         _apps = apps;
         _isLoading = false;
-
-        // If selectedAppId doesn't exist in app list, reset it
-        if (!_apps.any((app) => app['appId'] == selectedAppId)) {
-          selectedAppId = null;
-        }
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load apps")),
-      );
+      showCustomSnackBar(context, "Failed to load apps", false);
     }
+  }
+
+  Text _poppinsText(String text,
+      {Color? color, double fontSize = 14, FontWeight? fontWeight, TextAlign? align}) {
+    return Text(
+      text,
+      textAlign: align,
+      style: GoogleFonts.poppins(
+        color: color ?? Colors.black87,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+      ),
+    );
+  }
+
+  Future<void> _showAppSelectionDialog() async {
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        Set<String> localAssigned = Set.from(assignedAppIds);
+
+        return AlertDialog(
+          title: _poppinsText("Assign/Unassign Apps", fontWeight: FontWeight.w600),
+          content: StatefulBuilder(
+            builder: (context, setModalState) {
+              return SizedBox(
+                width: 250,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _apps.length,
+                  itemBuilder: (context, index) {
+                    final app = _apps[index];
+                    final appId = app['appId'];
+                    final isChecked = localAssigned.contains(appId);
+
+                    return CheckboxListTile(
+                      title: _poppinsText(app['appName']),
+                      value: isChecked,
+                      onChanged: _isAssigning
+                          ? null
+                          : (value) async {
+                        setModalState(() => _isAssigning = true);
+
+                        if (value == true) {
+                          final success = await OrganizationController.assignAppToOrganization(org['_id'], appId);
+                          if (success) {
+                            setState(() => assignedAppIds.add(appId));
+                            setModalState(() => localAssigned.add(appId));
+                            showCustomSnackBar(context, "Assigned ${app['appName']}", true);
+                          }
+                        } else {
+                          final success = await OrganizationController.unassignAppFromOrganization(org['_id'], appId);
+                          if (success) {
+                            setState(() => assignedAppIds.remove(appId));
+                            setModalState(() => localAssigned.remove(appId));
+                            showCustomSnackBar(context, "Unassigned ${app['appName']}", false);
+                          }
+                        }
+
+                        setModalState(() => _isAssigning = false);
+                        setState(() {
+                          org['apps'] = _apps
+                              .where((app) => assignedAppIds.contains(app['appId']))
+                              .toList();
+                        });
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: _poppinsText("Close", fontWeight: FontWeight.w500),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<bool> showConfirmationDialog({
@@ -74,17 +147,16 @@ class _OrganizationRowState extends State<OrganizationRow> {
     return await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
+        title: _poppinsText(title, fontWeight: FontWeight.bold),
+        content: _poppinsText(message),
         actions: [
           TextButton(
-            child: const Text("Cancel"),
+            child: _poppinsText("Cancel"),
             onPressed: () => Navigator.pop(ctx, false),
           ),
           ElevatedButton(
-            style:
-            ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-            child: const Text("Confirm"),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+            child: _poppinsText("Confirm", color: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
           ),
         ],
@@ -115,38 +187,29 @@ class _OrganizationRowState extends State<OrganizationRow> {
       ),
       child: Row(
         children: [
-          // Name
           Expanded(flex: columnFlex[0], child: _dataItem(name)),
 
-          // Approval Status / Actions
           Expanded(
             flex: columnFlex[2],
             child: Center(
               child: org['approved'] == true
-                  ? const Text("Accepted",
-                  style: TextStyle(
-                      color: Colors.green, fontWeight: FontWeight.bold))
+                  ? _poppinsText("Accepted",
+                  color: Colors.green, fontWeight: FontWeight.bold)
                   : org['approved'] == false
-                  ? const Text("Rejected",
-                  style: TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.bold))
+                  ? _poppinsText("Rejected",
+                  color: Colors.red, fontWeight: FontWeight.bold)
                   : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Iconsax.tick_circle,
-                        color: Colors.green),
+                    icon: const Icon(Iconsax.tick_circle, color: Colors.green),
                     onPressed: () async {
                       final confirmed = await showConfirmationDialog(
                         title: "Approve Organization",
-                        message:
-                        "Are you sure you want to approve '$name'?",
+                        message: "Are you sure you want to approve '$name'?",
                       );
                       if (confirmed) {
-                        final success =
-                        await OrganizationController
-                            .approveOrganization(
-                            org['_id'], true);
+                        final success = await OrganizationController.approveOrganization(org['_id'], true);
                         if (success) {
                           setState(() => org['approved'] = true);
                         }
@@ -154,19 +217,14 @@ class _OrganizationRowState extends State<OrganizationRow> {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Iconsax.close_circle,
-                        color: Colors.red),
+                    icon: const Icon(Iconsax.close_circle, color: Colors.red),
                     onPressed: () async {
                       final confirmed = await showConfirmationDialog(
                         title: "Reject Organization",
-                        message:
-                        "Are you sure you want to reject '$name'?",
+                        message: "Are you sure you want to reject '$name'?",
                       );
                       if (confirmed) {
-                        final success =
-                        await OrganizationController
-                            .approveOrganization(
-                            org['_id'], false);
+                        final success = await OrganizationController.approveOrganization(org['_id'], false);
                         if (success) {
                           setState(() => org['approved'] = false);
                         }
@@ -178,7 +236,6 @@ class _OrganizationRowState extends State<OrganizationRow> {
             ),
           ),
 
-          // Edit/Delete Actions
           Expanded(
             flex: columnFlex[3],
             child: Center(
@@ -194,79 +251,30 @@ class _OrganizationRowState extends State<OrganizationRow> {
                     if (confirmed) widget.onDelete();
                   }
                 },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text("Edit")),
-                  PopupMenuItem(value: 'delete', child: Text("Delete")),
+                itemBuilder: (context) => [
+                  PopupMenuItem(value: 'edit', child: _poppinsText("Edit")),
+                  PopupMenuItem(value: 'delete', child: _poppinsText("Delete")),
                 ],
                 icon: const Icon(Iconsax.card_edit),
               ),
             ),
           ),
 
-          // App Dropdown
           Expanded(
             flex: columnFlex[1],
             child: Center(
               child: _isLoading
-                  ? Lottie.asset('assets/smudging dots.json')
-                  : DropdownButton<String>(
-                isExpanded: true,
-                value: selectedAppId,
-                hint: const Text("Select App",
-                    style: TextStyle(fontSize: 13)),
-                onChanged: _isAssigning
-                    ? null
-                    : (newValue) async {
-                  if (newValue == null) return;
-                  final selectedApp = _apps.firstWhere(
-                        (app) => app['appId'] == newValue,
-                    orElse: () => {},
-                  );
-                  if (selectedApp.isEmpty) return;
-
-                  final confirmed = await showConfirmationDialog(
-                    title: "Assign App",
-                    message:
-                    "Assign '${selectedApp['appName']}' to '$name'?",
-                  );
-
-                  if (confirmed) {
-                    setState(() => _isAssigning = true);
-                    final success = await OrganizationController
-                        .assignAppToOrganization(
-                      org['_id'],
-                      selectedApp['appId'],
-                    );
-                    if (success) {
-                      setState(() {
-                        selectedAppId = selectedApp['appId'];
-                        org['apps'] = [selectedApp];
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text("App assigned successfully")),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text("Failed to assign app")),
-                      );
-                    }
-                    setState(() => _isAssigning = false);
-                  }
-                },
-                items: _apps
-                    .map<DropdownMenuItem<String>>((app) => DropdownMenuItem(
-                  value: app['appId'],
-                  child: Text(app['appName'],
-                      style: const TextStyle(fontSize: 13)),
-                ))
-                    .toList(),
+                  ? Lottie.asset('assets/smudging dots.json', height: 30)
+                  : _isAssigning
+                  ? const CircularProgressIndicator(strokeWidth: 2)
+                  : TextButton.icon(
+                onPressed: _showAppSelectionDialog,
+                icon: const Icon(Iconsax.more, size: 16),
+                label: _poppinsText("Apps", fontSize: 12),
               ),
             ),
           ),
 
-          // Created At
           Expanded(
             flex: columnFlex[5],
             child: _dataItem(formatDate(org['createdAt'] ?? "")),
@@ -276,10 +284,5 @@ class _OrganizationRowState extends State<OrganizationRow> {
     );
   }
 
-  Widget _dataItem(String value) => Center(
-    child: Text(
-      value,
-      style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
-    ),
-  );
+  Widget _dataItem(String value) => Center(child: _poppinsText(value));
 }

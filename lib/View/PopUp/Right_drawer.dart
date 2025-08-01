@@ -201,6 +201,13 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
     try {
       ItemModel newItem;
 
+      debugPrint("📥 Creating new item:");
+      debugPrint("  title: $newTitle");
+      debugPrint("  subtitle: $newSubtitle");
+      debugPrint("  type: ${selected.name}");
+      debugPrint("  parentId: ${widget.parentId}");
+      debugPrint("  isSublist: ${widget.isInSublist}");
+
       if (widget.isInSublist) {
         // ✅ Create sublist item (ListController)
         final newList = await ListController.createList(
@@ -245,7 +252,7 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
       showCustomSnackBar(context, "Item created successfully!", true);
       await _loadLists();
     } catch (e) {
-      debugPrint("Create item failed: $e");
+      debugPrint("❌ Create item failed: $e");
       showCustomSnackBar(context, "Failed to save", false);
     } finally {
       setState(() => isSaving = false);

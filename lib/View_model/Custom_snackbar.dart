@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void showCustomSnackBar(BuildContext context, String message, bool isSuccess) {
   final screenWidth = MediaQuery.of(context).size.width;
@@ -9,7 +10,7 @@ void showCustomSnackBar(BuildContext context, String message, bool isSuccess) {
     behavior: SnackBarBehavior.floating,
     content: Center(
       child: Container(
-        width: screenWidth * 1,
+        width: screenWidth * 0.9,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
           color: isSuccess ? Colors.green : Colors.red,
@@ -18,7 +19,11 @@ void showCustomSnackBar(BuildContext context, String message, bool isSuccess) {
         child: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     ),

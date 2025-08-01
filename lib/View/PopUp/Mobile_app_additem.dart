@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'dart:html' as html;
+import 'package:ancilmediaadminpanel/Controller/Get_all_item_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -244,7 +245,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                   final externalUrl = _urlController.text.trim();
 
                   try {
-                    final uploadedImageUrl = await AddItemController.uploadItem(
+                    final uploadedImageUrl = await ItemService.updateItem(
                       itemId: widget.itemId!,
                       title: title,
                       subtitle: subtitle,

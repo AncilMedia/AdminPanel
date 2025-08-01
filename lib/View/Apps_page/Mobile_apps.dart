@@ -100,7 +100,14 @@ class _MobileAppsState extends State<MobileApps> {
             });
 
             try {
-              await ItemService.updateItem(it);
+              await ItemService.updateItem(
+                itemId: it.id,
+                title: it.title,
+                subtitle: it.subtitle,
+                imageUrl: it.image,
+                externalUrl: it.url,
+                type: it.type,
+              );
             } catch (e) {
               debugPrint('Failed to update item: $e');
             }

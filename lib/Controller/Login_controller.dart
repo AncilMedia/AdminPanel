@@ -5,6 +5,8 @@ import '../View_model/Authentication_state.dart';
 import '../environmental variables.dart';
 
 class AuthService {
+
+
   Future<Map<String, dynamic>> login(String identifier, String password) async {
     try {
       final response = await http.post(
@@ -20,34 +22,34 @@ class AuthService {
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
 
-        // 🔐 Tokens
+        // 🔐 Save Tokens
         await prefs.setString('accessToken', responseData['accessToken']);
         await prefs.setString('refreshToken', responseData['refreshToken']);
 
-        // 👤 User Info
+        // 👤 Save User Info
         final user = responseData['user'];
         if (user != null) {
-          await prefs.setString('userRole', user['role'] ?? '');
-          await prefs.setString('username', user['username'] ?? '');
           await prefs.setString('userId', user['userId'] ?? '');
+          await prefs.setString('username', user['username'] ?? '');
+          await prefs.setString('userRole', user['role'] ?? '');
 
-          // 🏢 Organization Info
+          // 🏢 Save Organization Info
           final org = user['organization'];
           if (org != null) {
-            await prefs.setString('organizationId', org['_id'] ?? '');
+            await prefs.setString('organizationId', org['organizationId'] ?? '');
             await prefs.setString('organizationName', org['name'] ?? '');
             await prefs.setString('orgUniqueId', org['orgId'] ?? '');
           }
 
-          // ✅ Debug log all saved data
+          // ✅ Debug logs
           print("✅ Stored in SharedPreferences:");
           print("🔑 Access Token: ${prefs.getString('accessToken')}");
           print("🔁 Refresh Token: ${prefs.getString('refreshToken')}");
           print("👤 Username: ${prefs.getString('username')}");
           print("🆔 User ID: ${prefs.getString('userId')}");
           print("🛡️ Role: ${prefs.getString('userRole')}");
-          print("🏢 Org ID: ${prefs.getString('organizationId')}");
-          print("🏷️ Org Name: ${prefs.getString('organizationName')}");
+          print("🏢 Organization ID: ${prefs.getString('organizationId')}");
+          print("🏷️ Organization Name: ${prefs.getString('organizationName')}");
           print("📛 Org Unique ID: ${prefs.getString('orgUniqueId')}");
         }
       }
