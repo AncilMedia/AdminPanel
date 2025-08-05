@@ -37,12 +37,10 @@ class _OrganizationRowState extends State<OrganizationRow> {
   void initState() {
     super.initState();
     org = widget.organization;
-
     assignedAppIds = {
       if (org['apps'] != null)
         for (var app in org['apps']) if (app['appId'] != null) app['appId']
     };
-
     _fetchApps();
   }
 
@@ -93,7 +91,7 @@ class _OrganizationRowState extends State<OrganizationRow> {
                     final isChecked = localAssigned.contains(appId);
 
                     return CheckboxListTile(
-                      title: _poppinsText(app['appName']),
+                      title: _poppinsText(app['appName'] ?? "Unnamed App"),
                       value: isChecked,
                       onChanged: _isAssigning
                           ? null
@@ -161,8 +159,7 @@ class _OrganizationRowState extends State<OrganizationRow> {
           ),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
   }
 
   String formatDate(String dateStr) {
@@ -193,11 +190,9 @@ class _OrganizationRowState extends State<OrganizationRow> {
             flex: columnFlex[2],
             child: Center(
               child: org['approved'] == true
-                  ? _poppinsText("Accepted",
-                  color: Colors.green, fontWeight: FontWeight.bold)
+                  ? _poppinsText("Accepted", color: Colors.green, fontWeight: FontWeight.bold)
                   : org['approved'] == false
-                  ? _poppinsText("Rejected",
-                  color: Colors.red, fontWeight: FontWeight.bold)
+                  ? _poppinsText("Rejected", color: Colors.red, fontWeight: FontWeight.bold)
                   : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -210,9 +205,7 @@ class _OrganizationRowState extends State<OrganizationRow> {
                       );
                       if (confirmed) {
                         final success = await OrganizationController.approveOrganization(org['_id'], true);
-                        if (success) {
-                          setState(() => org['approved'] = true);
-                        }
+                        if (success) setState(() => org['approved'] = true);
                       }
                     },
                   ),
@@ -225,9 +218,7 @@ class _OrganizationRowState extends State<OrganizationRow> {
                       );
                       if (confirmed) {
                         final success = await OrganizationController.approveOrganization(org['_id'], false);
-                        if (success) {
-                          setState(() => org['approved'] = false);
-                        }
+                        if (success) setState(() => org['approved'] = false);
                       }
                     },
                   ),

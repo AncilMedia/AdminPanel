@@ -113,8 +113,7 @@ class _SignupPageState extends State<SignupPage> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        validator: (value) =>
-                        value == null || value.isEmpty
+                        validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your username'
                             : null,
                       ),
@@ -129,8 +128,7 @@ class _SignupPageState extends State<SignupPage> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        validator: (value) =>
-                        value == null || value.isEmpty
+                        validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your organization name'
                             : null,
                       ),
@@ -151,7 +149,8 @@ class _SignupPageState extends State<SignupPage> {
                             return 'Please enter your email';
                           }
                           final emailRegex = RegExp(
-                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          );
                           if (!emailRegex.hasMatch(value)) {
                             return 'Please enter a valid email address';
                           }
@@ -166,7 +165,8 @@ class _SignupPageState extends State<SignupPage> {
                         keyboardType: TextInputType.phone,
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
-                              RegExp(r'^\+?[0-9]*$')),
+                            RegExp(r'^\+?[0-9]*$'),
+                          ),
                         ],
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
@@ -174,11 +174,9 @@ class _SignupPageState extends State<SignupPage> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        validator: (value) =>
-                        value == null || value.isEmpty
+                        validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your phone number'
-                            : !RegExp(r'^\+?[0-9]{10,15}$')
-                            .hasMatch(value)
+                            : !RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)
                             ? 'Enter a valid phone number'
                             : null,
                       ),
@@ -195,17 +193,14 @@ class _SignupPageState extends State<SignupPage> {
                           fillColor: Colors.white,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              obscureText
-                                  ? Iconsax.eye_slash
-                                  : Iconsax.eye,
+                              obscureText ? Iconsax.eye_slash : Iconsax.eye,
                               color: Colors.grey,
                             ),
                             onPressed: () =>
                                 setState(() => obscureText = !obscureText),
                           ),
                         ),
-                        validator: (value) =>
-                        value == null || value.isEmpty
+                        validator: (value) => value == null || value.isEmpty
                             ? 'Please enter your password'
                             : null,
                       ),
@@ -227,8 +222,9 @@ class _SignupPageState extends State<SignupPage> {
                                   : Iconsax.eye,
                               color: Colors.grey,
                             ),
-                            onPressed: () => setState(() =>
-                            obscureConfirmText = !obscureConfirmText),
+                            onPressed: () => setState(
+                              () => obscureConfirmText = !obscureConfirmText,
+                            ),
                           ),
                         ),
                         validator: (value) {
@@ -253,12 +249,9 @@ class _SignupPageState extends State<SignupPage> {
                             if (_formKey.currentState!.validate()) {
                               setState(() => _isLoading = true);
 
-                              final result =
-                              await SignupController.signup(
-                                username:
-                                usernameController.text.trim(),
-                                organization:
-                                orgnameController.text.trim(),
+                              final result = await SignupController.signup(
+                                username: usernameController.text.trim(),
+                                organization: orgnameController.text.trim(),
                                 email: emailController.text.trim(),
                                 phone: phoneController.text.trim(),
                                 password: passwordController.text,
@@ -270,21 +263,28 @@ class _SignupPageState extends State<SignupPage> {
                                 final user = result['user'];
                                 final org = user['organization'];
                                 print(
-                                    "Signup Success: Org ID: ${org['orgId']}, Created At: ${org['createdAt']}");
+                                  "Signup Success: Org ID: ${org['orgId']}, Created At: ${org['createdAt']}",
+                                );
 
                                 showCustomSnackBar(
-                                    context, "Signup successful!", true);
+                                  context,
+                                  "Signup successful!",
+                                  true,
+                                );
 
                                 await Future.delayed(
-                                    const Duration(seconds: 2));
+                                  const Duration(seconds: 2),
+                                );
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) =>
-                                      const LoginPage()),
+                                    builder: (context) => const LoginPage(),
+                                  ),
                                 );
                               } else {
-                                print("Signup error response: ${result['message']}");
+                                print(
+                                  "Signup error response: ${result['message']}",
+                                );
                                 showCustomSnackBar(
                                   context,
                                   result['message'] ??
@@ -295,8 +295,7 @@ class _SignupPageState extends State<SignupPage> {
                             }
                           },
                           child: Container(
-                            padding:
-                            const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             constraints: BoxConstraints(
                               minWidth: 120,
                               maxWidth: screenWidth < 600
@@ -311,20 +310,20 @@ class _SignupPageState extends State<SignupPage> {
                             child: Center(
                               child: _isLoading
                                   ? Lottie.asset(
-                                'assets/Circular_moving_dot.json',
-                                width: 40,
-                                height: 40,
-                                fit: BoxFit.cover,
-                              )
+                                      'assets/Circular_moving_dot.json',
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                    )
                                   : Text(
-                                'Sign Up',
-                                style: GoogleFonts.poppins(
-                                  textStyle: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
+                                      'Sign Up',
+                                      style: GoogleFonts.poppins(
+                                        textStyle: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -345,8 +344,8 @@ class _SignupPageState extends State<SignupPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) =>
-                                      const LoginPage()),
+                                    builder: (context) => const LoginPage(),
+                                  ),
                                 );
                               },
                               child: Text(

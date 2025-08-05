@@ -243,26 +243,6 @@ class OrganizationController {
     return response.statusCode == 200;
   }
 
-  // Assign app to organization
-  // static Future<bool> assignAppToOrganization(String orgId, String appId) async {
-  //   final response = await _makeAuthorizedRequest(
-  //         (token) => http.patch(
-  //       Uri.parse("$_orgUrl/$orgId/assign-app"),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'Bearer $token',
-  //       },
-  //       body: jsonEncode({'appId': appId}),
-  //     ),
-  //   );
-  //
-  //   if (response == null) return false;
-  //
-  //   print("Assign App Response: ${response.statusCode} ${response.body}");
-  //   return response.statusCode == 200;
-  // }
-
-  // Update organization details
   static Future<bool> updateOrganizationDetails({
     required String id,
     required String name,

@@ -127,69 +127,6 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
       setState(() => pickedImage = result.files.single.bytes!);
     }
   }
-
-  // Future<void> _handleCreateNewList() async {
-  //   if (newTitle.trim().isEmpty) {
-  //     showCustomSnackBar(context, 'Title is required', false);
-  //     return;
-  //   }
-  //   setState(() => isSaving = true);
-  //   try {
-  //     ListModel newList;
-  //     if (widget.isInSublist && selected.isList) {
-  //       newList = await ListController.createList(
-  //         newTitle.trim(),
-  //         newSubtitle.trim(),
-  //         imageBytes: pickedImage,
-  //         parentId: widget.parentId,
-  //       );
-  //     } else {
-  //       final item = await ItemService.createItem(
-  //         title: newTitle.trim(),
-  //         subtitle: newSubtitle.trim(),
-  //         url: selected.isLink ? newUrl.trim() : '',
-  //         type: selected.name,
-  //         imageBytes: pickedImage,
-  //         parentId: widget.isInSublist ? widget.parentId : null,
-  //       );
-  //       newList = ListModel(
-  //         id: item.id,
-  //         title: item.title,
-  //         subtitle: item.subtitle,
-  //         image: item.image ?? '',
-  //         parentId: item.parentId,
-  //         index: item.index ?? 0,
-  //         type: item.type,
-  //       );
-  //     }
-  //
-  //     final newItem = ItemModel(
-  //       id: newList.id,
-  //       title: newList.title,
-  //       subtitle: newList.subtitle,
-  //       image: newList.image,
-  //       type: newList.type ?? selected.name,
-  //       parentId: newList.parentId,
-  //       index: newList.index,
-  //     );
-  //
-  //     widget.onAddItemToHome?.call(newItem);
-  //     setState(() {
-  //       showCreateForm = false;
-  //       newTitle = '';
-  //       newSubtitle = '';
-  //       newUrl = '';
-  //       pickedImage = null;
-  //     });
-  //     showCustomSnackBar(context, "Item created successfully!", true);
-  //     await _loadLists();
-  //   } catch (e) {
-  //     debugPrint("Create item failed: $e");
-  //     showCustomSnackBar(context, "Failed to save", false);
-  //   } finally {
-  //     setState(() => isSaving = false);
-  //   }
-  // }
   Future<void> _handleCreateNewList() async {
     if (newTitle.trim().isEmpty) {
       showCustomSnackBar(context, 'Title is required', false);
