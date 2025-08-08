@@ -222,3 +222,22 @@ class UserController {
     }
   }
 }
+
+
+class UsergetController {
+  static Future<List<UserModel>> fetchUsers({
+    required AuthState authState,
+  }) async {
+    final queryParams = <String, String>{};
+    final uri = Uri.parse('$baseUrl/api/users').replace(queryParameters: queryParams);
+    final api = ApiClient(authState);
+    final response = await api.get(uri.toString());
+
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      return data.map((e) => UserModel.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load users');
+    }
+  }
+}

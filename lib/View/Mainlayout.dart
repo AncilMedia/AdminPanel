@@ -1,3 +1,4 @@
+import 'package:ancilmediaadminpanel/View/Pushnotification.dart';
 import 'package:ancilmediaadminpanel/View/Organization.dart';
 import 'package:ancilmediaadminpanel/View/User.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +70,8 @@ class _MainLayoutState extends State<MainLayout> {
         return const Organization();
       case DrawerItem.applications:
         return const ApplicationPage();
+      case DrawerItem.pushnotification:
+        return const PushNotification();
       case DrawerItem.profile:
         return const Profile();
       case DrawerItem.notification:
@@ -94,6 +97,8 @@ class _MainLayoutState extends State<MainLayout> {
         return 'User';
       case DrawerItem.organization:
         return 'Organization';
+      case DrawerItem.pushnotification:
+        return 'Push Notification';
       case DrawerItem.applications:
         return 'Application';
       case DrawerItem.profile:
@@ -191,6 +196,8 @@ class _MainLayoutState extends State<MainLayout> {
         _buildDrawerTile(context, Iconsax.building, 'Organization', DrawerItem.organization, isDesktop),
       if (role == 'admin')
         _buildDrawerTile(context, Iconsax.box_2, 'Applications', DrawerItem.applications, isDesktop),
+      if (role == 'admin')
+        _buildDrawerTile(context, Iconsax.notification_bing, 'Push Notification', DrawerItem.pushnotification, isDesktop),
       _buildDrawerTile(context, Iconsax.message_text, 'Notification', DrawerItem.notification, isDesktop),
       _buildDrawerTile(context, Iconsax.profile_circle, 'Settings', DrawerItem.profile, isDesktop),
     ];

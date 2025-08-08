@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+
 import '../../Controller/Notification_controller.dart';
 import '../../View_model/Authentication_state.dart';
 import '../../View_model/Notification_dropdown_state.dart';
@@ -56,22 +57,25 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Notifications',style: GoogleFonts.poppins(
-        textStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600
-        )
-      ),)),
+      appBar: AppBar(
+        title: Text(
+          'Notifications',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       body: notifications.isEmpty
-          ?  Center(child: Lottie.asset('assets/Mailpc.json'))
+          ? Center(child: Lottie.asset('assets/Mailpc.json'))
           : ListView.builder(
         itemCount: notifications.length,
         itemBuilder: (_, i) {
           final notif = notifications[i];
-          final user = notif['userId'];
+          final user = notif['userId'] ?? {};
           final created = DateFormat('yMMMd – h:mm a')
               .format(DateTime.parse(notif['createdAt']));
-          final userCreated = user?['createdAt'] != null
+          final userCreated = user['createdAt'] != null
               ? DateFormat('yMMMd – h:mm a')
               .format(DateTime.parse(user['createdAt']))
               : 'N/A';
@@ -94,82 +98,51 @@ class _NotificationPageState extends State<NotificationPage> {
                       _deleteNotification(notif['_id']);
                     }
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
                       value: 'delete',
                       child: Text('Delete'),
                     ),
                   ],
                 ),
                 title: Text(
-                  'New User : ${user['username']}',
+                  'New User: ${user['username'] ?? 'Unknown'}',
                   style: GoogleFonts.poppins(
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
                 ),
                 subtitle: Text(
                   'Created at: $created',
                   style: GoogleFonts.poppins(
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
                   ),
                 ),
-                children: <Widget>[
-                  if (user != null)
-                    ListTile(
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Username: ${user['username'] ?? 'N/A'}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
+                children: [
+                  ListTile(
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        'Username: ${user['username'] ?? 'N/A'}',
+                        'Email: ${user['email'] ?? 'N/A'}',
+                        'Phone: ${user['phone'] ?? 'N/A'}',
+                        'User ID: ${user['userId'] ?? 'N/A'}',
+                        'Approved: ${user['approved'] == true ? 'Approved' : 'Pending'}',
+                        'Registered: $userCreated',
+                      ].map((e) => Padding(
+                        padding:
+                        const EdgeInsets.only(bottom: 4.0),
+                        child: Text(
+                          e,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
-                          Text(
-                            'Email: ${user['email'] ?? 'N/A'}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            'Phone: ${user['phone'] ?? 'N/A'}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            'User ID: ${user['userId'] ?? 'N/A'}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            'Approved: ${user['approved'] == true ? 'Approved' : 'Pending'}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            'Registered: $userCreated',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      )).toList(),
                     ),
+                  ),
                 ],
               ),
             ),

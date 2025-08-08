@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'Model/Item_Model.dart';
+import 'View/Pushnotification.dart';
 import 'Services/api_client.dart';
 import 'View/Login_page.dart';
 import 'View/Organization.dart';
@@ -14,10 +15,15 @@ import 'View_model/Notification_dropdown_state.dart';
 import 'View_model/Sidebar_provider.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
+import 'firebase_options.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   setUrlStrategy(PathUrlStrategy());
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(
     MultiProvider(
