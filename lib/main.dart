@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'Model/Item_Model.dart';
+import 'Socket_Service.dart';
 import 'View/Pushnotification.dart';
 import 'Services/api_client.dart';
 import 'View/Login_page.dart';
@@ -24,6 +25,8 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  SocketService().initSocket();
 
   runApp(
     MultiProvider(

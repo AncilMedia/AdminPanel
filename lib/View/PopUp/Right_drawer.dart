@@ -4,6 +4,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../Controller/PushNotification_controller.dart';
 import '../../Controller/right_drawer_controller.dart';
 import '../../Controller/Get_all_item_controller.dart';
 import '../../Model/list_model.dart';
@@ -127,6 +129,160 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
       setState(() => pickedImage = result.files.single.bytes!);
     }
   }
+
+  // Future<void> _handleCreateNewList() async {
+  //   if (newTitle.trim().isEmpty) {
+  //     showCustomSnackBar(context, 'Title is required', false);
+  //     return;
+  //   }
+  //
+  //   setState(() => isSaving = true);
+  //
+  //   try {
+  //     ItemModel newItem;
+  //
+  //     debugPrint("📥 Creating new item:");
+  //     debugPrint("  title: $newTitle");
+  //     debugPrint("  subtitle: $newSubtitle");
+  //     debugPrint("  type: ${selected.name}");
+  //     debugPrint("  parentId: ${widget.parentId}");
+  //     debugPrint("  isSublist: ${widget.isInSublist}");
+  //
+  //     if (widget.isInSublist) {
+  //       // ✅ Create sublist item (ListController)
+  //       final newList = await ListController.createList(
+  //         newTitle.trim(),
+  //         newSubtitle.trim(),
+  //         imageBytes: pickedImage,
+  //         parentId: widget.parentId,
+  //         type: selected.name,
+  //         url: selected.isLink ? newUrl.trim() : null,
+  //       );
+  //
+  //       newItem = ItemModel(
+  //         id: newList.id,
+  //         title: newList.title,
+  //         subtitle: newList.subtitle,
+  //         image: newList.image,
+  //         type: newList.type ?? selected.name,
+  //         parentId: newList.parentId,
+  //         index: newList.index,
+  //       );
+  //     } else {
+  //       // ✅ Create top-level item (ItemService)
+  //       newItem = await ItemService.createItem(
+  //         title: newTitle.trim(),
+  //         subtitle: newSubtitle.trim(),
+  //         imageBytes: pickedImage,
+  //         type: selected.name,
+  //         url: selected.isLink ? newUrl.trim() : null,
+  //       );
+  //     }
+  //
+  //     widget.onAddItemToHome?.call(newItem);
+  //
+  //     setState(() {
+  //       showCreateForm = false;
+  //       newTitle = '';
+  //       newSubtitle = '';
+  //       newUrl = '';
+  //       pickedImage = null;
+  //     });
+  //
+  //     showCustomSnackBar(context, "Item created successfully!", true);
+  //     await _loadLists();
+  //   } catch (e) {
+  //     debugPrint("❌ Create item failed: $e");
+  //     showCustomSnackBar(context, "Failed to save", false);
+  //   } finally {
+  //     setState(() => isSaving = false);
+  //   }
+  // }
+
+  // Future<void> _handleCreateNewList() async {
+  //   if (newTitle.trim().isEmpty) {
+  //     showCustomSnackBar(context, 'Title is required', false);
+  //     return;
+  //   }
+  //
+  //   setState(() => isSaving = true);
+  //
+  //   try {
+  //     ItemModel newItem;
+  //
+  //     debugPrint("📥 Creating new item:");
+  //     debugPrint("  title: $newTitle");
+  //     debugPrint("  subtitle: $newSubtitle");
+  //     debugPrint("  type: ${selected.name}");
+  //     debugPrint("  parentId: ${widget.parentId}");
+  //     debugPrint("  isSublist: ${widget.isInSublist}");
+  //
+  //     if (widget.isInSublist) {
+  //       final newList = await ListController.createList(
+  //         newTitle.trim(),
+  //         newSubtitle.trim(),
+  //         imageBytes: pickedImage,
+  //         parentId: widget.parentId,
+  //         type: selected.name,
+  //         url: selected.isLink ? newUrl.trim() : null,
+  //       );
+  //
+  //       newItem = ItemModel(
+  //         id: newList.id,
+  //         title: newList.title,
+  //         subtitle: newList.subtitle,
+  //         image: newList.image,
+  //         type: newList.type ?? selected.name,
+  //         parentId: newList.parentId,
+  //         index: newList.index,
+  //       );
+  //     } else {
+  //       newItem = await ItemService.createItem(
+  //         title: newTitle.trim(),
+  //         subtitle: newSubtitle.trim(),
+  //         imageBytes: pickedImage,
+  //         type: selected.name,
+  //         url: selected.isLink ? newUrl.trim() : null,
+  //       );
+  //     }
+  //
+  //     // ✅ Get organizationId from local storage
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final organizationId = prefs.getString("organizationId");
+  //
+  //     if (organizationId != null) {
+  //       await PushNotificationController.sendNotification(
+  //         title: "New ${selected.name.capitalize()} Added",
+  //         body: "A new ${selected.name} has been created: $newTitle",
+  //         event: "create_${selected.name}",
+  //         type: selected.name,
+  //         organizationId: organizationId,
+  //       );
+  //       debugPrint("📢 Notification sent to organization: $organizationId");
+  //     } else {
+  //       debugPrint("⚠️ No organizationId found in local storage");
+  //     }
+  //
+  //     widget.onAddItemToHome?.call(newItem);
+  //
+  //     setState(() {
+  //       showCreateForm = false;
+  //       newTitle = '';
+  //       newSubtitle = '';
+  //       newUrl = '';
+  //       pickedImage = null;
+  //     });
+  //
+  //     showCustomSnackBar(context, "Item created successfully!", true);
+  //     await _loadLists();
+  //   } catch (e) {
+  //     debugPrint("❌ Create item failed: $e");
+  //     showCustomSnackBar(context, "Failed to save", false);
+  //   } finally {
+  //     setState(() => isSaving = false);
+  //   }
+  // }
+
   Future<void> _handleCreateNewList() async {
     if (newTitle.trim().isEmpty) {
       showCustomSnackBar(context, 'Title is required', false);
@@ -146,7 +302,6 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
       debugPrint("  isSublist: ${widget.isInSublist}");
 
       if (widget.isInSublist) {
-        // ✅ Create sublist item (ListController)
         final newList = await ListController.createList(
           newTitle.trim(),
           newSubtitle.trim(),
@@ -166,7 +321,6 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
           index: newList.index,
         );
       } else {
-        // ✅ Create top-level item (ItemService)
         newItem = await ItemService.createItem(
           title: newTitle.trim(),
           subtitle: newSubtitle.trim(),
@@ -174,6 +328,40 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
           type: selected.name,
           url: selected.isLink ? newUrl.trim() : null,
         );
+      }
+
+      // ✅ Get organizationId from local storage
+      final prefs = await SharedPreferences.getInstance();
+      final organizationId = prefs.getString("organizationId");
+
+      if (organizationId != null) {
+        final notifResponse = await PushNotificationController.sendNotification(
+          title: "New ${selected.name.capitalize()} Added",
+          body: "A new ${selected.name} has been created: $newTitle",
+          event: "create_${selected.name}",
+          type: selected.name,
+          organizationId: organizationId,
+        );
+
+        final status = notifResponse['status'];
+        final data = notifResponse['data'];
+
+        if (status == 200) {
+          debugPrint("📢 Notification sent to organization: $organizationId");
+          showCustomSnackBar(context, "Created Successfully !!", true);
+        } else if (status == 400 &&
+            data['message'].toString().contains("No FCM tokens")) {
+          debugPrint("⚠️ No FCM tokens found → cannot send notification");
+          showCustomSnackBar(context,
+              "⚠️ No mobile devices registered. Notification not sent.", false);
+        } else {
+          debugPrint("❌ Notification failed: $data");
+          showCustomSnackBar(
+              context, "❌ Notification failed: ${data['message']}", false);
+        }
+      } else {
+        debugPrint("⚠️ No organizationId found in local storage");
+        showCustomSnackBar(context, "Item created, but no organization found for notification", false);
       }
 
       widget.onAddItemToHome?.call(newItem);
@@ -186,15 +374,15 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
         pickedImage = null;
       });
 
-      showCustomSnackBar(context, "Item created successfully!", true);
       await _loadLists();
     } catch (e) {
       debugPrint("❌ Create item failed: $e");
-      showCustomSnackBar(context, "Failed to save", false);
+      showCustomSnackBar(context, "❌ Failed to save item: $e", false);
     } finally {
       setState(() => isSaving = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

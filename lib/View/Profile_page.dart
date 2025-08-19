@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../Controller/Profile_controller.dart';
 import '../Services/api_client.dart';
 import '../View_model/Authentication_state.dart';
+import '../View_model/Custom_snackbar.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -23,6 +24,7 @@ class _ProfileState extends State<Profile> {
 
   String? userId, role, createdAt, blockStatus;
   String? profileImageUrl;
+  String? appName, packageName, organizationName; // ✅ added
   XFile? selectedImage;
   Uint8List? imageBytes;
   bool isChanged = false;
@@ -52,12 +54,22 @@ class _ProfileState extends State<Profile> {
       setState(() {
         userId = user['userId'];
         role = user['role'];
-        createdAt = user['createdAt']?.toString().split("T").first;
-        blockStatus = user['blocked'] == true ? "True" : "False";
         _usernameController.text = user['username'] ?? '';
         _emailController.text = user['email'] ?? '';
         _phoneController.text = user['phone'] ?? '';
         profileImageUrl = user['image'];
+        createdAt = user['createdAt']?.toString().split("T").first;
+        blockStatus = user['blocked'] == true ? "True" : "False";
+        // ✅ Extract appId details
+        if (user['appId'] != null) {
+          appName = user['appId']['appName'];
+          packageName = user['appId']['packageName'];
+
+          if (user['appId']['organizations'] != null &&
+              user['appId']['organizations'].isNotEmpty) {
+            organizationName = user['appId']['organizations'][0]['name'];
+          }
+        }
       });
     }
     setState(() => isLoading = false);
@@ -85,20 +97,16 @@ class _ProfileState extends State<Profile> {
         phone: _phoneController.text,
         imageFile: selectedImage,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated successfully")),
-      );
+      showCustomSnackBar(context, "Profile updated successfully", true); // ✅ Use snackbar
       setState(() {
         isChanged = false;
         selectedImage = null;
         imageBytes = null;
       });
-      loadProfile(); // ✅ No 'await' here to fix the error
+      loadProfile();
     } catch (e) {
       print('Update failed: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Update failed: $e")),
-      );
+      showCustomSnackBar(context, "Update failed: $e", false); // ✅ Use snackbar
     } finally {
       setState(() => isSaving = false);
     }
@@ -111,8 +119,12 @@ class _ProfileState extends State<Profile> {
         title: const Text('Delete Profile'),
         content: const Text('Are you sure you want to delete your profile?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete')),
         ],
       ),
     );
@@ -123,7 +135,9 @@ class _ProfileState extends State<Profile> {
       if (success) {
         final auth = Provider.of<AuthState>(context, listen: false);
         auth.logout();
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+        showCustomSnackBar(context, "Profile deleted successfully", true); // ✅ Snackbar
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (_) => const LoginPage()));
       }
       setState(() => isDeleting = false);
     }
@@ -157,7 +171,8 @@ class _ProfileState extends State<Profile> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * .02),
+                          padding: EdgeInsets.only(
+                              left: MediaQuery.of(context).size.width * .02),
                           child: Row(children: [
                             MouseRegion(
                               cursor: SystemMouseCursors.click,
@@ -167,38 +182,54 @@ class _ProfileState extends State<Profile> {
                                   radius: 60,
                                   backgroundImage: selectedImage != null
                                       ? MemoryImage(imageBytes!)
-                                      : (profileImageUrl != null && profileImageUrl!.isNotEmpty)
-                                      ? NetworkImage(profileImageUrl!) as ImageProvider
+                                      : (profileImageUrl != null &&
+                                      profileImageUrl!.isNotEmpty)
+                                      ? NetworkImage(profileImageUrl!)
+                                  as ImageProvider
                                       : null,
                                   child: selectedImage == null &&
-                                      (profileImageUrl == null || profileImageUrl!.isEmpty)
+                                      (profileImageUrl == null ||
+                                          profileImageUrl!.isEmpty)
                                       ? const Icon(Icons.person, size: 60)
                                       : null,
                                 ),
                               ),
                             ),
-                            SizedBox(width: MediaQuery.of(context).size.width * .02),
-                            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text("ID: $userId",
-                                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600)),
-                              Text(
-                                "Role: ${role != null && role!.isNotEmpty ? role![0].toUpperCase() + role!.substring(1) : ''}",
-                                style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey),
-                              ),
-                            ])
+                            SizedBox(
+                                width:
+                                MediaQuery.of(context).size.width * .02),
+                            Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("ID: $userId",
+                                      style: GoogleFonts.poppins(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600)),
+                                  Text(
+                                    "Role: ${role != null && role!.isNotEmpty ? role![0].toUpperCase() + role!.substring(1) : ''}",
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 18, color: Colors.grey),
+                                  ),
+                                ])
                           ]),
                         ),
                         if (isChanged)
                           Padding(
-                            padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * .05),
+                            padding: EdgeInsets.only(
+                                right:
+                                MediaQuery.of(context).size.width * .05),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.teal,
-                                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 25, vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15)),
                               ),
                               onPressed: saveProfile,
-                              child: const Text("Save", style: TextStyle(fontSize: 16, color: Colors.white)),
+                              child: const Text("Save",
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.white)),
                             ),
                           ),
                       ],
@@ -206,24 +237,32 @@ class _ProfileState extends State<Profile> {
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: MediaQuery.of(context).size.width * .015,
-                        vertical: MediaQuery.of(context).size.height * .010,
+                        vertical:
+                        MediaQuery.of(context).size.height * .010,
                       ),
-                      child: const Divider(thickness: 1.5, color: Colors.black45),
+                      child: const Divider(
+                          thickness: 1.5, color: Colors.black45),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: Column(
                         children: [
                           Padding(
-                            padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * .5),
+                            padding: EdgeInsets.only(
+                                right: MediaQuery.of(context).size.width * .5),
                             child: Column(
                               children: [
-                                buildTextField("Username", _usernameController),
+                                buildTextField(
+                                    "Username", _usernameController),
                                 buildTextField("Email", _emailController),
                                 buildTextField("Phone", _phoneController),
                               ],
                             ),
                           ),
+                          infoRow("App Name", appName ?? "Not linked"),
+                          // infoRow("Package Name", packageName ?? "Not linked"),
+                          infoRow("Organization",
+                              organizationName ?? "Not linked"),
                           infoRow("Block status", blockStatus ?? ""),
                           infoRow("Account Created at", createdAt ?? ""),
                           const SizedBox(height: 20),
@@ -238,8 +277,9 @@ class _ProfileState extends State<Profile> {
                         child: GestureDetector(
                           onTap: deleteProfile,
                           child: Container(
-                            height: MediaQuery.of(context).size.height * .0500,
-                            width: MediaQuery.of(context).size.width *.7,
+                            height:
+                            MediaQuery.of(context).size.height * .0500,
+                            width: MediaQuery.of(context).size.width * .7,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(15),
                               color: Colors.red,
@@ -288,9 +328,14 @@ class _ProfileState extends State<Profile> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
-        Text("$label :  ", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+        Text("$label :  ",
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600, fontSize: 16)),
         Text(value,
-            style: GoogleFonts.poppins(color: Colors.black45, fontSize: 16, fontWeight: FontWeight.w600)),
+            style: GoogleFonts.poppins(
+                color: Colors.black45,
+                fontSize: 16,
+                fontWeight: FontWeight.w600)),
       ]),
     );
   }

@@ -8,6 +8,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../../../View_model/Authentication_state.dart';
 import '../../Controller/Notification_controller.dart';
+import '../../Socket_Service.dart';
 import '../../View_model/Notification_dropdown_state.dart';
 import 'Notification_dialog.dart';
 import 'Notification_page.dart';
@@ -27,8 +28,7 @@ class _NotificationIconDropdownState extends State<NotificationIconDropdown> {
   void initState() {
     super.initState();
     loadUnread();
-    connectSocket();
-    setupSocket();
+    setupSocketListeners();
   }
 
   @override
@@ -50,66 +50,22 @@ class _NotificationIconDropdownState extends State<NotificationIconDropdown> {
   }
 
 
-  void setupSocket() {
-    IO.Socket socket = IO.io('http://localhost:3000', <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
-    });
+  void setupSocketListeners() {
+    final socketService = SocketService();
 
-    socket.connect();
+    // Emit a test ping after connecting
+    socketService.on('connect', (_) {
+      debugPrint('✅ Connected to socket server');
 
-    socket.onConnect((_) {
-      print('✅ Connected to backend socket');
-
-      // Send test ping to backend
-      socket.emit('ping_test', {
+      // Send ping
+      socketService.emit('ping_test', {
         "user": "Flutter",
         "timestamp": DateTime.now().toIso8601String(),
       });
     });
 
-    // Listen for response from backend
-    socket.on('new_user_registered', (data) {
-      print('📩 Event received from backend: $data');
-    });
-
-    socket.onDisconnect((_) {
-      print('❌ Socket disconnected');
-    });
-  }
-  /// Connect to Socket.IO server
-  void connectSocket() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('accessToken');
-
-    if (token == null) {
-      debugPrint('⚠️ No token found.');
-      return;
-    }
-
-    final cleanedUrl = NgrokUrl.endsWith('/')
-        ? NgrokUrl.substring(0, NgrokUrl.length - 1)
-        : NgrokUrl;
-
-    socket = IO.io(
-      cleanedUrl,
-      IO.OptionBuilder()
-          .setTransports(['websocket'])
-          .setExtraHeaders({
-        'Authorization': 'Bearer $token',
-        'ngrok-skip-browser-warning': 'true',
-      })
-          .enableAutoConnect()
-          .enableReconnection()
-          .setReconnectionDelay(5000)
-          .build(),
-    );
-
-    socket!.onConnect((_) => debugPrint('✅ Connected to socket'));
-    socket!.onConnectError((e) => debugPrint('❌ Socket error: $e'));
-    socket!.onDisconnect((_) => debugPrint('🔌 Disconnected'));
-
-    socket!.on('new_user_registered', (data) {
+    // Listen for new user notifications
+    socketService.on('new_user_registered', (data) {
       debugPrint('📥 Received new user notification:\n$data');
       if (mounted) {
         setState(() {
@@ -120,6 +76,50 @@ class _NotificationIconDropdownState extends State<NotificationIconDropdown> {
       }
     });
   }
+
+  /// Connect to Socket.IO server
+  // void connectSocket() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final token = prefs.getString('accessToken');
+  //
+  //   if (token == null) {
+  //     debugPrint('⚠️ No token found.');
+  //     return;
+  //   }
+  //
+  //   final cleanedUrl = NgrokUrl.endsWith('/')
+  //       ? NgrokUrl.substring(0, NgrokUrl.length - 1)
+  //       : NgrokUrl;
+  //
+  //   socket = IO.io(
+  //     cleanedUrl,
+  //     IO.OptionBuilder()
+  //         .setTransports(['websocket'])
+  //         .setExtraHeaders({
+  //       'Authorization': 'Bearer $token',
+  //       'ngrok-skip-browser-warning': 'true',
+  //     })
+  //         .enableAutoConnect()
+  //         .enableReconnection()
+  //         .setReconnectionDelay(5000)
+  //         .build(),
+  //   );
+  //
+  //   socket!.onConnect((_) => debugPrint('✅ Connected to socket'));
+  //   socket!.onConnectError((e) => debugPrint('❌ Socket error: $e'));
+  //   socket!.onDisconnect((_) => debugPrint('🔌 Disconnected'));
+  //
+  //   socket!.on('new_user_registered', (data) {
+  //     debugPrint('📥 Received new user notification:\n$data');
+  //     if (mounted) {
+  //       setState(() {
+  //         unread.insert(0, data);
+  //         if (unread.length > 5) unread = unread.take(5).toList();
+  //         Provider.of<NotificationState>(context, listen: false).updateCount(unread.length);
+  //       });
+  //     }
+  //   });
+  // }
 
   /// Mark a notification as read and show the dialog
   Future<void> _markAndShow(dynamic notif) async {
