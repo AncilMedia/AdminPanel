@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
+import '../Ngrok_test_url.dart';
 import '../environmental variables.dart';
 import '../Services/api_client.dart';
 
@@ -32,6 +33,8 @@ class ProfileController {
     required String phone,
     XFile? imageFile,
   }) async {
+    final ngrokUrl = await fetchNgrokUrl();
+
     final uri = Uri.parse('$NgrokUrl/api/settings');
     final request = http.MultipartRequest('PUT', uri);
 

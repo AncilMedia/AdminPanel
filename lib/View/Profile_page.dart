@@ -7,6 +7,7 @@ import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import '../Controller/Profile_controller.dart';
 import '../Services/api_client.dart';
+import '../Socket_Service.dart';
 import '../View_model/Authentication_state.dart';
 import '../View_model/Custom_snackbar.dart';
 
@@ -32,8 +33,46 @@ class _ProfileState extends State<Profile> {
   bool isLoading = true;
   bool isSaving = false;
   bool isDeleting = false;
+  String orgName = 'Loading...';
+  String? orgImage;
 
   ProfileController? _controller;
+
+  void setupSocketListeners() {
+    final socketService = SocketService();
+
+    socketService.on('connect', (_) {
+      debugPrint('✅ Connected to socket server (Profile)');
+    });
+
+    socketService.on('disconnect', (_) {
+      debugPrint('❌ Disconnected from socket server (Profile)');
+    });
+
+    socketService.on('profile_updated', (data) {
+      debugPrint('📸 Profile updated event: $data');
+      setState(() {
+        // Update user info
+        _usernameController.text = data['username'] ?? _usernameController.text;
+        profileImageUrl = data['image'] ?? profileImageUrl;
+        role = data['role'] ?? role;
+
+        // Update organization info if available
+        if (data['organization'] != null) {
+          organizationName = data['organization']['name'] ?? organizationName;
+          orgImage = data['organization']['image'] ?? orgImage;
+        }
+
+        isChanged = false; // reset change flag if update is from socket
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setupSocketListeners();
+  }
 
   @override
   void didChangeDependencies() {
