@@ -99,13 +99,22 @@ class _PushNotificationState extends State<PushNotification> {
     return org['_id'] as String?;
   }
 
+  // String? _getSelectedUserId() {
+  //   final user = users.firstWhere(
+  //         (element) => element.username == selectedIndividual,
+  //     orElse: () => UserModel.empty(),
+  //   );
+  //   return user.userId.isEmpty ? null : user.userId;
+  // }
+
   String? _getSelectedUserId() {
     final user = users.firstWhere(
           (element) => element.username == selectedIndividual,
       orElse: () => UserModel.empty(),
     );
-    return user.userId.isEmpty ? null : user.userId;
+    return user.userId.isNotEmpty ? user.userId : null; // If backend expects _id, replace user.userId with user.id
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +124,6 @@ class _PushNotificationState extends State<PushNotification> {
     final isFormValid = titleController.text.isNotEmpty && bodyController.text.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Push Notification")),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

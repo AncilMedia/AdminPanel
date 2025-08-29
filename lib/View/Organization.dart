@@ -69,9 +69,10 @@ class _OrganizationState extends State<Organization> {
 
     if (error == null) {
       await _loadOrganizations();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
     }
+    // else {
+    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    // }
   }
 
   Future<void> _updateOrganization({

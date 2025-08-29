@@ -2,6 +2,8 @@ import 'package:ancilmediaadminpanel/View/Apps_page/Apps.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'Controller/Roles_controller.dart';
+import 'Controller/Sidebar_controller.dart';
 import 'Model/Item_Model.dart';
 import 'Socket_Service.dart';
 import 'View/Pushnotification.dart';
@@ -9,6 +11,7 @@ import 'Services/api_client.dart';
 import 'View/Login_page.dart';
 import 'View/Organization.dart';
 import 'View/PopUp/Right_drawer.dart';
+import 'View/Role.dart';
 import 'View_model/Authentication_state.dart';
 import 'View_model/Drawer_provider.dart';
 import 'View_model/Listitem_details.dart';
@@ -16,6 +19,7 @@ import 'View_model/Notification_dropdown_state.dart';
 import 'View_model/Sidebar_provider.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
+import 'View_model/side_navbar_drawer.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -33,8 +37,12 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => SubDrawerProvider()),
         ChangeNotifierProvider(create: (_) => SidedrawerProvider()),
+        ChangeNotifierProvider(create: (_) => SidebarProvider()),
+        ChangeNotifierProvider(create: (_) => SidebarController()),
         ChangeNotifierProvider(create: (_) => AuthState()),
         ChangeNotifierProvider(create: (_) => NotificationState()),
+        ChangeNotifierProvider(create: (_) => RolesController()),
+
         Provider<ApiClient>(
           create: (context) => ApiClient(context.read<AuthState>()),
         ),
