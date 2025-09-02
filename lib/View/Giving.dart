@@ -19,18 +19,16 @@ class _GivingState extends State<Giving> {
 
     return Scaffold(
       drawer: isLargeScreen ? null : Container( ),
-      body: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1749729390/giving_toodse.json')),
-              ],
-            ),
+      body: Center(
+        child: Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722681/loading_circle_v2ikmh.json',height: 200,width: 200)),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

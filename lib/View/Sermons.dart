@@ -25,7 +25,7 @@ class _SermonsState extends State<Sermons> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1749729389/gift_bktmqy.json')),
+                Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756720597/sermons_zbotg9.json')),
               ],
             ),
           ),

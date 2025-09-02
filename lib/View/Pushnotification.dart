@@ -125,7 +125,7 @@ class _PushNotificationState extends State<PushNotification> {
 
     return Scaffold(
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ?  Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724306/New_Notification_Bell_krzyrx.json'))
           : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

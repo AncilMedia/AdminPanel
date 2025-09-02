@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 import '../Controller/App_controller.dart';
 
 class ApplicationPage extends StatefulWidget {
@@ -273,7 +274,6 @@ class ApplicationPage extends StatefulWidget {
 //   }
 // }
 
-
 class _ApplicationPageState extends State<ApplicationPage> {
   final AppService _appService = AppService();
   List<dynamic> _apps = [];
@@ -296,9 +296,9 @@ class _ApplicationPageState extends State<ApplicationPage> {
     } catch (e) {
       if (!mounted) return; // ✅ Check mounted
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load apps")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to load apps")));
     }
   }
 
@@ -327,13 +327,13 @@ class _ApplicationPageState extends State<ApplicationPage> {
     if (!mounted) return; // ✅ Check mounted before updating state
     if (success) {
       await _fetchApps(); // safe now
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('App deleted successfully')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('App deleted successfully')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete app')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to delete app')));
     }
   }
 
@@ -350,125 +350,146 @@ class _ApplicationPageState extends State<ApplicationPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-        children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.08),
-          // header row
-          Container(
-            height: MediaQuery.of(context).size.height * 0.07,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Colors.teal,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15),
+          ? Center(
+              child: Lottie.network(
+                'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722682/bass_loading_vottxs.json',
+                height: 350,
+                width: 350,
               ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
+            )
+          : Column(
               children: [
-                Expanded(
-                  flex: 2,
-                  child: Text("Name",
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          color: Colors.white)),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+                // header row
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.07,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.teal,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(15),
+                      bottomRight: Radius.circular(15),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          "Name",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          "Organizations",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          "Created At",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          "Delete",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Expanded(
-                  flex: 3,
-                  child: Text("Organizations",
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          color: Colors.white)),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text("Created At",
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          color: Colors.white)),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text("Delete",
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          color: Colors.white)),
+                  child: ListView.builder(
+                    itemCount: _apps.length,
+                    itemBuilder: (context, index) {
+                      final app = _apps[index];
+                      return Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 16,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    app['appName'] ?? 'Unnamed',
+                                    style: GoogleFonts.poppins(fontSize: 16),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    _getOrgNames(app),
+                                    style: GoogleFonts.poppins(fontSize: 16),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    app['createdAt']?.substring(0, 10) ?? '',
+                                    style: GoogleFonts.poppins(fontSize: 16),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: GestureDetector(
+                                    onTap: () => _deleteApp(app['_id']),
+                                    child: Container(
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                          0.04,
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.06,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.redAccent,
+                                      ),
+                                      child: const Icon(
+                                        Iconsax.trash,
+                                        size: 20,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(color: Colors.grey, thickness: 0.2),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _apps.length,
-              itemBuilder: (context, index) {
-                final app = _apps[index];
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              app['appName'] ?? 'Unnamed',
-                              style: GoogleFonts.poppins(fontSize: 16),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              _getOrgNames(app),
-                              style: GoogleFonts.poppins(fontSize: 16),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              app['createdAt']?.substring(0, 10) ?? '',
-                              style: GoogleFonts.poppins(fontSize: 16),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: GestureDetector(
-                              onTap: () => _deleteApp(app['_id']),
-                              child: Container(
-                                height:
-                                MediaQuery.of(context).size.height *
-                                    0.04,
-                                width: MediaQuery.of(context).size.width *
-                                    0.06,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.redAccent,
-                                ),
-                                child: const Icon(Iconsax.trash,
-                                    size: 20, color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(
-                      color: Colors.grey,
-                      thickness: 0.2,
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

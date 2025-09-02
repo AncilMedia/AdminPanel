@@ -1,105 +1,830 @@
+// // // // // // // import 'package:flutter/material.dart';
+// // // // // // // import 'package:http/http.dart' as http;
+// // // // // // // import 'dart:convert';
+// // // // // // // import 'package:shared_preferences/shared_preferences.dart';
+// // // // // // // import '../environmental variables.dart';
+// // // // // // //
+// // // // // // // class SidebarController extends ChangeNotifier {
+// // // // // // //   List<Map<String, dynamic>> sidebarItems = [];
+// // // // // // //   bool isLoading = true;
+// // // // // // //
+// // // // // // //   SidebarController() {
+// // // // // // //     fetchSidebarItems();
+// // // // // // //   }
+// // // // // // //
+// // // // // // //   Future<void> fetchSidebarItems() async {
+// // // // // // //     try {
+// // // // // // //       isLoading = true;
+// // // // // // //       notifyListeners();
+// // // // // // //
+// // // // // // //       // Get token from local storage
+// // // // // // //       SharedPreferences prefs = await SharedPreferences.getInstance();
+// // // // // // //       String? token = prefs.getString('accessToken');
+// // // // // // //
+// // // // // // //       if (token == null) {
+// // // // // // //         print('No token found in local storage');
+// // // // // // //         isLoading = false;
+// // // // // // //         notifyListeners();
+// // // // // // //         return;
+// // // // // // //       }
+// // // // // // //
+// // // // // // //       final response = await http.get(
+// // // // // // //         Uri.parse('$baseUrl/api/sidebar'),
+// // // // // // //         headers: {'Authorization': 'Bearer $token'},
+// // // // // // //       );
+// // // // // // //
+// // // // // // //       if (response.statusCode == 200) {
+// // // // // // //         sidebarItems =
+// // // // // // //         List<Map<String, dynamic>>.from(json.decode(response.body));
+// // // // // // //       } else {
+// // // // // // //         sidebarItems = [];
+// // // // // // //         print('Failed to fetch sidebar items: ${response.statusCode}');
+// // // // // // //       }
+// // // // // // //
+// // // // // // //       isLoading = false;
+// // // // // // //       notifyListeners();
+// // // // // // //     } catch (e) {
+// // // // // // //       print('Error fetching sidebar items: $e');
+// // // // // // //       isLoading = false;
+// // // // // // //       notifyListeners();
+// // // // // // //     }
+// // // // // // //   }
+// // // // // // // }
+// // // // // //
+// // // // // // import 'package:flutter/material.dart';
+// // // // // // import 'package:http/http.dart' as http;
+// // // // // // import 'dart:convert';
+// // // // // // import 'package:shared_preferences/shared_preferences.dart';
+// // // // // // import '../environmental variables.dart';
+// // // // // //
+// // // // // // class SidebarController extends ChangeNotifier {
+// // // // // //   List<Map<String, dynamic>> sidebarItems = [];
+// // // // // //   bool isLoading = true;
+// // // // // //
+// // // // // //   SidebarController() {
+// // // // // //     fetchSidebarItems();
+// // // // // //   }
+// // // // // //
+// // // // // //   Future<void> fetchSidebarItems() async {
+// // // // // //     try {
+// // // // // //       isLoading = true;
+// // // // // //       notifyListeners();
+// // // // // //
+// // // // // //       SharedPreferences prefs = await SharedPreferences.getInstance();
+// // // // // //       String? token = prefs.getString('accessToken');
+// // // // // //
+// // // // // //       if (token == null) {
+// // // // // //         print('No token found in local storage');
+// // // // // //         isLoading = false;
+// // // // // //         notifyListeners();
+// // // // // //         return;
+// // // // // //       }
+// // // // // //
+// // // // // //       final response = await http.get(
+// // // // // //         Uri.parse('$baseUrl/api/sidebar'),
+// // // // // //         headers: {'Authorization': 'Bearer $token'},
+// // // // // //       );
+// // // // // //
+// // // // // //       if (response.statusCode == 200) {
+// // // // // //         sidebarItems =
+// // // // // //         List<Map<String, dynamic>>.from(json.decode(response.body));
+// // // // // //       } else {
+// // // // // //         sidebarItems = [];
+// // // // // //         print('Failed to fetch sidebar items: ${response.statusCode}');
+// // // // // //       }
+// // // // // //
+// // // // // //       isLoading = false;
+// // // // // //       notifyListeners();
+// // // // // //     } catch (e) {
+// // // // // //       print('Error fetching sidebar items: $e');
+// // // // // //       isLoading = false;
+// // // // // //       notifyListeners();
+// // // // // //     }
+// // // // // //   }
+// // // // // // }
+// // // // //
+// // // // //
+// // // // // import 'dart:convert';
+// // // // // import 'package:flutter/material.dart';
+// // // // // import 'package:http/http.dart' as http;
+// // // // // import 'package:shared_preferences/shared_preferences.dart';
+// // // // //
+// // // // // import '../environmental variables.dart';
+// // // // //
+// // // // //
+// // // // // class SidebarController extends ChangeNotifier {
+// // // // //   bool isLoading = false;
+// // // // //   List<Map<String, dynamic>> sidebarItems = [];
+// // // // //   List<Map<String, dynamic>> roleSidebarItems = [];
+// // // // //   Map<String, dynamic>? selectedRoleSidebar;
+// // // // //
+// // // // //   /// ✅ Get stored token
+// // // // //   Future<String?> _getToken() async {
+// // // // //     final prefs = await SharedPreferences.getInstance();
+// // // // //     return prefs.getString("accessToken");
+// // // // //   }
+// // // // //
+// // // // //   /// ✅ Get all sidebar items
+// // // // //   Future<void> fetchAllSidebarItems() async {
+// // // // //     try {
+// // // // //       isLoading = true;
+// // // // //       notifyListeners();
+// // // // //
+// // // // //       final token = await _getToken();
+// // // // //       final response = await http.get(
+// // // // //         Uri.parse('$baseUrl/api/sidebar'),
+// // // // //         headers: {"Authorization": "Bearer $token"},
+// // // // //       );
+// // // // //
+// // // // //       if (response.statusCode == 200) {
+// // // // //         sidebarItems = List<Map<String, dynamic>>.from(jsonDecode(response.body));
+// // // // //       } else {
+// // // // //         debugPrint("Fetch Sidebar Items Failed: ${response.body}");
+// // // // //       }
+// // // // //     } catch (e) {
+// // // // //       debugPrint("Fetch Sidebar Items Error: $e");
+// // // // //     } finally {
+// // // // //       isLoading = false;
+// // // // //       notifyListeners();
+// // // // //     }
+// // // // //   }
+// // // // //
+// // // // //   /// ✅ Get sidebar items for a role
+// // // // //   Future<void> fetchSidebarForRole(String roleId) async {
+// // // // //     try {
+// // // // //       isLoading = true;
+// // // // //       notifyListeners();
+// // // // //
+// // // // //       final token = await _getToken();
+// // // // //       final response = await http.get(
+// // // // //         Uri.parse("$baseUrl/api/sidebar/$roleId"),
+// // // // //         headers: {"Authorization": "Bearer $token"},
+// // // // //       );
+// // // // //
+// // // // //       if (response.statusCode == 200) {
+// // // // //         final data = jsonDecode(response.body);
+// // // // //         selectedRoleSidebar = data;
+// // // // //         roleSidebarItems = List<Map<String, dynamic>>.from(data["items"]);
+// // // // //       } else {
+// // // // //         debugPrint("Fetch Sidebar For Role Failed: ${response.body}");
+// // // // //       }
+// // // // //     } catch (e) {
+// // // // //       debugPrint("Fetch Sidebar For Role Error: $e");
+// // // // //     } finally {
+// // // // //       isLoading = false;
+// // // // //       notifyListeners();
+// // // // //     }
+// // // // //   }
+// // // // //   /// ✅ Create sidebar item (admin only)
+// // // // //   Future<bool> createSidebarItem({
+// // // // //     required String key,
+// // // // //     required String label,
+// // // // //     required String icon,
+// // // // //     required List<String> roles,
+// // // // //     required int order,
+// // // // //   }) async {
+// // // // //     try {
+// // // // //       isLoading = true;
+// // // // //       notifyListeners();
+// // // // //
+// // // // //       final token = await _getToken();
+// // // // //       final response = await http.post(
+// // // // //         Uri.parse('$baseUrl/api/sidebar'),
+// // // // //         headers: {
+// // // // //           "Content-Type": "application/json",
+// // // // //           "Authorization": "Bearer $token",
+// // // // //         },
+// // // // //         body: jsonEncode({
+// // // // //           "key": key,
+// // // // //           "label": label,
+// // // // //           "icon": icon,
+// // // // //           "roles": roles,
+// // // // //           "order": order,
+// // // // //         }),
+// // // // //       );
+// // // // //
+// // // // //       if (response.statusCode == 201) {
+// // // // //         await fetchAllSidebarItems();
+// // // // //         return true;
+// // // // //       } else {
+// // // // //         debugPrint("Create Sidebar Failed: ${response.body}");
+// // // // //         return false;
+// // // // //       }
+// // // // //     } catch (e) {
+// // // // //       debugPrint("Create Sidebar Error: $e");
+// // // // //       return false;
+// // // // //     } finally {
+// // // // //       isLoading = false;
+// // // // //       notifyListeners();
+// // // // //     }
+// // // // //   }
+// // // // //
+// // // // //   /// ✅ Update sidebar item
+// // // // //   Future<bool> updateSidebarItem(String id, {
+// // // // //     String? label,
+// // // // //     String? icon,
+// // // // //     List<String>? roles,
+// // // // //     int? order,
+// // // // //   }) async {
+// // // // //     try {
+// // // // //       isLoading = true;
+// // // // //       notifyListeners();
+// // // // //
+// // // // //       final token = await _getToken();
+// // // // //       final response = await http.put(
+// // // // //         Uri.parse("$baseUrl/api/sidebar/$id"),
+// // // // //         headers: {
+// // // // //           "Content-Type": "application/json",
+// // // // //           "Authorization": "Bearer $token",
+// // // // //         },
+// // // // //         body: jsonEncode({
+// // // // //           if (label != null) "label": label,
+// // // // //           if (icon != null) "icon": icon,
+// // // // //           if (roles != null) "roles": roles,
+// // // // //           if (order != null) "order": order,
+// // // // //         }),
+// // // // //       );
+// // // // //
+// // // // //       if (response.statusCode == 200) {
+// // // // //         await fetchAllSidebarItems();
+// // // // //         return true;
+// // // // //       } else {
+// // // // //         debugPrint("Update Sidebar Failed: ${response.body}");
+// // // // //         return false;
+// // // // //       }
+// // // // //     } catch (e) {
+// // // // //       debugPrint("Update Sidebar Error: $e");
+// // // // //       return false;
+// // // // //     } finally {
+// // // // //       isLoading = false;
+// // // // //       notifyListeners();
+// // // // //     }
+// // // // //   }
+// // // // //
+// // // // //   /// ✅ Delete sidebar item
+// // // // //   Future<bool> deleteSidebarItem(String id) async {
+// // // // //     try {
+// // // // //       isLoading = true;
+// // // // //       notifyListeners();
+// // // // //
+// // // // //       final token = await _getToken();
+// // // // //       final response = await http.delete(
+// // // // //         Uri.parse("$baseUrl/api/sidebar/$id"),
+// // // // //         headers: {"Authorization": "Bearer $token"},
+// // // // //       );
+// // // // //
+// // // // //       if (response.statusCode == 200) {
+// // // // //         sidebarItems.removeWhere((item) => item["_id"] == id);
+// // // // //         notifyListeners();
+// // // // //         return true;
+// // // // //       } else {
+// // // // //         debugPrint("Delete Sidebar Failed: ${response.body}");
+// // // // //         return false;
+// // // // //       }
+// // // // //     } catch (e) {
+// // // // //       debugPrint("Delete Sidebar Error: $e");
+// // // // //       return false;
+// // // // //     } finally {
+// // // // //       isLoading = false;
+// // // // //       notifyListeners();
+// // // // //     }
+// // // // //   }
+// // // // //
+// // // // //   /// ✅ Assign sidebar permissions to role
+// // // // //   Future<bool> assignSidebarPermissions(String roleId, List<Map<String, dynamic>> sidebar) async {
+// // // // //     try {
+// // // // //       isLoading = true;
+// // // // //       notifyListeners();
+// // // // //
+// // // // //       final token = await _getToken();
+// // // // //       final response = await http.put(
+// // // // //         Uri.parse("$baseUrl/api/sidebar/assign/$roleId"),
+// // // // //         headers: {
+// // // // //           "Content-Type": "application/json",
+// // // // //           "Authorization": "Bearer $token",
+// // // // //         },
+// // // // //         body: jsonEncode({"sidebar": sidebar}),
+// // // // //       );
+// // // // //
+// // // // //       if (response.statusCode == 200) {
+// // // // //         debugPrint("Sidebar Permissions Assigned: ${response.body}");
+// // // // //         return true;
+// // // // //       } else {
+// // // // //         debugPrint("Assign Sidebar Permissions Failed: ${response.body}");
+// // // // //         return false;
+// // // // //       }
+// // // // //     } catch (e) {
+// // // // //       debugPrint("Assign Sidebar Permissions Error: $e");
+// // // // //       return false;
+// // // // //     } finally {
+// // // // //       isLoading = false;
+// // // // //       notifyListeners();
+// // // // //     }
+// // // // //   }
+// // // // // }
+// // // //
+// // // //
+// // // // import 'dart:convert';
 // // // // import 'package:flutter/material.dart';
 // // // // import 'package:http/http.dart' as http;
-// // // // import 'dart:convert';
 // // // // import 'package:shared_preferences/shared_preferences.dart';
+// // // //
 // // // // import '../environmental variables.dart';
 // // // //
 // // // // class SidebarController extends ChangeNotifier {
-// // // //   List<Map<String, dynamic>> sidebarItems = [];
-// // // //   bool isLoading = true;
+// // // //   bool isLoading = false;
+// // // //   String? errorMessage;
 // // // //
-// // // //   SidebarController() {
-// // // //     fetchSidebarItems();
+// // // //   List<Map<String, dynamic>> sidebarItems = [];
+// // // //   List<Map<String, dynamic>> roleSidebarItems = [];
+// // // //   Map<String, dynamic>? selectedRoleSidebar;
+// // // //
+// // // //   /// ✅ Get stored token
+// // // //   Future<String?> _getToken() async {
+// // // //     final prefs = await SharedPreferences.getInstance();
+// // // //     return prefs.getString("accessToken");
 // // // //   }
 // // // //
-// // // //   Future<void> fetchSidebarItems() async {
+// // // //   /// ✅ Safely decode JSON
+// // // //   dynamic _tryParseJson(String source) {
 // // // //     try {
-// // // //       isLoading = true;
-// // // //       notifyListeners();
+// // // //       return jsonDecode(source);
+// // // //     } catch (_) {
+// // // //       return null;
+// // // //     }
+// // // //   }
 // // // //
-// // // //       // Get token from local storage
-// // // //       SharedPreferences prefs = await SharedPreferences.getInstance();
-// // // //       String? token = prefs.getString('accessToken');
+// // // //   /// ✅ Get all sidebar items
+// // // //   Future<void> fetchAllSidebarItems() async {
+// // // //     isLoading = true;
+// // // //     errorMessage = null;
+// // // //     notifyListeners();
 // // // //
-// // // //       if (token == null) {
-// // // //         print('No token found in local storage');
-// // // //         isLoading = false;
-// // // //         notifyListeners();
-// // // //         return;
-// // // //       }
-// // // //
+// // // //     try {
+// // // //       final token = await _getToken();
 // // // //       final response = await http.get(
 // // // //         Uri.parse('$baseUrl/api/sidebar'),
-// // // //         headers: {'Authorization': 'Bearer $token'},
+// // // //         headers: {"Authorization": "Bearer $token"},
 // // // //       );
 // // // //
 // // // //       if (response.statusCode == 200) {
-// // // //         sidebarItems =
-// // // //         List<Map<String, dynamic>>.from(json.decode(response.body));
+// // // //         final data = _tryParseJson(response.body);
+// // // //         if (data is List) {
+// // // //           sidebarItems =
+// // // //           List<Map<String, dynamic>>.from(data.map((e) => Map<String, dynamic>.from(e)));
+// // // //         } else {
+// // // //           errorMessage = "Invalid response format";
+// // // //         }
 // // // //       } else {
-// // // //         sidebarItems = [];
-// // // //         print('Failed to fetch sidebar items: ${response.statusCode}');
+// // // //         errorMessage = "Failed to fetch sidebar items";
 // // // //       }
-// // // //
-// // // //       isLoading = false;
-// // // //       notifyListeners();
 // // // //     } catch (e) {
-// // // //       print('Error fetching sidebar items: $e');
+// // // //       errorMessage = "Error: $e";
+// // // //     } finally {
 // // // //       isLoading = false;
 // // // //       notifyListeners();
 // // // //     }
 // // // //   }
+// // // //
+// // // //   /// ✅ Get sidebar items for a role
+// // // //   Future<void> fetchSidebarForRole(String roleId) async {
+// // // //     isLoading = true;
+// // // //     errorMessage = null;
+// // // //     notifyListeners();
+// // // //
+// // // //     try {
+// // // //       final token = await _getToken();
+// // // //       final response = await http.get(
+// // // //         Uri.parse("$baseUrl/api/sidebar/$roleId"),
+// // // //         headers: {"Authorization": "Bearer $token"},
+// // // //       );
+// // // //
+// // // //       if (response.statusCode == 200) {
+// // // //         final data = _tryParseJson(response.body);
+// // // //         if (data is Map<String, dynamic>) {
+// // // //           selectedRoleSidebar = data;
+// // // //           roleSidebarItems = List<Map<String, dynamic>>.from(data["items"] ?? []);
+// // // //         } else {
+// // // //           errorMessage = "Invalid response format";
+// // // //         }
+// // // //       } else {
+// // // //         errorMessage = "Failed to fetch sidebar for role";
+// // // //       }
+// // // //     } catch (e) {
+// // // //       errorMessage = "Error: $e";
+// // // //     } finally {
+// // // //       isLoading = false;
+// // // //       notifyListeners();
+// // // //     }
+// // // //   }
+// // // //
+// // // //   /// ✅ Create sidebar item (admin only)
+// // // //   Future<bool> createSidebarItem({
+// // // //     required String key,
+// // // //     required String label,
+// // // //     required String icon,
+// // // //     required List<String> roles,
+// // // //     required int order,
+// // // //   }) async {
+// // // //     isLoading = true;
+// // // //     errorMessage = null;
+// // // //     notifyListeners();
+// // // //
+// // // //     try {
+// // // //       final token = await _getToken();
+// // // //       final response = await http.post(
+// // // //         Uri.parse('$baseUrl/api/sidebar'),
+// // // //         headers: {
+// // // //           "Content-Type": "application/json",
+// // // //           "Authorization": "Bearer $token",
+// // // //         },
+// // // //         body: jsonEncode({
+// // // //           "key": key,
+// // // //           "label": label,
+// // // //           "icon": icon,
+// // // //           "roles": roles,
+// // // //           "order": order,
+// // // //         }),
+// // // //       );
+// // // //
+// // // //       if (response.statusCode == 201) {
+// // // //         await fetchAllSidebarItems();
+// // // //         return true;
+// // // //       } else {
+// // // //         errorMessage = "Failed to create sidebar item";
+// // // //       }
+// // // //     } catch (e) {
+// // // //       errorMessage = "Error: $e";
+// // // //     } finally {
+// // // //       isLoading = false;
+// // // //       notifyListeners();
+// // // //     }
+// // // //     return false;
+// // // //   }
+// // // //
+// // // //   /// ✅ Update sidebar item
+// // // //   Future<bool> updateSidebarItem(
+// // // //       String id, {
+// // // //         String? label,
+// // // //         String? icon,
+// // // //         List<String>? roles,
+// // // //         int? order,
+// // // //       }) async {
+// // // //     isLoading = true;
+// // // //     errorMessage = null;
+// // // //     notifyListeners();
+// // // //
+// // // //     try {
+// // // //       final token = await _getToken();
+// // // //       final response = await http.put(
+// // // //         Uri.parse("$baseUrl/api/sidebar/$id"),
+// // // //         headers: {
+// // // //           "Content-Type": "application/json",
+// // // //           "Authorization": "Bearer $token",
+// // // //         },
+// // // //         body: jsonEncode({
+// // // //           if (label != null) "label": label,
+// // // //           if (icon != null) "icon": icon,
+// // // //           if (roles != null) "roles": roles,
+// // // //           if (order != null) "order": order,
+// // // //         }),
+// // // //       );
+// // // //
+// // // //       if (response.statusCode == 200) {
+// // // //         await fetchAllSidebarItems();
+// // // //         return true;
+// // // //       } else {
+// // // //         errorMessage = "Failed to update sidebar item";
+// // // //       }
+// // // //     } catch (e) {
+// // // //       errorMessage = "Error: $e";
+// // // //     } finally {
+// // // //       isLoading = false;
+// // // //       notifyListeners();
+// // // //     }
+// // // //     return false;
+// // // //   }
+// // // //
+// // // //   /// ✅ Delete sidebar item
+// // // //   Future<bool> deleteSidebarItem(String id) async {
+// // // //     isLoading = true;
+// // // //     errorMessage = null;
+// // // //     notifyListeners();
+// // // //
+// // // //     try {
+// // // //       final token = await _getToken();
+// // // //       final response = await http.delete(
+// // // //         Uri.parse("$baseUrl/api/sidebar/$id"),
+// // // //         headers: {"Authorization": "Bearer $token"},
+// // // //       );
+// // // //
+// // // //       if (response.statusCode == 200) {
+// // // //         sidebarItems.removeWhere((item) => item["_id"] == id);
+// // // //         notifyListeners();
+// // // //         return true;
+// // // //       } else {
+// // // //         errorMessage = "Failed to delete sidebar item";
+// // // //       }
+// // // //     } catch (e) {
+// // // //       errorMessage = "Error: $e";
+// // // //     } finally {
+// // // //       isLoading = false;
+// // // //       notifyListeners();
+// // // //     }
+// // // //     return false;
+// // // //   }
+// // // //
+// // // //   /// ✅ Assign sidebar permissions to role
+// // // //   Future<bool> assignSidebarPermissions(
+// // // //       String roleId,
+// // // //       List<Map<String, dynamic>> sidebar,
+// // // //       ) async {
+// // // //     isLoading = true;
+// // // //     errorMessage = null;
+// // // //     notifyListeners();
+// // // //
+// // // //     try {
+// // // //       final token = await _getToken();
+// // // //       final response = await http.put(
+// // // //         Uri.parse("$baseUrl/api/sidebar/assign/$roleId"),
+// // // //         headers: {
+// // // //           "Content-Type": "application/json",
+// // // //           "Authorization": "Bearer $token",
+// // // //         },
+// // // //         body: jsonEncode({"sidebar": sidebar}),
+// // // //       );
+// // // //
+// // // //       if (response.statusCode == 200) {
+// // // //         return true;
+// // // //       } else {
+// // // //         errorMessage = "Failed to assign sidebar permissions";
+// // // //       }
+// // // //     } catch (e) {
+// // // //       errorMessage = "Error: $e";
+// // // //     } finally {
+// // // //       isLoading = false;
+// // // //       notifyListeners();
+// // // //     }
+// // // //     return false;
+// // // //   }
 // // // // }
 // // //
+// // //
+// // // import 'dart:convert';
 // // // import 'package:flutter/material.dart';
 // // // import 'package:http/http.dart' as http;
-// // // import 'dart:convert';
 // // // import 'package:shared_preferences/shared_preferences.dart';
+// // //
 // // // import '../environmental variables.dart';
 // // //
 // // // class SidebarController extends ChangeNotifier {
-// // //   List<Map<String, dynamic>> sidebarItems = [];
-// // //   bool isLoading = true;
+// // //   bool isLoading = false;
+// // //   String? errorMessage;
 // // //
-// // //   SidebarController() {
-// // //     fetchSidebarItems();
+// // //   List<Map<String, dynamic>> sidebarItems = [];
+// // //   List<Map<String, dynamic>> roleSidebarItems = [];
+// // //   Map<String, dynamic>? selectedRoleSidebar;
+// // //
+// // //   /// ✅ Get stored token
+// // //   Future<String?> _getToken() async {
+// // //     final prefs = await SharedPreferences.getInstance();
+// // //     return prefs.getString("accessToken");
 // // //   }
 // // //
-// // //   Future<void> fetchSidebarItems() async {
+// // //   /// ✅ Safely decode JSON
+// // //   dynamic _tryParseJson(String source) {
 // // //     try {
-// // //       isLoading = true;
-// // //       notifyListeners();
+// // //       return jsonDecode(source);
+// // //     } catch (_) {
+// // //       return null;
+// // //     }
+// // //   }
 // // //
-// // //       SharedPreferences prefs = await SharedPreferences.getInstance();
-// // //       String? token = prefs.getString('accessToken');
+// // //   /// ✅ Get all sidebar items
+// // //   Future<void> fetchAllSidebarItems() async {
+// // //     isLoading = true;
+// // //     errorMessage = null;
+// // //     notifyListeners();
 // // //
-// // //       if (token == null) {
-// // //         print('No token found in local storage');
-// // //         isLoading = false;
-// // //         notifyListeners();
-// // //         return;
-// // //       }
-// // //
+// // //     try {
+// // //       final token = await _getToken();
 // // //       final response = await http.get(
 // // //         Uri.parse('$baseUrl/api/sidebar'),
-// // //         headers: {'Authorization': 'Bearer $token'},
+// // //         headers: {"Authorization": "Bearer $token"},
 // // //       );
 // // //
 // // //       if (response.statusCode == 200) {
-// // //         sidebarItems =
-// // //         List<Map<String, dynamic>>.from(json.decode(response.body));
+// // //         final data = _tryParseJson(response.body);
+// // //         if (data is List) {
+// // //           sidebarItems = List<Map<String, dynamic>>.from(
+// // //             data.map((e) => Map<String, dynamic>.from(e)),
+// // //           );
+// // //         } else {
+// // //           errorMessage = "Invalid response format";
+// // //         }
 // // //       } else {
-// // //         sidebarItems = [];
-// // //         print('Failed to fetch sidebar items: ${response.statusCode}');
+// // //         errorMessage = "Failed: ${response.body}";
 // // //       }
-// // //
-// // //       isLoading = false;
-// // //       notifyListeners();
 // // //     } catch (e) {
-// // //       print('Error fetching sidebar items: $e');
+// // //       errorMessage = "Error: $e";
+// // //     } finally {
 // // //       isLoading = false;
 // // //       notifyListeners();
 // // //     }
+// // //   }
+// // //
+// // //   /// ✅ Get sidebar items for a role
+// // //   Future<void> fetchSidebarForRole(String roleId) async {
+// // //     isLoading = true;
+// // //     errorMessage = null;
+// // //     notifyListeners();
+// // //
+// // //     try {
+// // //       final token = await _getToken();
+// // //       final response = await http.get(
+// // //         Uri.parse("$baseUrl/api/sidebar/$roleId"),
+// // //         headers: {"Authorization": "Bearer $token"},
+// // //       );
+// // //
+// // //       if (response.statusCode == 200) {
+// // //         final data = _tryParseJson(response.body);
+// // //         if (data is Map<String, dynamic>) {
+// // //           selectedRoleSidebar = data;
+// // //           roleSidebarItems = List<Map<String, dynamic>>.from(data["items"] ?? []);
+// // //         } else {
+// // //           errorMessage = "Invalid response format";
+// // //         }
+// // //       } else {
+// // //         errorMessage = "Failed: ${response.body}";
+// // //       }
+// // //     } catch (e) {
+// // //       errorMessage = "Error: $e";
+// // //     } finally {
+// // //       isLoading = false;
+// // //       notifyListeners();
+// // //     }
+// // //   }
+// // //
+// // //   /// ✅ Create sidebar item (admin only)
+// // //   Future<bool> createSidebarItem({
+// // //     required String key,
+// // //     required String label,
+// // //     required String icon,
+// // //     required List<String> roles, // Must be role IDs
+// // //     required int order,
+// // //   }) async {
+// // //     isLoading = true;
+// // //     errorMessage = null;
+// // //     notifyListeners();
+// // //
+// // //     try {
+// // //       final token = await _getToken();
+// // //       final response = await http.post(
+// // //         Uri.parse('$baseUrl/api/sidebar'),
+// // //         headers: {
+// // //           "Content-Type": "application/json",
+// // //           "Authorization": "Bearer $token",
+// // //         },
+// // //         body: jsonEncode({
+// // //           "key": key,
+// // //           "label": label,
+// // //           "icon": icon,
+// // //           "roles": roles, // ✅ send ObjectIds here
+// // //           "order": order,
+// // //         }),
+// // //       );
+// // //
+// // //       if (response.statusCode == 201) {
+// // //         await fetchAllSidebarItems();
+// // //         return true;
+// // //       } else {
+// // //         errorMessage = "Failed: ${response.body}";
+// // //       }
+// // //     } catch (e) {
+// // //       errorMessage = "Error: $e";
+// // //     } finally {
+// // //       isLoading = false;
+// // //       notifyListeners();
+// // //     }
+// // //     return false;
+// // //   }
+// // //
+// // //   /// ✅ Update sidebar item
+// // //   Future<bool> updateSidebarItem(
+// // //       String id, {
+// // //         String? label,
+// // //         String? icon,
+// // //         List<String>? roles, // Must be role IDs
+// // //         int? order,
+// // //       }) async {
+// // //     isLoading = true;
+// // //     errorMessage = null;
+// // //     notifyListeners();
+// // //
+// // //     try {
+// // //       final token = await _getToken();
+// // //       final response = await http.put(
+// // //         Uri.parse("$baseUrl/api/sidebar/$id"),
+// // //         headers: {
+// // //           "Content-Type": "application/json",
+// // //           "Authorization": "Bearer $token",
+// // //         },
+// // //         body: jsonEncode({
+// // //           if (label != null) "label": label,
+// // //           if (icon != null) "icon": icon,
+// // //           if (roles != null) "roles": roles, // ✅ ObjectIds
+// // //           if (order != null) "order": order,
+// // //         }),
+// // //       );
+// // //
+// // //       if (response.statusCode == 200) {
+// // //         await fetchAllSidebarItems();
+// // //         return true;
+// // //       } else {
+// // //         errorMessage = "Failed: ${response.body}";
+// // //       }
+// // //     } catch (e) {
+// // //       errorMessage = "Error: $e";
+// // //     } finally {
+// // //       isLoading = false;
+// // //       notifyListeners();
+// // //     }
+// // //     return false;
+// // //   }
+// // //
+// // //   /// ✅ Delete sidebar item
+// // //   Future<bool> deleteSidebarItem(String id) async {
+// // //     isLoading = true;
+// // //     errorMessage = null;
+// // //     notifyListeners();
+// // //
+// // //     try {
+// // //       final token = await _getToken();
+// // //       final response = await http.delete(
+// // //         Uri.parse("$baseUrl/api/sidebar/$id"),
+// // //         headers: {"Authorization": "Bearer $token"},
+// // //       );
+// // //
+// // //       if (response.statusCode == 200) {
+// // //         sidebarItems.removeWhere((item) => item["_id"] == id);
+// // //         notifyListeners();
+// // //         return true;
+// // //       } else {
+// // //         errorMessage = "Failed: ${response.body}";
+// // //       }
+// // //     } catch (e) {
+// // //       errorMessage = "Error: $e";
+// // //     } finally {
+// // //       isLoading = false;
+// // //       notifyListeners();
+// // //     }
+// // //     return false;
+// // //   }
+// // //
+// // //   /// ✅ Assign sidebar permissions to role
+// // //   Future<bool> assignSidebarPermissions(
+// // //       String roleId,
+// // //       List<Map<String, dynamic>> sidebar,
+// // //       ) async {
+// // //     isLoading = true;
+// // //     errorMessage = null;
+// // //     notifyListeners();
+// // //
+// // //     try {
+// // //       final token = await _getToken();
+// // //       final response = await http.put(
+// // //         Uri.parse("$baseUrl/api/sidebar/assign/$roleId"),
+// // //         headers: {
+// // //           "Content-Type": "application/json",
+// // //           "Authorization": "Bearer $token",
+// // //         },
+// // //         body: jsonEncode({
+// // //           "sidebar": sidebar.map((e) => {
+// // //             "key": e["key"],
+// // //             "label": e["label"],
+// // //             "icon": e["icon"],
+// // //             "order": e["order"] ?? 0,
+// // //             "permissions": e["permissions"] ?? {
+// // //               "view": true,
+// // //               "read": false,
+// // //               "manage": false,
+// // //             }
+// // //           }).toList()
+// // //         }),
+// // //       );
+// // //
+// // //       if (response.statusCode == 200) {
+// // //         return true;
+// // //       } else {
+// // //         errorMessage = "Failed: ${response.body}";
+// // //       }
+// // //     } catch (e) {
+// // //       errorMessage = "Error: $e";
+// // //     } finally {
+// // //       isLoading = false;
+// // //       notifyListeners();
+// // //     }
+// // //     return false;
 // // //   }
 // // // }
 // //
@@ -111,9 +836,10 @@
 // //
 // // import '../environmental variables.dart';
 // //
-// //
 // // class SidebarController extends ChangeNotifier {
 // //   bool isLoading = false;
+// //   String? errorMessage;
+// //
 // //   List<Map<String, dynamic>> sidebarItems = [];
 // //   List<Map<String, dynamic>> roleSidebarItems = [];
 // //   Map<String, dynamic>? selectedRoleSidebar;
@@ -124,12 +850,28 @@
 // //     return prefs.getString("accessToken");
 // //   }
 // //
+// //   /// ✅ Get stored roleName
+// //   Future<String> _getRoleName() async {
+// //     final prefs = await SharedPreferences.getInstance();
+// //     return prefs.getString("userRole") ?? "";
+// //   }
+// //
+// //   /// ✅ Safely decode JSON
+// //   dynamic _tryParseJson(String source) {
+// //     try {
+// //       return jsonDecode(source);
+// //     } catch (_) {
+// //       return null;
+// //     }
+// //   }
+// //
 // //   /// ✅ Get all sidebar items
 // //   Future<void> fetchAllSidebarItems() async {
-// //     try {
-// //       isLoading = true;
-// //       notifyListeners();
+// //     isLoading = true;
+// //     errorMessage = null;
+// //     notifyListeners();
 // //
+// //     try {
 // //       final token = await _getToken();
 // //       final response = await http.get(
 // //         Uri.parse('$baseUrl/api/sidebar'),
@@ -137,12 +879,19 @@
 // //       );
 // //
 // //       if (response.statusCode == 200) {
-// //         sidebarItems = List<Map<String, dynamic>>.from(jsonDecode(response.body));
+// //         final data = _tryParseJson(response.body);
+// //         if (data is List) {
+// //           sidebarItems = List<Map<String, dynamic>>.from(
+// //             data.map((e) => Map<String, dynamic>.from(e)),
+// //           );
+// //         } else {
+// //           errorMessage = "Invalid response format";
+// //         }
 // //       } else {
-// //         debugPrint("Fetch Sidebar Items Failed: ${response.body}");
+// //         errorMessage = "Failed: ${response.body}";
 // //       }
 // //     } catch (e) {
-// //       debugPrint("Fetch Sidebar Items Error: $e");
+// //       errorMessage = "Error: $e";
 // //     } finally {
 // //       isLoading = false;
 // //       notifyListeners();
@@ -151,10 +900,11 @@
 // //
 // //   /// ✅ Get sidebar items for a role
 // //   Future<void> fetchSidebarForRole(String roleId) async {
-// //     try {
-// //       isLoading = true;
-// //       notifyListeners();
+// //     isLoading = true;
+// //     errorMessage = null;
+// //     notifyListeners();
 // //
+// //     try {
 // //       final token = await _getToken();
 // //       final response = await http.get(
 // //         Uri.parse("$baseUrl/api/sidebar/$roleId"),
@@ -162,31 +912,57 @@
 // //       );
 // //
 // //       if (response.statusCode == 200) {
-// //         final data = jsonDecode(response.body);
-// //         selectedRoleSidebar = data;
-// //         roleSidebarItems = List<Map<String, dynamic>>.from(data["items"]);
+// //         final data = _tryParseJson(response.body);
+// //         if (data is Map<String, dynamic>) {
+// //           selectedRoleSidebar = data;
+// //           await _filterSidebarForCurrentUser();
+// //         } else {
+// //           errorMessage = "Invalid response format";
+// //         }
 // //       } else {
-// //         debugPrint("Fetch Sidebar For Role Failed: ${response.body}");
+// //         errorMessage = "Failed: ${response.body}";
 // //       }
 // //     } catch (e) {
-// //       debugPrint("Fetch Sidebar For Role Error: $e");
+// //       errorMessage = "Error: $e";
 // //     } finally {
 // //       isLoading = false;
 // //       notifyListeners();
 // //     }
 // //   }
+// //
+// //   /// ✅ Filter sidebar based on role
+// //   Future<void> _filterSidebarForCurrentUser() async {
+// //     final roleName = (await _getRoleName()).toLowerCase();
+// //
+// //     final items = List<Map<String, dynamic>>.from(
+// //       selectedRoleSidebar?["items"] ?? [],
+// //     );
+// //
+// //     if (roleName == "admin") {
+// //       // 🔓 Admin → show all items (ignore permissions)
+// //       roleSidebarItems = items;
+// //     } else {
+// //       // 🔐 Non-admin → only show items with manage == true
+// //       roleSidebarItems = items.where((item) {
+// //         final perms = item["permissions"] ?? {};
+// //         return perms["manage"] == true;
+// //       }).toList();
+// //     }
+// //   }
+// //
 // //   /// ✅ Create sidebar item (admin only)
 // //   Future<bool> createSidebarItem({
 // //     required String key,
 // //     required String label,
 // //     required String icon,
-// //     required List<String> roles,
+// //     required List<String> roles, // Must be role IDs
 // //     required int order,
 // //   }) async {
-// //     try {
-// //       isLoading = true;
-// //       notifyListeners();
+// //     isLoading = true;
+// //     errorMessage = null;
+// //     notifyListeners();
 // //
+// //     try {
 // //       final token = await _getToken();
 // //       final response = await http.post(
 // //         Uri.parse('$baseUrl/api/sidebar'),
@@ -198,7 +974,7 @@
 // //           "key": key,
 // //           "label": label,
 // //           "icon": icon,
-// //           "roles": roles,
+// //           "roles": roles, // ✅ send ObjectIds here
 // //           "order": order,
 // //         }),
 // //       );
@@ -207,29 +983,30 @@
 // //         await fetchAllSidebarItems();
 // //         return true;
 // //       } else {
-// //         debugPrint("Create Sidebar Failed: ${response.body}");
-// //         return false;
+// //         errorMessage = "Failed: ${response.body}";
 // //       }
 // //     } catch (e) {
-// //       debugPrint("Create Sidebar Error: $e");
-// //       return false;
+// //       errorMessage = "Error: $e";
 // //     } finally {
 // //       isLoading = false;
 // //       notifyListeners();
 // //     }
+// //     return false;
 // //   }
 // //
 // //   /// ✅ Update sidebar item
-// //   Future<bool> updateSidebarItem(String id, {
-// //     String? label,
-// //     String? icon,
-// //     List<String>? roles,
-// //     int? order,
-// //   }) async {
-// //     try {
-// //       isLoading = true;
-// //       notifyListeners();
+// //   Future<bool> updateSidebarItem(
+// //       String id, {
+// //         String? label,
+// //         String? icon,
+// //         List<String>? roles, // Must be role IDs
+// //         int? order,
+// //       }) async {
+// //     isLoading = true;
+// //     errorMessage = null;
+// //     notifyListeners();
 // //
+// //     try {
 // //       final token = await _getToken();
 // //       final response = await http.put(
 // //         Uri.parse("$baseUrl/api/sidebar/$id"),
@@ -240,7 +1017,7 @@
 // //         body: jsonEncode({
 // //           if (label != null) "label": label,
 // //           if (icon != null) "icon": icon,
-// //           if (roles != null) "roles": roles,
+// //           if (roles != null) "roles": roles, // ✅ ObjectIds
 // //           if (order != null) "order": order,
 // //         }),
 // //       );
@@ -249,24 +1026,24 @@
 // //         await fetchAllSidebarItems();
 // //         return true;
 // //       } else {
-// //         debugPrint("Update Sidebar Failed: ${response.body}");
-// //         return false;
+// //         errorMessage = "Failed: ${response.body}";
 // //       }
 // //     } catch (e) {
-// //       debugPrint("Update Sidebar Error: $e");
-// //       return false;
+// //       errorMessage = "Error: $e";
 // //     } finally {
 // //       isLoading = false;
 // //       notifyListeners();
 // //     }
+// //     return false;
 // //   }
 // //
 // //   /// ✅ Delete sidebar item
 // //   Future<bool> deleteSidebarItem(String id) async {
-// //     try {
-// //       isLoading = true;
-// //       notifyListeners();
+// //     isLoading = true;
+// //     errorMessage = null;
+// //     notifyListeners();
 // //
+// //     try {
 // //       final token = await _getToken();
 // //       final response = await http.delete(
 // //         Uri.parse("$baseUrl/api/sidebar/$id"),
@@ -278,24 +1055,27 @@
 // //         notifyListeners();
 // //         return true;
 // //       } else {
-// //         debugPrint("Delete Sidebar Failed: ${response.body}");
-// //         return false;
+// //         errorMessage = "Failed: ${response.body}";
 // //       }
 // //     } catch (e) {
-// //       debugPrint("Delete Sidebar Error: $e");
-// //       return false;
+// //       errorMessage = "Error: $e";
 // //     } finally {
 // //       isLoading = false;
 // //       notifyListeners();
 // //     }
+// //     return false;
 // //   }
 // //
 // //   /// ✅ Assign sidebar permissions to role
-// //   Future<bool> assignSidebarPermissions(String roleId, List<Map<String, dynamic>> sidebar) async {
-// //     try {
-// //       isLoading = true;
-// //       notifyListeners();
+// //   Future<bool> assignSidebarPermissions(
+// //       String roleId,
+// //       List<Map<String, dynamic>> sidebar,
+// //       ) async {
+// //     isLoading = true;
+// //     errorMessage = null;
+// //     notifyListeners();
 // //
+// //     try {
 // //       final token = await _getToken();
 // //       final response = await http.put(
 // //         Uri.parse("$baseUrl/api/sidebar/assign/$roleId"),
@@ -303,26 +1083,35 @@
 // //           "Content-Type": "application/json",
 // //           "Authorization": "Bearer $token",
 // //         },
-// //         body: jsonEncode({"sidebar": sidebar}),
+// //         body: jsonEncode({
+// //           "sidebar": sidebar.map((e) => {
+// //             "key": e["key"],
+// //             "label": e["label"],
+// //             "icon": e["icon"],
+// //             "order": e["order"] ?? 0,
+// //             "permissions": e["permissions"] ?? {
+// //               "view": true,
+// //               "read": false,
+// //               "manage": false,
+// //             }
+// //           }).toList()
+// //         }),
 // //       );
 // //
 // //       if (response.statusCode == 200) {
-// //         debugPrint("Sidebar Permissions Assigned: ${response.body}");
 // //         return true;
 // //       } else {
-// //         debugPrint("Assign Sidebar Permissions Failed: ${response.body}");
-// //         return false;
+// //         errorMessage = "Failed: ${response.body}";
 // //       }
 // //     } catch (e) {
-// //       debugPrint("Assign Sidebar Permissions Error: $e");
-// //       return false;
+// //       errorMessage = "Error: $e";
 // //     } finally {
 // //       isLoading = false;
 // //       notifyListeners();
 // //     }
+// //     return false;
 // //   }
 // // }
-//
 //
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
@@ -339,13 +1128,19 @@
 //   List<Map<String, dynamic>> roleSidebarItems = [];
 //   Map<String, dynamic>? selectedRoleSidebar;
 //
-//   /// ✅ Get stored token
+//   /// 🔑 Get stored token
 //   Future<String?> _getToken() async {
 //     final prefs = await SharedPreferences.getInstance();
 //     return prefs.getString("accessToken");
 //   }
 //
-//   /// ✅ Safely decode JSON
+//   /// 🔑 Get stored roleName
+//   Future<String> _getRoleName() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     return prefs.getString("userRole") ?? "";
+//   }
+//
+//   /// 📦 Try decode JSON safely
 //   dynamic _tryParseJson(String source) {
 //     try {
 //       return jsonDecode(source);
@@ -354,7 +1149,16 @@
 //     }
 //   }
 //
-//   /// ✅ Get all sidebar items
+//   /// 📦 Extract error message from response
+//   String _extractError(http.Response response) {
+//     final data = _tryParseJson(response.body);
+//     if (data is Map && data["message"] != null) {
+//       return data["message"].toString();
+//     }
+//     return response.body;
+//   }
+//
+//   /// 📥 Get all sidebar items
 //   Future<void> fetchAllSidebarItems() async {
 //     isLoading = true;
 //     errorMessage = null;
@@ -362,6 +1166,8 @@
 //
 //     try {
 //       final token = await _getToken();
+//       if (token == null) throw Exception("No token found");
+//
 //       final response = await http.get(
 //         Uri.parse('$baseUrl/api/sidebar'),
 //         headers: {"Authorization": "Bearer $token"},
@@ -371,12 +1177,12 @@
 //         final data = _tryParseJson(response.body);
 //         if (data is List) {
 //           sidebarItems =
-//           List<Map<String, dynamic>>.from(data.map((e) => Map<String, dynamic>.from(e)));
+//               data.map((e) => Map<String, dynamic>.from(e)).toList();
 //         } else {
 //           errorMessage = "Invalid response format";
 //         }
 //       } else {
-//         errorMessage = "Failed to fetch sidebar items";
+//         errorMessage = "Failed: ${_extractError(response)}";
 //       }
 //     } catch (e) {
 //       errorMessage = "Error: $e";
@@ -386,7 +1192,7 @@
 //     }
 //   }
 //
-//   /// ✅ Get sidebar items for a role
+//   /// 📥 Get sidebar items for a role
 //   Future<void> fetchSidebarForRole(String roleId) async {
 //     isLoading = true;
 //     errorMessage = null;
@@ -394,6 +1200,8 @@
 //
 //     try {
 //       final token = await _getToken();
+//       if (token == null) throw Exception("No token found");
+//
 //       final response = await http.get(
 //         Uri.parse("$baseUrl/api/sidebar/$roleId"),
 //         headers: {"Authorization": "Bearer $token"},
@@ -403,12 +1211,12 @@
 //         final data = _tryParseJson(response.body);
 //         if (data is Map<String, dynamic>) {
 //           selectedRoleSidebar = data;
-//           roleSidebarItems = List<Map<String, dynamic>>.from(data["items"] ?? []);
+//           await _filterSidebarForCurrentUser();
 //         } else {
 //           errorMessage = "Invalid response format";
 //         }
 //       } else {
-//         errorMessage = "Failed to fetch sidebar for role";
+//         errorMessage = "Failed: ${_extractError(response)}";
 //       }
 //     } catch (e) {
 //       errorMessage = "Error: $e";
@@ -418,7 +1226,27 @@
 //     }
 //   }
 //
-//   /// ✅ Create sidebar item (admin only)
+//   /// 🔐 Filter sidebar for current role
+//   Future<void> _filterSidebarForCurrentUser() async {
+//     final roleName = (await _getRoleName()).toLowerCase();
+//
+//     final items = List<Map<String, dynamic>>.from(
+//       selectedRoleSidebar?["items"] ?? [],
+//     );
+//
+//     if (roleName == "admin") {
+//       roleSidebarItems = items;
+//     } else {
+//       roleSidebarItems = items
+//           .where((item) =>
+//       (item["permissions"] ?? {})["manage"] == true ||
+//           (item["permissions"] ?? {})["view"] == true)
+//           .map((e) => Map<String, dynamic>.from(e))
+//           .toList();
+//     }
+//   }
+//
+//   /// ➕ Create sidebar item
 //   Future<bool> createSidebarItem({
 //     required String key,
 //     required String label,
@@ -432,6 +1260,8 @@
 //
 //     try {
 //       final token = await _getToken();
+//       if (token == null) throw Exception("No token found");
+//
 //       final response = await http.post(
 //         Uri.parse('$baseUrl/api/sidebar'),
 //         headers: {
@@ -451,7 +1281,7 @@
 //         await fetchAllSidebarItems();
 //         return true;
 //       } else {
-//         errorMessage = "Failed to create sidebar item";
+//         errorMessage = "Failed: ${_extractError(response)}";
 //       }
 //     } catch (e) {
 //       errorMessage = "Error: $e";
@@ -462,7 +1292,7 @@
 //     return false;
 //   }
 //
-//   /// ✅ Update sidebar item
+//   /// ✏️ Update sidebar item
 //   Future<bool> updateSidebarItem(
 //       String id, {
 //         String? label,
@@ -476,6 +1306,8 @@
 //
 //     try {
 //       final token = await _getToken();
+//       if (token == null) throw Exception("No token found");
+//
 //       final response = await http.put(
 //         Uri.parse("$baseUrl/api/sidebar/$id"),
 //         headers: {
@@ -494,7 +1326,7 @@
 //         await fetchAllSidebarItems();
 //         return true;
 //       } else {
-//         errorMessage = "Failed to update sidebar item";
+//         errorMessage = "Failed: ${_extractError(response)}";
 //       }
 //     } catch (e) {
 //       errorMessage = "Error: $e";
@@ -505,7 +1337,7 @@
 //     return false;
 //   }
 //
-//   /// ✅ Delete sidebar item
+//   /// 🗑️ Delete sidebar item
 //   Future<bool> deleteSidebarItem(String id) async {
 //     isLoading = true;
 //     errorMessage = null;
@@ -513,6 +1345,8 @@
 //
 //     try {
 //       final token = await _getToken();
+//       if (token == null) throw Exception("No token found");
+//
 //       final response = await http.delete(
 //         Uri.parse("$baseUrl/api/sidebar/$id"),
 //         headers: {"Authorization": "Bearer $token"},
@@ -523,7 +1357,7 @@
 //         notifyListeners();
 //         return true;
 //       } else {
-//         errorMessage = "Failed to delete sidebar item";
+//         errorMessage = "Failed: ${_extractError(response)}";
 //       }
 //     } catch (e) {
 //       errorMessage = "Error: $e";
@@ -534,7 +1368,7 @@
 //     return false;
 //   }
 //
-//   /// ✅ Assign sidebar permissions to role
+//   /// ✅ Assign sidebar permissions
 //   Future<bool> assignSidebarPermissions(
 //       String roleId,
 //       List<Map<String, dynamic>> sidebar,
@@ -545,19 +1379,70 @@
 //
 //     try {
 //       final token = await _getToken();
+//       if (token == null) throw Exception("No token found");
+//
 //       final response = await http.put(
 //         Uri.parse("$baseUrl/api/sidebar/assign/$roleId"),
 //         headers: {
 //           "Content-Type": "application/json",
 //           "Authorization": "Bearer $token",
 //         },
-//         body: jsonEncode({"sidebar": sidebar}),
+//         body: jsonEncode({
+//           "sidebar": sidebar
+//               .map((e) => {
+//             "key": e["key"],
+//             "label": e["label"],
+//             "icon": e["icon"],
+//             "order": e["order"] ?? 0,
+//             "permissions": e["permissions"] ??
+//                 {
+//                   "view": true,
+//                   "read": false,
+//                   "manage": false,
+//                 }
+//           })
+//               .toList()
+//         }),
 //       );
 //
 //       if (response.statusCode == 200) {
 //         return true;
 //       } else {
-//         errorMessage = "Failed to assign sidebar permissions";
+//         errorMessage = "Failed: ${_extractError(response)}";
+//       }
+//     } catch (e) {
+//       errorMessage = "Error: $e";
+//     } finally {
+//       isLoading = false;
+//       notifyListeners();
+//     }
+//     return false;
+//   }
+//
+//   /// 🔄 Reorder sidebar items
+//   Future<bool> reorderSidebar(List<String> orderedIds) async {
+//     isLoading = true;
+//     errorMessage = null;
+//     notifyListeners();
+//
+//     try {
+//       final token = await _getToken();
+//       if (token == null) throw Exception("No token found");
+//
+//       final response = await http.put(
+//         Uri.parse("$baseUrl/api/sidebar/reorder"),
+//         headers: {
+//           "Content-Type": "application/json",
+//           "Authorization": "Bearer $token",
+//         },
+//         body: jsonEncode({"orderedIds": orderedIds}),
+//       );
+//
+//       if (response.statusCode == 200) {
+//         await fetchAllSidebarItems();
+//         return true;
+//       } else {
+//         errorMessage = "Failed: ${_extractError(response)}";
 //       }
 //     } catch (e) {
 //       errorMessage = "Error: $e";
@@ -568,6 +1453,7 @@
 //     return false;
 //   }
 // }
+
 
 
 import 'dart:convert';
@@ -585,13 +1471,19 @@ class SidebarController extends ChangeNotifier {
   List<Map<String, dynamic>> roleSidebarItems = [];
   Map<String, dynamic>? selectedRoleSidebar;
 
-  /// ✅ Get stored token
+  /// 🔑 Get stored token
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("accessToken");
   }
 
-  /// ✅ Safely decode JSON
+  /// 🔑 Get stored roleName
+  Future<String> _getRoleName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("userRole") ?? "";
+  }
+
+  /// 📦 Try decode JSON safely
   dynamic _tryParseJson(String source) {
     try {
       return jsonDecode(source);
@@ -600,7 +1492,16 @@ class SidebarController extends ChangeNotifier {
     }
   }
 
-  /// ✅ Get all sidebar items
+  /// 📦 Extract error message from response
+  String _extractError(http.Response response) {
+    final data = _tryParseJson(response.body);
+    if (data is Map && data["message"] != null) {
+      return data["message"].toString();
+    }
+    return response.body;
+  }
+
+  /// 📥 Get all sidebar items
   Future<void> fetchAllSidebarItems() async {
     isLoading = true;
     errorMessage = null;
@@ -608,32 +1509,39 @@ class SidebarController extends ChangeNotifier {
 
     try {
       final token = await _getToken();
+      if (token == null) throw Exception("No token found");
+
+      final url = '$baseUrl/api/sidebar';
       final response = await http.get(
-        Uri.parse('$baseUrl/api/sidebar'),
+        Uri.parse(url),
         headers: {"Authorization": "Bearer $token"},
       );
+
+      print("📡 GET $url");
+      print("🔹 Status: ${response.statusCode}");
+      print("🔹 Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = _tryParseJson(response.body);
         if (data is List) {
-          sidebarItems = List<Map<String, dynamic>>.from(
-            data.map((e) => Map<String, dynamic>.from(e)),
-          );
+          sidebarItems =
+              data.map((e) => Map<String, dynamic>.from(e)).toList();
         } else {
           errorMessage = "Invalid response format";
         }
       } else {
-        errorMessage = "Failed: ${response.body}";
+        errorMessage = "Failed: ${_extractError(response)}";
       }
     } catch (e) {
       errorMessage = "Error: $e";
+      print("❌ fetchAllSidebarItems Error: $e");
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
-  /// ✅ Get sidebar items for a role
+  /// 📥 Get sidebar items for a role
   Future<void> fetchSidebarForRole(String roleId) async {
     isLoading = true;
     errorMessage = null;
@@ -641,36 +1549,64 @@ class SidebarController extends ChangeNotifier {
 
     try {
       final token = await _getToken();
+      if (token == null) throw Exception("No token found");
+
+      final url = "$baseUrl/api/sidebar/$roleId";
       final response = await http.get(
-        Uri.parse("$baseUrl/api/sidebar/$roleId"),
+        Uri.parse(url),
         headers: {"Authorization": "Bearer $token"},
       );
+
+      print("📡 GET $url");
+      print("🔹 Status: ${response.statusCode}");
+      print("🔹 Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = _tryParseJson(response.body);
         if (data is Map<String, dynamic>) {
           selectedRoleSidebar = data;
-          roleSidebarItems = List<Map<String, dynamic>>.from(data["items"] ?? []);
+          await _filterSidebarForCurrentUser();
         } else {
           errorMessage = "Invalid response format";
         }
       } else {
-        errorMessage = "Failed: ${response.body}";
+        errorMessage = "Failed: ${_extractError(response)}";
       }
     } catch (e) {
       errorMessage = "Error: $e";
+      print("❌ fetchSidebarForRole Error: $e");
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
-  /// ✅ Create sidebar item (admin only)
+  /// 🔐 Filter sidebar for current role
+  Future<void> _filterSidebarForCurrentUser() async {
+    final roleName = (await _getRoleName()).toLowerCase();
+
+    final items = List<Map<String, dynamic>>.from(
+      selectedRoleSidebar?["items"] ?? [],
+    );
+
+    if (roleName == "admin") {
+      roleSidebarItems = items;
+    } else {
+      roleSidebarItems = items
+          .where((item) =>
+      (item["permissions"] ?? {})["manage"] == true ||
+          (item["permissions"] ?? {})["view"] == true)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+  }
+
+  /// ➕ Create sidebar item
   Future<bool> createSidebarItem({
     required String key,
     required String label,
     required String icon,
-    required List<String> roles, // Must be role IDs
+    required List<String> roles,
     required int order,
   }) async {
     isLoading = true;
@@ -679,29 +1615,40 @@ class SidebarController extends ChangeNotifier {
 
     try {
       final token = await _getToken();
+      if (token == null) throw Exception("No token found");
+
+      final url = '$baseUrl/api/sidebar';
+      final body = jsonEncode({
+        "key": key,
+        "label": label,
+        "icon": icon,
+        "roles": roles,
+        "order": order,
+      });
+
       final response = await http.post(
-        Uri.parse('$baseUrl/api/sidebar'),
+        Uri.parse(url),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({
-          "key": key,
-          "label": label,
-          "icon": icon,
-          "roles": roles, // ✅ send ObjectIds here
-          "order": order,
-        }),
+        body: body,
       );
+
+      print("📡 POST $url");
+      print("🔹 Body Sent: $body");
+      print("🔹 Status: ${response.statusCode}");
+      print("🔹 Response: ${response.body}");
 
       if (response.statusCode == 201) {
         await fetchAllSidebarItems();
         return true;
       } else {
-        errorMessage = "Failed: ${response.body}";
+        errorMessage = "Failed: ${_extractError(response)}";
       }
     } catch (e) {
       errorMessage = "Error: $e";
+      print("❌ createSidebarItem Error: $e");
     } finally {
       isLoading = false;
       notifyListeners();
@@ -709,12 +1656,12 @@ class SidebarController extends ChangeNotifier {
     return false;
   }
 
-  /// ✅ Update sidebar item
+  /// ✏️ Update sidebar item
   Future<bool> updateSidebarItem(
       String id, {
         String? label,
         String? icon,
-        List<String>? roles, // Must be role IDs
+        List<String>? roles,
         int? order,
       }) async {
     isLoading = true;
@@ -723,28 +1670,39 @@ class SidebarController extends ChangeNotifier {
 
     try {
       final token = await _getToken();
+      if (token == null) throw Exception("No token found");
+
+      final url = "$baseUrl/api/sidebar/$id";
+      final body = jsonEncode({
+        if (label != null) "label": label,
+        if (icon != null) "icon": icon,
+        if (roles != null) "roles": roles,
+        if (order != null) "order": order,
+      });
+
       final response = await http.put(
-        Uri.parse("$baseUrl/api/sidebar/$id"),
+        Uri.parse(url),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({
-          if (label != null) "label": label,
-          if (icon != null) "icon": icon,
-          if (roles != null) "roles": roles, // ✅ ObjectIds
-          if (order != null) "order": order,
-        }),
+        body: body,
       );
+
+      print("📡 PUT $url");
+      print("🔹 Body Sent: $body");
+      print("🔹 Status: ${response.statusCode}");
+      print("🔹 Response: ${response.body}");
 
       if (response.statusCode == 200) {
         await fetchAllSidebarItems();
         return true;
       } else {
-        errorMessage = "Failed: ${response.body}";
+        errorMessage = "Failed: ${_extractError(response)}";
       }
     } catch (e) {
       errorMessage = "Error: $e";
+      print("❌ updateSidebarItem Error: $e");
     } finally {
       isLoading = false;
       notifyListeners();
@@ -752,7 +1710,7 @@ class SidebarController extends ChangeNotifier {
     return false;
   }
 
-  /// ✅ Delete sidebar item
+  /// 🗑️ Delete sidebar item
   Future<bool> deleteSidebarItem(String id) async {
     isLoading = true;
     errorMessage = null;
@@ -760,20 +1718,28 @@ class SidebarController extends ChangeNotifier {
 
     try {
       final token = await _getToken();
+      if (token == null) throw Exception("No token found");
+
+      final url = "$baseUrl/api/sidebar/$id";
       final response = await http.delete(
-        Uri.parse("$baseUrl/api/sidebar/$id"),
+        Uri.parse(url),
         headers: {"Authorization": "Bearer $token"},
       );
+
+      print("📡 DELETE $url");
+      print("🔹 Status: ${response.statusCode}");
+      print("🔹 Response: ${response.body}");
 
       if (response.statusCode == 200) {
         sidebarItems.removeWhere((item) => item["_id"] == id);
         notifyListeners();
         return true;
       } else {
-        errorMessage = "Failed: ${response.body}";
+        errorMessage = "Failed: ${_extractError(response)}";
       }
     } catch (e) {
       errorMessage = "Error: $e";
+      print("❌ deleteSidebarItem Error: $e");
     } finally {
       isLoading = false;
       notifyListeners();
@@ -781,7 +1747,7 @@ class SidebarController extends ChangeNotifier {
     return false;
   }
 
-  /// ✅ Assign sidebar permissions to role
+  /// ✅ Assign sidebar permissions
   Future<bool> assignSidebarPermissions(
       String roleId,
       List<Map<String, dynamic>> sidebar,
@@ -792,38 +1758,158 @@ class SidebarController extends ChangeNotifier {
 
     try {
       final token = await _getToken();
+      if (token == null) throw Exception("No token found");
+
+      final url = "$baseUrl/api/sidebar/assign/$roleId";
+      final body = jsonEncode({
+        "sidebar": sidebar
+            .map((e) => {
+          "key": e["key"],
+          "label": e["label"],
+          "icon": e["icon"],
+          "order": e["order"] ?? 0,
+          "permissions": e["permissions"] ??
+              {
+                "view": true,
+                "read": false,
+                "manage": false,
+              }
+        })
+            .toList()
+      });
+
       final response = await http.put(
-        Uri.parse("$baseUrl/api/sidebar/assign/$roleId"),
+        Uri.parse(url),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({
-          "sidebar": sidebar.map((e) => {
-            "key": e["key"],
-            "label": e["label"],
-            "icon": e["icon"],
-            "order": e["order"] ?? 0,
-            "permissions": e["permissions"] ?? {
-              "view": true,
-              "read": false,
-              "manage": false,
-            }
-          }).toList()
-        }),
+        body: body,
       );
+
+      print("📡 PUT $url");
+      print("🔹 Body Sent: $body");
+      print("🔹 Status: ${response.statusCode}");
+      print("🔹 Response: ${response.body}");
 
       if (response.statusCode == 200) {
         return true;
       } else {
-        errorMessage = "Failed: ${response.body}";
+        errorMessage = "Failed: ${_extractError(response)}";
       }
     } catch (e) {
       errorMessage = "Error: $e";
+      print("❌ assignSidebarPermissions Error: $e");
     } finally {
       isLoading = false;
       notifyListeners();
     }
     return false;
   }
+
+  /// 🔄 Reorder sidebar items
+  /// 🔄 Reorder sidebar items
+  /// 🔄 Reorder sidebar items
+
+  Future<bool> reorderSidebar(List<Map<String, dynamic>> sidebarItems) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _getToken();
+      if (token == null) throw Exception("No token found");
+
+      final url = "$baseUrl/api/sidebar/reorder";
+
+      final orderedList = sidebarItems.asMap().entries.map((entry) {
+        return {
+          "_id": entry.value["_id"].toString(),
+          "order": entry.key + 1, // start from 1
+        };
+      }).toList();
+
+      // ✅ Wrap the array inside "items" key
+      final body = jsonEncode({"items": orderedList});
+
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: body,
+      );
+
+      print("📡 PUT $url");
+      print("🔹 Body Sent: $body");
+      print("🔹 Status: ${response.statusCode}");
+      print("🔹 Response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        await fetchAllSidebarItems();
+        return true;
+      } else {
+        errorMessage = "Failed: ${_extractError(response)}";
+      }
+    } catch (e) {
+      errorMessage = "Error: $e";
+      print("❌ reorderSidebar Error: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+    return false;
+  }
+
+  // Future<bool> reorderSidebar(List<String> orderedIds) async {
+  //   isLoading = true;
+  //   errorMessage = null;
+  //   notifyListeners();
+  //
+  //   try {
+  //     final token = await _getToken();
+  //     if (token == null) throw Exception("No token found");
+  //
+  //     final url = "$baseUrl/api/sidebar/reorder";
+  //
+  //     // Build request body with both _id and order
+  //     final orderedList = orderedIds.asMap().entries.map((entry) {
+  //       return {
+  //         "_id": entry.value,
+  //         "order": entry.key + 1, // order starts from 1
+  //       };
+  //     }).toList();
+  //
+  //     final body = jsonEncode({"orderedIds": orderedList});
+  //
+  //     final response = await http.put(
+  //       Uri.parse(url),
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "Authorization": "Bearer $token",
+  //       },
+  //       body: body,
+  //     );
+  //
+  //     print("📡 PUT $url");
+  //     print("🔹 Body Sent: $body");
+  //     print("🔹 Status: ${response.statusCode}");
+  //     print("🔹 Response: ${response.body}");
+  //
+  //     if (response.statusCode == 200) {
+  //       await fetchAllSidebarItems();
+  //       return true;
+  //     } else {
+  //       errorMessage = "Failed: ${_extractError(response)}";
+  //     }
+  //   } catch (e) {
+  //     errorMessage = "Error: $e";
+  //     print("❌ reorderSidebar Error: $e");
+  //   } finally {
+  //     isLoading = false;
+  //     notifyListeners();
+  //   }
+  //   return false;
+  // }
 }

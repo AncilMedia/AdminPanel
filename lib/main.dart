@@ -6,6 +6,7 @@ import 'Controller/Roles_controller.dart';
 import 'Controller/Sidebar_controller.dart';
 import 'Model/Item_Model.dart';
 import 'Socket_Service.dart';
+import 'View/Mainlayout.dart';
 import 'View/Pushnotification.dart';
 import 'Services/api_client.dart';
 import 'View/Login_page.dart';
@@ -42,6 +43,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AuthState()),
         ChangeNotifierProvider(create: (_) => NotificationState()),
         ChangeNotifierProvider(create: (_) => RolesController()),
+        ChangeNotifierProvider(create: (_) => SidebarsubProvider()),
 
         Provider<ApiClient>(
           create: (context) => ApiClient(context.read<AuthState>()),

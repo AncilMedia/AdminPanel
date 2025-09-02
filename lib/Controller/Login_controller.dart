@@ -6,69 +6,6 @@ import '../environmental variables.dart';
 
 class AuthService {
 
-
-  // Future<Map<String, dynamic>> login(String identifier, String password) async {
-  //   try {
-  //     final response = await http.post(
-  //       Uri.parse("$baseUrl/api/auth/login"),
-  //       headers: {'Content-Type': 'application/json'},
-  //       body: jsonEncode({'identifier': identifier, 'password': password}),
-  //     );
-  //
-  //     final responseData = jsonDecode(response.body);
-  //     print("🔐 Login Status: ${response.statusCode}");
-  //     print("📦 Login Response Body: ${response.body}");
-  //
-  //     if (response.statusCode == 200) {
-  //       final prefs = await SharedPreferences.getInstance();
-  //
-  //       // 🔐 Save Tokens
-  //       await prefs.setString('accessToken', responseData['accessToken']);
-  //       await prefs.setString('refreshToken', responseData['refreshToken']);
-  //
-  //       // 👤 Save User Info
-  //       final user = responseData['user'];
-  //       if (user != null) {
-  //         await prefs.setString('userId', user['userId'] ?? '');
-  //         await prefs.setString('username', user['username'] ?? '');
-  //         await prefs.setString('userRole', user['role'] ?? '');
-  //
-  //         // 🏢 Save Organization Info
-  //         final org = user['organization'];
-  //         if (org != null) {
-  //           await prefs.setString('organizationId', org['organizationId'] ?? '');
-  //           await prefs.setString('organizationName', org['name'] ?? '');
-  //           await prefs.setString('orgUniqueId', org['orgId'] ?? '');
-  //         }
-  //
-  //         // ✅ Debug logs
-  //         print("✅ Stored in SharedPreferences:");
-  //         print("🔑 Access Token: ${prefs.getString('accessToken')}");
-  //         print("🔁 Refresh Token: ${prefs.getString('refreshToken')}");
-  //         print("👤 Username: ${prefs.getString('username')}");
-  //         print("🆔 User ID: ${prefs.getString('userId')}");
-  //         print("🛡️ Role: ${prefs.getString('userRole')}");
-  //         print("🏢 Organization ID: ${prefs.getString('organizationId')}");
-  //         print("🏷️ Organization Name: ${prefs.getString('organizationName')}");
-  //         print("📛 Org Unique ID: ${prefs.getString('orgUniqueId')}");
-  //       }
-  //     }
-  //
-  //     return {
-  //       'status': response.statusCode,
-  //       'body': response.body,
-  //       'parsed': responseData,
-  //     };
-  //   } catch (e) {
-  //     print("❌ Login error: $e");
-  //     return {
-  //       'status': 500,
-  //       'body': 'Login exception',
-  //       'parsed': {'error': 'Unexpected error'},
-  //     };
-  //   }
-  // }
-
   Future<Map<String, dynamic>> login(String identifier, String password) async {
     try {
       final response = await http.post(
@@ -142,7 +79,7 @@ class AuthService {
     if (refreshToken == null) return null;
 
     final response = await http.post(
-      Uri.parse("$baseUrl/api/auth/refresh"),
+      Uri.parse("$baseUrl/api/auth/refresh-token"),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'refreshToken': refreshToken}),
     );

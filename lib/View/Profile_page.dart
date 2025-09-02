@@ -187,10 +187,10 @@ class _ProfileState extends State<Profile> {
     if (isLoading || isSaving || isDeleting) {
       return Scaffold(
         body: Center(
-          child: Lottie.asset(
-            'assets/Circular_moving_dot.json',
-            width: 150,
-            height: 150,
+          child: Lottie.network(
+            'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722682/profile_c67ivh.json',
+            width: 400,
+            height: 400,
           ),
         ),
       );

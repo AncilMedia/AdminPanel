@@ -258,7 +258,6 @@ class UserController {
 
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
-      // Backend returns objects with {name, description}, extract names
       return data.map<String>((e) {
         if (e is String) return e;
         if (e is Map<String, dynamic>) return e['name'] ?? '';
@@ -275,41 +274,19 @@ class UserController {
     required String userId,
     required bool approve,
   }) async {
-    final api = ApiClient(authState);
-    final uri = '$baseUrl/api/users/approve/$userId';
-    final response = await api.put(
-      uri,
-      body: jsonEncode({'approve': approve}),
-      headers: {'Content-Type': 'application/json'},
-    );
-    return response.statusCode == 200;
-  }
-
-  /// Delete a user
-  static Future<bool> deleteUser({
-    required AuthState authState,
-    required String userId,
-  }) async {
-    final api = ApiClient(authState);
-    final uri = '$baseUrl/api/users/$userId';
-    final response = await api.delete(uri);
-    return response.statusCode == 204;
-  }
-
-  /// Update user role
-  static Future<bool> updateUserRole({
-    required AuthState authState,
-    required String userId,
-    required String newRole,
-  }) async {
-    final api = ApiClient(authState);
-    final uri = '$baseUrl/api/users/role/$userId';
-    final response = await api.put(
-      uri,
-      body: jsonEncode({'newRole': newRole}),
-      headers: {'Content-Type': 'application/json'},
-    );
-    return response.statusCode == 200;
+    try {
+      final api = ApiClient(authState);
+      final uri = '$baseUrl/api/users/approve/$userId';
+      final response = await api.put(
+        uri,
+        body: jsonEncode({'approve': approve}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating approval status: $e");
+      return false;
+    }
   }
 
   /// Block or unblock a user
@@ -318,14 +295,56 @@ class UserController {
     required String userId,
     required bool block,
   }) async {
-    final api = ApiClient(authState);
-    final uri = '$baseUrl/api/users/block/$userId';
-    final response = await api.put(
-      uri,
-      body: jsonEncode({'block': block}),
-      headers: {'Content-Type': 'application/json'},
-    );
-    return response.statusCode == 200;
+    try {
+      final api = ApiClient(authState);
+      final uri = '$baseUrl/api/users/block/$userId';
+      final response = await api.put(
+        uri,
+        body: jsonEncode({'block': block}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating block status: $e");
+      return false;
+    }
+  }
+
+  /// Update user role
+  static Future<bool> updateUserRole({
+    required AuthState authState,
+    required String userId,
+    required String newRole,
+  }) async {
+    try {
+      final api = ApiClient(authState);
+      final uri = '$baseUrl/api/users/role/$userId';
+      final response = await api.put(
+        uri,
+        body: jsonEncode({'newRole': newRole}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error updating user role: $e");
+      return false;
+    }
+  }
+
+  /// Delete a user
+  static Future<bool> deleteUser({
+    required AuthState authState,
+    required String userId,
+  }) async {
+    try {
+      final api = ApiClient(authState);
+      final uri = '$baseUrl/api/users/$userId';
+      final response = await api.delete(uri);
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (e) {
+      print("Error deleting user: $e");
+      return false;
+    }
   }
 
   /// Create new user

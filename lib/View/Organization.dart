@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
 import '../View_model/organization_popup.dart';
 import '../controller/organization_controller.dart';
 
@@ -47,7 +48,10 @@ class _OrganizationState extends State<Organization> {
   void _filterOrganizations(String query) {
     setState(() {
       filteredOrganizations = allOrganizations
-          .where((org) => org['name'].toLowerCase().contains(query.trim().toLowerCase()))
+          .where(
+            (org) =>
+                org['name'].toLowerCase().contains(query.trim().toLowerCase()),
+          )
           .toList();
     });
   }
@@ -101,7 +105,9 @@ class _OrganizationState extends State<Organization> {
 
   void _showOrganizationDialog({Map<String, dynamic>? org}) {
     final _orgNameController = TextEditingController(text: org?['name'] ?? '');
-    final _usernameController = TextEditingController(text: org?['username'] ?? '');
+    final _usernameController = TextEditingController(
+      text: org?['username'] ?? '',
+    );
     final _emailController = TextEditingController(text: org?['email'] ?? '');
     final _passwordController = TextEditingController();
     final _phoneController = TextEditingController(text: org?['phone'] ?? '');
@@ -125,13 +131,15 @@ class _OrganizationState extends State<Organization> {
                 TextFormField(
                   controller: _orgNameController,
                   decoration: _inputDecoration('Organization'),
-                  validator: (value) => value == null || value.trim().isEmpty ? 'Required' : null,
+                  validator: (value) =>
+                      value == null || value.trim().isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
                   controller: _usernameController,
                   decoration: _inputDecoration('Username'),
-                  validator: (value) => value == null || value.trim().isEmpty ? 'Required' : null,
+                  validator: (value) =>
+                      value == null || value.trim().isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
@@ -152,7 +160,9 @@ class _OrganizationState extends State<Organization> {
                     controller: _passwordController,
                     obscureText: true,
                     decoration: _inputDecoration('Password'),
-                    validator: (value) => value == null || value.trim().isEmpty ? 'Required' : null,
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Required'
+                        : null,
                   ),
                 ],
                 const SizedBox(height: 10),
@@ -164,7 +174,8 @@ class _OrganizationState extends State<Organization> {
                     final phone = value?.trim();
                     if (phone == null || phone.isEmpty) return 'Required';
                     final phoneRegex = RegExp(r'^[0-9]{10,15}$');
-                    if (!phoneRegex.hasMatch(phone)) return 'Invalid phone number';
+                    if (!phoneRegex.hasMatch(phone))
+                      return 'Invalid phone number';
                     return null;
                   },
                 ),
@@ -173,7 +184,10 @@ class _OrganizationState extends State<Organization> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
             onPressed: () async {
@@ -251,7 +265,7 @@ class _OrganizationState extends State<Organization> {
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -288,7 +302,10 @@ class _OrganizationState extends State<Organization> {
               children: [
                 Expanded(flex: columnFlex[0], child: _headerItem("Name")),
                 // Expanded(flex: columnFlex[1], child: _headerItem("Block Status")),
-                Expanded(flex: columnFlex[1], child: _headerItem("Approval Status")),
+                Expanded(
+                  flex: columnFlex[1],
+                  child: _headerItem("Approval Status"),
+                ),
                 Expanded(flex: columnFlex[2], child: _headerItem("Actions")),
                 Expanded(flex: columnFlex[2], child: _headerItem("Apps")),
                 Expanded(flex: columnFlex[4], child: _headerItem("Created At")),
@@ -297,28 +314,38 @@ class _OrganizationState extends State<Organization> {
           ),
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: Lottie.network(
+                      'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722683/Organization_yqbizz.json',
+                      height: 500,
+                      width: 500,
+                    ),
+                  )
                 : filteredOrganizations.isEmpty
                 ? Center(
-              child: Text(
-                "No organizations found",
-                style: GoogleFonts.poppins(fontSize: 16),
-              ),
-            )
+                    child: Text(
+                      "No organizations found",
+                      style: GoogleFonts.poppins(fontSize: 16),
+                    ),
+                  )
                 : ListView.builder(
-              itemCount: filteredOrganizations.length,
-              itemBuilder: (context, index) {
-                final org = filteredOrganizations[index];
-                return OrganizationRow(
-                  organization: org,
-                  onDelete: () async {
-                    final success = await OrganizationController.deleteOrganization(org['_id']);
-                    if (success) await _loadOrganizations();
-                  },
-                  onEdit: (org) => _showOrganizationDialog(org: org), // ✅ FIXED
-                );
-              },
-            ),
+                    itemCount: filteredOrganizations.length,
+                    itemBuilder: (context, index) {
+                      final org = filteredOrganizations[index];
+                      return OrganizationRow(
+                        organization: org,
+                        onDelete: () async {
+                          final success =
+                              await OrganizationController.deleteOrganization(
+                                org['_id'],
+                              );
+                          if (success) await _loadOrganizations();
+                        },
+                        onEdit: (org) =>
+                            _showOrganizationDialog(org: org), // ✅ FIXED
+                      );
+                    },
+                  ),
           ),
         ],
       ),
