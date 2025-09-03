@@ -7,6 +7,7 @@ import 'Controller/Sidebar_controller.dart';
 import 'Model/Item_Model.dart';
 import 'Socket_Service.dart';
 import 'View/Mainlayout.dart';
+import 'View/Media_page.dart';
 import 'View/Pushnotification.dart';
 import 'Services/api_client.dart';
 import 'View/Login_page.dart';
@@ -77,7 +78,7 @@ class MyApp extends StatelessWidget {
       //     index: null,
       //   ),
       // ),
-      home: LoginPage(),
+      home: MediaPage(),
 
       // home: const Apps(),
     );
