@@ -3843,6 +3843,7 @@
 //   }
 // }
 
+import 'package:ancilmediaadminpanel/View/Media_page.dart';
 import 'package:ancilmediaadminpanel/View/Role.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -3892,6 +3893,7 @@ class _MainLayoutState extends State<MainLayout> {
     'organization': Iconsax.building,
     'applications': Iconsax.box_2,
     'pushnotification': Iconsax.notification_bing,
+    'media': Iconsax.video,
     'notification': Iconsax.message_text,
     'role': Iconsax.profile_circle,
     'profile': Iconsax.profile_circle,
@@ -4087,6 +4089,8 @@ class _MainLayoutState extends State<MainLayout> {
         return const RolesPage();
       case 'profile':
         return const Profile();
+      case 'media':
+        return const MediaPage();
       case 'notification':
         return const NotificationPage();
       default:

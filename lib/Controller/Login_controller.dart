@@ -28,7 +28,8 @@ class AuthService {
         // 👤 Save User Info
         final user = responseData['user'];
         if (user != null) {
-          await prefs.setString('userId', user['userId'] ?? '');
+          await prefs.setString('userId', user['id'] ?? '');
+          await prefs.setString('user_Id', user['userId'] ?? '');
           await prefs.setString('username', user['username'] ?? '');
           await prefs.setString('userRole', user['role'] ?? '');
           await prefs.setString('roleId', user['roleId'] ?? ''); // ✅ store roleId
@@ -36,7 +37,8 @@ class AuthService {
           // 🏢 Save Organization Info
           final org = user['organization'];
           if (org != null) {
-            await prefs.setString('organizationId', org['organizationId'] ?? '');
+            await prefs.setString('organizationId', org['_id'] ?? '');
+            // await prefs.setString('organizationId', org['organizationId'] ?? '');
             await prefs.setString('organizationName', org['name'] ?? '');
             await prefs.setString('orgUniqueId', org['orgId'] ?? '');
           }

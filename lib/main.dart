@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
       //     index: null,
       //   ),
       // ),
-      home: MediaPage(),
+      home: LoginPage(),
 
       // home: const Apps(),
     );
