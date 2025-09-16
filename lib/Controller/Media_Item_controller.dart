@@ -346,13 +346,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../environmental variables.dart';
 
 class MediaItemService {
-  // ✅ Create Media Item (upload file + metadata)
+
   // Future<Map<String, dynamic>> createMediaItem({
   //   required String title,
   //   required String description,
   //   String? tags,
   //   String? seriesId,
-  //   required File file, // video/audio file
+  //   File? file, // for mobile/desktop
+  //   PlatformFile? webFile, // for web
   // }) async {
   //   final prefs = await SharedPreferences.getInstance();
   //
@@ -372,10 +373,24 @@ class MediaItemService {
   //   if (orgId != null) request.fields["organization"] = orgId;
   //   if (roleId != null) request.fields["role"] = roleId;
   //
-  //   // 🔹 Add file
-  //   request.files.add(
-  //     await http.MultipartFile.fromPath("file", file.path),
-  //   );
+  //   // 🔹 Add file depending on platform
+  //   if (kIsWeb && webFile != null) {
+  //     // Web → use bytes
+  //     request.files.add(
+  //       http.MultipartFile.fromBytes(
+  //         "file",
+  //         webFile.bytes!,
+  //         filename: webFile.name,
+  //       ),
+  //     );
+  //   } else if (!kIsWeb && file != null) {
+  //     // Mobile/Desktop → use path
+  //     request.files.add(
+  //       await http.MultipartFile.fromPath("file", file.path),
+  //     );
+  //   } else {
+  //     throw Exception("No file selected");
+  //   }
   //
   //   print("📤 POST $uri");
   //   final response = await request.send();
@@ -386,14 +401,15 @@ class MediaItemService {
   //   return jsonDecode(resBody);
   // }
 
-  // ✅ Create Media Item (upload file + metadata)
   Future<Map<String, dynamic>> createMediaItem({
     required String title,
     required String description,
     String? tags,
     String? seriesId,
-    File? file, // for mobile/desktop
-    PlatformFile? webFile, // for web
+    File? file,                // media (mobile/desktop)
+    PlatformFile? webFile,     // media (web)
+    File? thumbnailFile,       // thumbnail (mobile/desktop)
+    PlatformFile? webThumbnailFile, // thumbnail (web)
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -413,9 +429,8 @@ class MediaItemService {
     if (orgId != null) request.fields["organization"] = orgId;
     if (roleId != null) request.fields["role"] = roleId;
 
-    // 🔹 Add file depending on platform
+    // 🔹 Add main media file
     if (kIsWeb && webFile != null) {
-      // Web → use bytes
       request.files.add(
         http.MultipartFile.fromBytes(
           "file",
@@ -424,15 +439,29 @@ class MediaItemService {
         ),
       );
     } else if (!kIsWeb && file != null) {
-      // Mobile/Desktop → use path
       request.files.add(
         await http.MultipartFile.fromPath("file", file.path),
       );
     } else {
-      throw Exception("No file selected");
+      throw Exception("No media file selected");
     }
 
-    print("📤 POST $uri");
+    // 🔹 Add thumbnail file if provided
+    if (kIsWeb && webThumbnailFile != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          "thumbnail",
+          webThumbnailFile.bytes!,
+          filename: webThumbnailFile.name,
+        ),
+      );
+    } else if (!kIsWeb && thumbnailFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath("thumbnail", thumbnailFile.path),
+      );
+    }
+
+    print("📤 POST $uri with fields: ${request.fields}");
     final response = await request.send();
     final resBody = await response.stream.bytesToString();
 
@@ -440,6 +469,9 @@ class MediaItemService {
 
     return jsonDecode(resBody);
   }
+
+
+
   // ✅ Get All Media Items
   Future<List<dynamic>> getMediaItems() async {
     final uri = Uri.parse("$baseUrl/api/media/item");

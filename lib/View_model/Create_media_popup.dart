@@ -529,8 +529,8 @@ Future<void> showCreateMediaItemDialog(
                     ),
                     const SizedBox(height: 16),
 
-                    ElevatedButton(
-                      onPressed: () async {
+                    GestureDetector(
+                      onTap: () async {
                         FilePickerResult? result = await FilePicker.platform.pickFiles(
                           type: FileType.custom,
                           allowedExtensions: ['mp4', 'mp3', 'mov', 'wav'],
@@ -548,10 +548,24 @@ Future<void> showCreateMediaItemDialog(
                           }
                         }
                       },
-                      child: Text(
-                        pickedFile == null && webFile == null
-                            ? "Pick Media File"
-                            : "File Selected: ${kIsWeb ? webFile!.name : pickedFile!.path.split('/').last}",
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * .0500,
+                        width: MediaQuery.of(context).size.width * .3,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: Colors.purpleAccent.shade200
+                        ),
+                        child: Center(
+                          child: Text(
+                            pickedFile == null && webFile == null
+                                ? "Pick Media File"
+                                : "File Selected: ${kIsWeb ? webFile!.name : pickedFile!.path.split('/').last}",style: GoogleFonts.poppins(
+                           fontWeight: FontWeight.w500,
+                           fontSize: 16,
+                           color: Colors.white
+                          ),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

@@ -586,6 +586,35 @@ class _LibraryPageState extends State<LibraryPage> {
 
   }
 
+  Future<void> _deleteSeries(Map<String, dynamic> series) async {
+    final seriesId = series["_id"] ?? series["id"];
+    if (seriesId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Series ID is missing. Cannot delete.")),
+      );
+      return;
+    }
+
+    try {
+      final deleted = await _seriesService.deleteSeries(seriesId);
+      debugPrint("Deleted series response: $deleted");
+
+      setState(() {
+        _mediaSeries.remove(series);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Series deleted successfully")),
+      );
+    } catch (e) {
+      debugPrint("Error deleting series: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to delete series")),
+      );
+    }
+  }
+
+
   Future<void> _fetchUserMedia() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString("userId"); // fallback for debug
@@ -626,7 +655,7 @@ class _LibraryPageState extends State<LibraryPage> {
         : SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.only(
-          left: MediaQuery.of(context).size.width * .2,
+          left: MediaQuery.of(context).size.width * .1,
           right: MediaQuery.of(context).size.width * .1,
           top: MediaQuery.of(context).size.height * .05,
         ),
@@ -851,175 +880,184 @@ class _LibraryPageState extends State<LibraryPage> {
             const SizedBox(height: 30),
 
             // 🔹 Recent Media Items
-            Container(
-              height: MediaQuery.of(context).size.height * .3,
-              width: MediaQuery.of(context).size.width * .8,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.white,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Recent Media Items",
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * .005),
-                    const Divider(),
-                    _mediaItems.isEmpty
-                        ? const Text("No media items yet.")
-                        : Column(
-                      children: _mediaItems.take(5).map((item) {
-                        final String? thumbnailUrl = item["thumbnailUrl"];
-                        final String seriesName = item["seriesId"]?["title"] ?? "No Series";
-                        final String createdDate = item["createdAt"] != null
-                            ? DateTime.parse(item["createdAt"])
-                            .toLocal()
-                            .toString()
-                            .substring(0, 16)
-                            : "Unknown Date";
 
-                        return ListTile(
-                          leading: thumbnailUrl != null && thumbnailUrl.isNotEmpty
-                              ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              thumbnailUrl,
-                              width: 75,
-                              height: 200,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Iconsax.video, size: 40, color: Colors.grey),
+            Text(
+              "Recent Media Items",
+              style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const Divider(),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * .3,
+              child: _mediaItems.isEmpty
+                  ? const Center(child: Text("No media items yet."))
+                  : ListView.builder(
+                itemCount:
+                _mediaItems.length > 5 ? 5 : _mediaItems.length,
+                itemBuilder: (context, index) {
+                  final item = _mediaItems[index];
+                  final thumbnailUrl = item["thumbnailUrl"];
+                  final seriesName =
+                      item["seriesId"]?["title"] ?? "No Series";
+                  final createdDate = item["createdAt"] != null
+                      ? DateTime.parse(item["createdAt"])
+                      .toLocal()
+                      .toString()
+                      .substring(0, 16)
+                      : "Unknown Date";
+
+                  return ListTile(
+                    leading: thumbnailUrl != null &&
+                        thumbnailUrl.isNotEmpty
+                        ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        thumbnailUrl,
+                        width: 75,
+                        height: 75,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) =>
+                        const Icon(Iconsax.video,
+                            size: 40,
+                            color: Colors.grey),
+                      ),
+                    )
+                        : const Icon(Iconsax.video,
+                        size: 40, color: Colors.grey),
+                    title: Text(item["title"] ?? "Untitled"),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (item["description"] != null &&
+                            item["description"]
+                                .toString()
+                                .isNotEmpty)
+                          Text(item["description"]),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Text(
+                              "Series: $seriesName",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600),
                             ),
-                          )
-                              : const Icon(Iconsax.video, size: 40, color: Colors.grey),
-                          title: Text(item["title"] ?? "Untitled"),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (item["description"] != null &&
-                                  item["description"].toString().isNotEmpty)
-                                Text(item["description"]),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Text(
-                                    "Series: $seriesName",
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
-                                  ),
-                                  Text('--->', style: GoogleFonts.poppins(color: Colors.grey)),
-                                  Text(
-                                    createdDate,
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                              const Divider()
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                            Text(
+                              " ---> ",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              createdDate,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        Divider()
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
 
             const SizedBox(height: 30),
 
             // 🔹 Recent Media Series
-            Container(
-              width: MediaQuery.of(context).size.width * .8,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.white,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Recent Media Series",
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * .01),
-                    _mediaSeries.isEmpty
-                        ? const Text("No media series yet.")
-                        : Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: _mediaSeries.take(5).map((series) {
-                        final String createdDate = series["createdAt"] != null
-                            ? DateTime.parse(series["createdAt"]).toLocal().toString().substring(0, 16)
-                            : "Unknown Date";
+            Text(
+              "Recent Media Series",
+              style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const Divider(),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: _mediaSeries.take(5).map((series) {
+                final createdDate = series["createdAt"] != null
+                    ? DateTime.parse(series["createdAt"])
+                    .toLocal()
+                    .toString()
+                    .substring(0, 16)
+                    : "Unknown Date";
+                final thumbnail = series["thumbnail"];
 
-                        return SizedBox(
-                          width: 200,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.network(
-                                  series["thumbnail"] ?? Icon(Iconsax.image),
-                                  height: 120,
-                                  width: 200,
-                                  fit: BoxFit.cover,
-                                ),
+                return SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: thumbnail != null && thumbnail.isNotEmpty
+                            ? Image.network(
+                          thumbnail,
+                          height: 200,
+                          width: 250,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (context, error, stackTrace) =>
+                              Container(
+                                height: 200,
+                                width: 250,
+                                color: Colors.grey[200],
+                                child: const Icon(Iconsax.image,
+                                    size: 40, color: Colors.grey),
                               ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(series["title"] ?? "Untitled",
-                                        style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-                                  ),
-                                  PopupMenuButton<String>(
-                                    icon: const Icon(
-                                      Iconsax.more,
-                                      color: Colors.grey,
-                                    ),
-                                    onSelected: (value) {
-                                      if (value == "add") {
-                                        debugPrint("Add to List tapped");
-                                      } else if (value == "remove") {
-                                        debugPrint("Remove tapped");
-                                      }
-                                    },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
-                                        value: "add",
-                                        child: Text("Add to List"),
-                                      ),
-                                      const PopupMenuItem(
-                                        value: "remove",
-                                        child: Text("Remove"),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                        )
+                            : Container(
+                          height: 200,
+                          width: 250,
+                          color: Colors.grey[200],
+                          child: const Icon(Iconsax.image,
+                              size: 40, color: Colors.grey),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(series["title"] ?? "Untitled",
+                                style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w500)),
+                          ),
+                          PopupMenuButton<String>(
+                            icon: const Icon(
+                              Iconsax.more,
+                              color: Colors.grey,
+                            ),
+                            onSelected: (value) async {
+                              if (value == "add") {
+                                debugPrint("Add to List tapped");
+                              } else if (value == "remove") {
+                                await _deleteSeries(series);
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: "add",
+                                child: Text("Add to List"),
+                              ),
+                              const PopupMenuItem(
+                                value: "remove",
+                                child: Text("Remove"),
                               ),
                             ],
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
             Container(
               height: MediaQuery.of(context).size.height * .3,

@@ -80,36 +80,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../environmental variables.dart';
 
 class MediaSeriesService {
-  // 🔹 Create Media Series
-  // Future<Map<String, dynamic>> createSeries({
-  //   required String title,
-  //   required String description,
-  //   required String thumbnail,
-  //   String? userId,
-  //   String? orgId,
-  //   String? roleId,
-  // }) async {
-  //   // Use passed IDs or fallback to valid test IDs
-  //   final createdBy = userId ?? "68a7f7cd27471122559a1016";
-  //   final organization = orgId ?? "68a7f77c27471122559a1003";
-  //   final role = roleId ?? "68a7f7cb27471122559a100b";
-  //
-  //   final response = await http.post(
-  //     Uri.parse("$baseUrl/api/media/series"),
-  //     headers: {"Content-Type": "application/json"},
-  //     body: jsonEncode({
-  //       "title": title,
-  //       "description": description,
-  //       "thumbnail": thumbnail,
-  //       "createdBy": createdBy,
-  //       "organization": organization,
-  //       "role": role,
-  //     }),
-  //   );
-  //
-  //   print("🔹 Create Series Response: ${response.body}");
-  //   return jsonDecode(response.body);
-  // }
 
   // 🔹 Create Media Series
   Future<Map<String, dynamic>> createSeries({

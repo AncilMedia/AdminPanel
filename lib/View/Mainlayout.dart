@@ -3954,7 +3954,8 @@ class _MainLayoutState extends State<MainLayout> {
       body: Row(
         children: [
           // Sidebar (hidden on Apps page)
-          if (isDesktop && selectedKey != "apps")
+          // if (isDesktop && selectedKey != "apps")
+          if (isDesktop && selectedKey != "apps" && selectedKey != "media")
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(30),

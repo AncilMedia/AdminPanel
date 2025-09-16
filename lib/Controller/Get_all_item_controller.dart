@@ -8,7 +8,7 @@ import '../environmental variables.dart';
 class ItemService {
   static Future<List<ItemModel>> fetchItems({String? parentId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
+    final userId = prefs.getString('user_Id');
     final token = prefs.getString('accessToken');
 
     final uri = Uri.parse(
@@ -46,7 +46,7 @@ class ItemService {
     final uri = Uri.parse('$baseUrl/api/item');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('accessToken');
-    final userId = prefs.getString('userId');
+    final userId = prefs.getString('user_Id');
     final organizationId = prefs.getString('organizationId');
 
     if (token == null) throw Exception('Not authenticated: No access token');
@@ -91,7 +91,7 @@ class ItemService {
 
   static Future<void> deleteItem(String id) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
+    final userId = prefs.getString('user_Id');
     final token = prefs.getString('accessToken');
 
     final response = await http.delete(
@@ -109,7 +109,7 @@ class ItemService {
 
   static Future<void> reorderItems(List<ItemModel> items) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
+    final userId = prefs.getString('user_Id');
     final token = prefs.getString('accessToken');
 
     final body = json.encode({
@@ -136,7 +136,7 @@ class ItemService {
 
   static Future<ItemModel?> fetchItemById(String id) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
+    final userId = prefs.getString('user_Id');
     final token = prefs.getString('accessToken');
 
     final response = await http.get(
@@ -166,7 +166,7 @@ class ItemService {
     String? imageUrl,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
+    final userId = prefs.getString('user_Id');
     final token = prefs.getString('accessToken');
     final uri = Uri.parse('$baseUrl/api/item/$itemId');
 
