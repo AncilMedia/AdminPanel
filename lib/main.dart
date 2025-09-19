@@ -28,9 +28,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setUrlStrategy(PathUrlStrategy());
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   SocketService().initSocket();
 
@@ -45,6 +43,10 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => NotificationState()),
         ChangeNotifierProvider(create: (_) => RolesController()),
         ChangeNotifierProvider(create: (_) => SidebarsubProvider()),
+        ChangeNotifierProvider(
+          create: (_) => RolesController(),
+          child: RolesPage(),
+        ),
 
         Provider<ApiClient>(
           create: (context) => ApiClient(context.read<AuthState>()),
