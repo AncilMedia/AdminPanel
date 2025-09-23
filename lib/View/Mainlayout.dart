@@ -3852,14 +3852,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Controller/Sidebar_controller.dart';
-import '../View_model/Sidebar_provider.dart';
 import '../View_model/Logout.dart';
 
 // Pages
-import '../View_model/side_navbar_drawer.dart';
 import 'Application_page.dart';
 import 'Apps_page/Apps.dart';
-import 'Apps_page/Push_Notifications.dart';
 import 'Events.dart';
 import 'Giving.dart';
 import 'Home_page.dart';
@@ -3868,6 +3865,7 @@ import 'Organization.dart';
 import 'Profile_page.dart';
 import 'Pushnotification.dart';
 import 'Sermons.dart';
+import 'Sidebar_Manger.dart';
 import 'User.dart';
 import 'Notifications/notification_bell.dart';
 
@@ -3895,8 +3893,9 @@ class _MainLayoutState extends State<MainLayout> {
     'pushnotification': Iconsax.notification_bing,
     'media': Iconsax.video,
     'notification': Iconsax.message_text,
-    'role': Iconsax.profile_circle,
+    'role': Iconsax.smileys,
     'profile': Iconsax.profile_circle,
+    'sidebar': Iconsax.box,
   };
 
   @override
@@ -4094,6 +4093,8 @@ class _MainLayoutState extends State<MainLayout> {
         return const MediaPage();
       case 'notification':
         return const NotificationPage();
+      case 'sidebar':
+        return const ManageSidebar();
       default:
         return const Center(
             child: Text(
