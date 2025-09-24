@@ -14,6 +14,7 @@ import 'View/Login_page.dart';
 import 'View/Organization.dart';
 import 'View/PopUp/Right_drawer.dart';
 import 'View/Role.dart';
+import 'View/Video_Analytics.dart';
 import 'View_model/Authentication_state.dart';
 import 'View_model/Drawer_provider.dart';
 import 'View_model/Listitem_details.dart';
@@ -80,8 +81,7 @@ class MyApp extends StatelessWidget {
       //     index: null,
       //   ),
       // ),
-      home: LoginPage(),
-
+      home: MediaAnalyticsDashboard(),
       // home: const Apps(),
     );
   }
