@@ -347,60 +347,6 @@ import '../environmental variables.dart';
 
 class MediaItemService {
 
-  // Future<Map<String, dynamic>> createMediaItem({
-  //   required String title,
-  //   required String description,
-  //   String? tags,
-  //   String? seriesId,
-  //   File? file, // for mobile/desktop
-  //   PlatformFile? webFile, // for web
-  // }) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //
-  //   final userId = prefs.getString("userId");
-  //   final orgId = prefs.getString("organizationId");
-  //   final roleId = prefs.getString("roleId");
-  //
-  //   final uri = Uri.parse("$baseUrl/api/media/item");
-  //   final request = http.MultipartRequest("POST", uri);
-  //
-  //   // 🔹 Add text fields
-  //   request.fields["title"] = title;
-  //   request.fields["description"] = description;
-  //   if (tags != null) request.fields["tags"] = tags;
-  //   if (seriesId != null) request.fields["seriesId"] = seriesId;
-  //   if (userId != null) request.fields["createdBy"] = userId;
-  //   if (orgId != null) request.fields["organization"] = orgId;
-  //   if (roleId != null) request.fields["role"] = roleId;
-  //
-  //   // 🔹 Add file depending on platform
-  //   if (kIsWeb && webFile != null) {
-  //     // Web → use bytes
-  //     request.files.add(
-  //       http.MultipartFile.fromBytes(
-  //         "file",
-  //         webFile.bytes!,
-  //         filename: webFile.name,
-  //       ),
-  //     );
-  //   } else if (!kIsWeb && file != null) {
-  //     // Mobile/Desktop → use path
-  //     request.files.add(
-  //       await http.MultipartFile.fromPath("file", file.path),
-  //     );
-  //   } else {
-  //     throw Exception("No file selected");
-  //   }
-  //
-  //   print("📤 POST $uri");
-  //   final response = await request.send();
-  //   final resBody = await response.stream.bytesToString();
-  //
-  //   print("⬇️ Response [${response.statusCode}]: $resBody");
-  //
-  //   return jsonDecode(resBody);
-  // }
-
   Future<Map<String, dynamic>> createMediaItem({
     required String title,
     required String description,
