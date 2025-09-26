@@ -140,6 +140,16 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     }
   }
 
+  void clearFilters() {
+    setState(() {
+      startDate = null;
+      endDate = null;
+      selectedMediaItem = null;
+      mediaController.value = null;
+    });
+    fetchAnalytics(filtered: false);
+  }
+
   Future<void> _selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -234,25 +244,39 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 onPressed: () => fetchAnalytics(filtered: true),
                 child: const Text("Apply Filters"),
               ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: clearFilters,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade400,
+                ),
+                child: const Text("Clear Filters"),
+              ),
               const SizedBox(width: 20),
               const Text("Media Item:"),
               const SizedBox(width: 8),
-
-              // 🔹 Dropdown
+              // 🔹 Dropdown with "All Media" option
               Expanded(
                 child: CustomDropdown<String>.search(
                   hintText: "Select Media Item...",
-                  items: allMediaList.map((e) => e['title'] as String? ?? "").toList(),
+                  items: ["All Media"] +
+                      allMediaList.map((e) => e['title'] as String? ?? "").toList(),
                   controller: mediaController,
                   onChanged: (selectedTitle) {
-                    final selected = allMediaList.firstWhere(
-                          (e) => e['title'] == selectedTitle,
-                      orElse: () => {},
-                    );
-                    setState(() {
-                      selectedMediaItem = selected;
-                      fetchAnalytics(filtered: true);
-                    });
+                    if (selectedTitle == "All Media") {
+                      setState(() {
+                        selectedMediaItem = null;
+                      });
+                    } else {
+                      final selected = allMediaList.firstWhere(
+                            (e) => e['title'] == selectedTitle,
+                        orElse: () => {},
+                      );
+                      setState(() {
+                        selectedMediaItem = selected;
+                      });
+                    }
+                    fetchAnalytics(filtered: true);
                   },
                   decoration: CustomDropdownDecoration(
                     closedBorder: Border.all(color: Colors.blueAccent),
@@ -267,8 +291,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
           // 🔹 Chart
           Card(
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 3,
             shadowColor: Colors.grey.shade100,
             child: Padding(
@@ -298,20 +321,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       ),
                       tooltipBehavior: _tooltipBehavior,
                       series: <CartesianSeries>[
-                        _buildStackedSeries(
-                            chartData, 'ios', 'iOS', Colors.amber),
-                        _buildStackedSeries(
-                            chartData, 'android', 'Android', Colors.blue),
-                        _buildStackedSeries(
-                            chartData, 'webApp', 'Web App', Colors.green),
-                        _buildStackedSeries(
-                            chartData, 'appleTv', 'Apple TV', Colors.purple),
-                        _buildStackedSeries(
-                            chartData, 'roku', 'Roku', Colors.orange),
-                        _buildStackedSeries(
-                            chartData, 'webEmbed', 'Web Embed', Colors.teal),
-                        _buildStackedSeries(
-                            chartData, 'other', 'Other', Colors.grey),
+                        _buildStackedSeries(chartData, 'ios', 'iOS', Colors.amber),
+                        _buildStackedSeries(chartData, 'android', 'Android', Colors.blue),
+                        _buildStackedSeries(chartData, 'webApp', 'Web App', Colors.green),
+                        _buildStackedSeries(chartData, 'appleTv', 'Apple TV', Colors.purple),
+                        _buildStackedSeries(chartData, 'roku', 'Roku', Colors.orange),
+                        _buildStackedSeries(chartData, 'webEmbed', 'Web Embed', Colors.teal),
+                        _buildStackedSeries(chartData, 'other', 'Other', Colors.grey),
                       ],
                     ),
                   ),
