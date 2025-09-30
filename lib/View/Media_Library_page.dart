@@ -646,424 +646,430 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _loading
-        ? const Center(
-      child: CircularProgressIndicator(
-        color: Colors.purple,
-      ),
-    )
-        : SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: MediaQuery.of(context).size.width * .1,
-          right: MediaQuery.of(context).size.width * .1,
-          top: MediaQuery.of(context).size.height * .05,
+    return Scaffold(
+      body: _loading
+          ? const Center(
+        child: CircularProgressIndicator(
+          color: Colors.purple,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// 🔹 Top Row with Dropdown
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == "item") {
-                        showCreateMediaItemDialog(context,_itemService,_seriesService);
-                      } else if (value == "series") {
-                        showCreateMediaSeriesDialog(context,_seriesService);
-                      }
-                    },
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    offset: const Offset(0, 50),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: "item",
+      )
+          : SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: MediaQuery.of(context).size.width * .1,
+            right: MediaQuery.of(context).size.width * .1,
+            top: MediaQuery.of(context).size.height * .05,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 🔹 Top Row with Dropdown
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == "item") {
+                          showCreateMediaItemDialog(context,_itemService,_seriesService);
+                        } else if (value == "series") {
+                          showCreateMediaSeriesDialog(context,_seriesService);
+                        }
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      offset: const Offset(0, 50),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: "item",
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Iconsax.video,
+                                size: 18,
+                                color: Colors.purple,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Create Media Item",
+                                style: GoogleFonts.poppins(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: "series",
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Iconsax.video_add,
+                                size: 18,
+                                color: Colors.purple,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Create Media Series",
+                                style: GoogleFonts.poppins(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.purple,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         child: Row(
                           children: [
-                            const Icon(
-                              Iconsax.video,
-                              size: 18,
-                              color: Colors.purple,
-                            ),
+                            const Icon(Iconsax.video, color: Colors.white),
                             const SizedBox(width: 8),
                             Text(
-                              "Create Media Item",
-                              style: GoogleFonts.poppins(fontSize: 14),
+                              "Create Media",
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: "series",
-                        child: Row(
-                          children: [
+                            const SizedBox(width: 6),
                             const Icon(
-                              Iconsax.video_add,
-                              size: 18,
-                              color: Colors.purple,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Create Media Series",
-                              style: GoogleFonts.poppins(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.purple,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Iconsax.video, color: Colors.white),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Create Media",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
+                              Icons.keyboard_arrow_down,
                               color: Colors.white,
                             ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 🔹 Bulk Edit Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.black12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Iconsax.information, color: Colors.blue, size: 35),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Save time and add tags to your media library in bulk",
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Colors.white,
+                          const SizedBox(height: 8),
+                          Text(
+                            "Make the most of your media and get your entire media library tagged with topics,\nscripture, and speakers quickly with Bulk Edit.",
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            // 🔹 Bulk Edit Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Iconsax.information, color: Colors.blue, size: 35),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(width: 16),
+                    Row(
                       children: [
-                        Text(
-                          "Save time and add tags to your media library in bulk",
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
+                        Container(
+                          height: MediaQuery.of(context).size.height * .04,
+                          width: MediaQuery.of(context).size.width * .07,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.black12),
+                            color: Colors.white,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Make the most of your media and get your entire media library tagged with topics,\nscripture, and speakers quickly with Bulk Edit.",
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Row(
-                    children: [
-                      Container(
-                        height: MediaQuery.of(context).size.height * .04,
-                        width: MediaQuery.of(context).size.width * .07,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.black12),
-                          color: Colors.white,
-                        ),
-                        child: Center(
-                          child: Text(
-                            "Get started",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
+                          child: Center(
+                            child: Text(
+                              "Get started",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Iconsax.close_circle),
-                      ),
-                    ],
-                  ),
-                ],
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Iconsax.close_circle),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            // 🔹 Upload Component
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(Iconsax.add_circle, color: Colors.green, size: 28),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      "Upload a video or audio file to create a Media item",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+              // 🔹 Upload Component
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.black12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Iconsax.add_circle, color: Colors.green, size: 28),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        "Upload a video or audio file to create a Media item",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Add file picker logic here
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    ElevatedButton(
+                      onPressed: () {
+                        // TODO: Add file picker logic here
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        "Upload",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      "Upload",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            // 🔹 Recent Media Items
+              // 🔹 Recent Media Items
 
-            Text(
-              "Recent Media Items",
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            const Divider(),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * .3,
-              child: _mediaItems.isEmpty
-                  ? const Center(child: Text("No media items yet."))
-                  : ListView.builder(
-                itemCount:
-                _mediaItems.length > 5 ? 5 : _mediaItems.length,
-                itemBuilder: (context, index) {
-                  final item = _mediaItems[index];
-                  final thumbnailUrl = item["thumbnailUrl"];
-                  final seriesName =
-                      item["seriesId"]?["title"] ?? "No Series";
-                  final createdDate = item["createdAt"] != null
-                      ? DateTime.parse(item["createdAt"])
+              Text(
+                "Recent Media Items",
+                style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+              const Divider(),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * .3,
+                child: _mediaItems.isEmpty
+                    ? const Center(child: Text("No media items yet."))
+                    : GestureDetector(
+                  onTap: (){
+                    print("Tapped on media items");
+                  },
+                      child: ListView.builder(
+                                        itemCount:
+                                        _mediaItems.length > 5 ? 5 : _mediaItems.length,
+                                        itemBuilder: (context, index) {
+                      final item = _mediaItems[index];
+                      final thumbnailUrl = item["thumbnailUrl"];
+                      final seriesName =
+                          item["seriesId"]?["title"] ?? "No Series";
+                      final createdDate = item["createdAt"] != null
+                          ? DateTime.parse(item["createdAt"])
+                          .toLocal()
+                          .toString()
+                          .substring(0, 16)
+                          : "Unknown Date";
+
+                      return ListTile(
+                        leading: thumbnailUrl != null &&
+                            thumbnailUrl.isNotEmpty
+                            ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            thumbnailUrl,
+                            width: 75,
+                            height: 75,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) =>
+                            const Icon(Iconsax.video,
+                                size: 40,
+                                color: Colors.grey),
+                          ),
+                        )
+                            : const Icon(Iconsax.video,
+                            size: 40, color: Colors.grey),
+                        title: Text(item["title"] ?? "Untitled"),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (item["description"] != null &&
+                                item["description"]
+                                    .toString()
+                                    .isNotEmpty)
+                              Text(item["description"]),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  "Series: $seriesName",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                Text(
+                                  " ---> ",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  createdDate,
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                            Divider()
+                          ],
+                        ),
+                      );
+                                        },
+                                      ),
+                    ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // 🔹 Recent Media Series
+              Text(
+                "Recent Media Series",
+                style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+              const Divider(),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: _mediaSeries.take(5).map((series) {
+                  final createdDate = series["createdAt"] != null
+                      ? DateTime.parse(series["createdAt"])
                       .toLocal()
                       .toString()
                       .substring(0, 16)
                       : "Unknown Date";
+                  final thumbnail = series["thumbnail"];
 
-                  return ListTile(
-                    leading: thumbnailUrl != null &&
-                        thumbnailUrl.isNotEmpty
-                        ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        thumbnailUrl,
-                        width: 75,
-                        height: 75,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) =>
-                        const Icon(Iconsax.video,
-                            size: 40,
-                            color: Colors.grey),
-                      ),
-                    )
-                        : const Icon(Iconsax.video,
-                        size: 40, color: Colors.grey),
-                    title: Text(item["title"] ?? "Untitled"),
-                    subtitle: Column(
+                  return SizedBox(
+                    width: 200,
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (item["description"] != null &&
-                            item["description"]
-                                .toString()
-                                .isNotEmpty)
-                          Text(item["description"]),
-                        const SizedBox(height: 4),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: thumbnail != null && thumbnail.isNotEmpty
+                              ? Image.network(
+                            thumbnail,
+                            height: 200,
+                            width: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) =>
+                                Container(
+                                  height: 200,
+                                  width: 250,
+                                  color: Colors.grey[200],
+                                  child: const Icon(Iconsax.image,
+                                      size: 40, color: Colors.grey),
+                                ),
+                          )
+                              : Container(
+                            height: 200,
+                            width: 250,
+                            color: Colors.grey[200],
+                            child: const Icon(Iconsax.image,
+                                size: 40, color: Colors.grey),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
-                            Text(
-                              "Series: $seriesName",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w600),
+                            Expanded(
+                              child: Text(series["title"] ?? "Untitled",
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w500)),
                             ),
-                            Text(
-                              " ---> ",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              createdDate,
-                              style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w600),
+                            PopupMenuButton<String>(
+                              icon: const Icon(
+                                Iconsax.more,
+                                color: Colors.grey,
+                              ),
+                              onSelected: (value) async {
+                                if (value == "add") {
+                                  debugPrint("Add to List tapped");
+                                } else if (value == "remove") {
+                                  await _deleteSeries(series);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: "add",
+                                  child: Text("Add to List"),
+                                ),
+                                const PopupMenuItem(
+                                  value: "remove",
+                                  child: Text("Remove"),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        Divider()
                       ],
                     ),
                   );
-                },
+                }).toList(),
               ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // 🔹 Recent Media Series
-            Text(
-              "Recent Media Series",
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            const Divider(),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: _mediaSeries.take(5).map((series) {
-                final createdDate = series["createdAt"] != null
-                    ? DateTime.parse(series["createdAt"])
-                    .toLocal()
-                    .toString()
-                    .substring(0, 16)
-                    : "Unknown Date";
-                final thumbnail = series["thumbnail"];
-
-                return SizedBox(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: thumbnail != null && thumbnail.isNotEmpty
-                            ? Image.network(
-                          thumbnail,
-                          height: 200,
-                          width: 250,
-                          fit: BoxFit.cover,
-                          errorBuilder:
-                              (context, error, stackTrace) =>
-                              Container(
-                                height: 200,
-                                width: 250,
-                                color: Colors.grey[200],
-                                child: const Icon(Iconsax.image,
-                                    size: 40, color: Colors.grey),
-                              ),
-                        )
-                            : Container(
-                          height: 200,
-                          width: 250,
-                          color: Colors.grey[200],
-                          child: const Icon(Iconsax.image,
-                              size: 40, color: Colors.grey),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(series["title"] ?? "Untitled",
-                                style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w500)),
-                          ),
-                          PopupMenuButton<String>(
-                            icon: const Icon(
-                              Iconsax.more,
-                              color: Colors.grey,
-                            ),
-                            onSelected: (value) async {
-                              if (value == "add") {
-                                debugPrint("Add to List tapped");
-                              } else if (value == "remove") {
-                                await _deleteSeries(series);
-                              }
-                            },
-                            itemBuilder: (context) => [
-                              const PopupMenuItem(
-                                value: "add",
-                                child: Text("Add to List"),
-                              ),
-                              const PopupMenuItem(
-                                value: "remove",
-                                child: Text("Remove"),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-            Container(
-              height: MediaQuery.of(context).size.height * .3,
-            ),
-          ],
+              Container(
+                height: MediaQuery.of(context).size.height * .3,
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      ));
   }}

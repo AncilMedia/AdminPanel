@@ -96,8 +96,10 @@ import 'Controller/Roles_controller.dart';
 import 'Controller/Sidebar_controller.dart';
 import 'Model/Item_Model.dart';
 import 'Socket_Service.dart';
+import 'View/LibraryDetails.dart';
 import 'View/Mainlayout.dart';
 import 'View/Media_Analytics_page.dart';
+import 'View/Media_Library_page.dart';
 import 'View/Media_page.dart';
 import 'View/Pushnotification.dart';
 import 'Services/api_client.dart';
@@ -156,7 +158,7 @@ class MyApp extends StatelessWidget {
       // theme: ThemeData(
       //   primarySwatch: Colors.blue,
       // ),
-      home: AnalyticsPage(), // 👈 safe entrypoint widget
+      home: LibraryDetails(), // 👈 safe entrypoint widget
     );
   }
 }

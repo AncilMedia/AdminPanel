@@ -30,7 +30,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   List<Map<String, dynamic>> allMediaList = []; // Full list for dropdown
   final AnalyticsService analyticsService = AnalyticsService();
 
-  // Animated Dropdown controller
+  // Dropdown controller
   late SingleSelectController<String?> mediaController;
 
   @override
@@ -48,11 +48,21 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     });
 
     try {
-      final mediaItemIdValue =
-      filtered && selectedMediaItem != null ? selectedMediaItem!['id'] as String? : null;
+      String? mediaItemIdValue;
+
+      // ✅ Only add mediaItemId if user selected one (and not "All Media")
+      if (filtered && selectedMediaItem != null && mediaController.value != "All Media") {
+        mediaItemIdValue = selectedMediaItem!['id'] as String?;
+      }
+
+      print("🔍 Fetching Analytics...");
+      print("  ▶ Filtered: $filtered");
+      print("  ▶ Selected Media ID: $mediaItemIdValue");
+      print("  ▶ Start Date: ${startDate != null ? DateFormat('yyyy-MM-dd').format(startDate!) : 'null'}");
+      print("  ▶ End Date: ${endDate != null ? DateFormat('yyyy-MM-dd').format(endDate!) : 'null'}");
 
       final data = await analyticsService.getAllMediaAnalytics(
-        limit: limit,
+        limit: 50,
         sortField: sortField,
         sortOrder: sortOrder,
         mediaItemId: mediaItemIdValue,
@@ -60,83 +70,19 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         endDate: endDate,
       );
 
-      if (data != null) {
-        final fetchedMediaItems =
-        List<Map<String, dynamic>>.from(data['mediaList'] ?? []);
-
-        // Assign full list once for dropdown
-        if (allMediaList.isEmpty) {
-          allMediaList = fetchedMediaItems;
-          if (allMediaList.isNotEmpty && selectedMediaItem == null) {
-            selectedMediaItem = allMediaList[0];
-            mediaController.value = selectedMediaItem!['title'] as String?;
-          }
-        }
-
-        // Determine which items to show in chart/table
-        final displayedMediaItems = filtered && selectedMediaItem != null
-            ? fetchedMediaItems
-            : allMediaList;
-
-        // Aggregate chart data
-        final Map<String, Map<String, dynamic>> aggregated = {};
-        for (final item in displayedMediaItems) {
-          final dateString = item['date']?.toString() ?? "";
-          DateTime? date;
-          try {
-            date = DateTime.parse(dateString);
-          } catch (_) {
-            continue;
-          }
-          if (date == null) continue;
-
-          final monthKey = DateFormat('MMM yyyy').format(date);
-
-          aggregated.putIfAbsent(monthKey, () => {
-            'month': monthKey,
-            'ios': 0,
-            'android': 0,
-            'webApp': 0,
-            'appleTv': 0,
-            'roku': 0,
-            'webEmbed': 0,
-            'other': 0,
-          });
-
-          final devices = Map<String, dynamic>.from(item['devices'] ?? {});
-          for (final key in devices.keys) {
-            if (aggregated[monthKey]!.containsKey(key)) {
-              aggregated[monthKey]![key] =
-                  (aggregated[monthKey]![key] ?? 0) +
-                      (devices[key] is num ? devices[key].toInt() : 0);
-            }
-          }
-        }
-
-        final chartData = aggregated.values.toList()
-          ..sort((a, b) => DateFormat('MMM yyyy')
-              .parse(a['month'] as String)
-              .compareTo(DateFormat('MMM yyyy').parse(b['month'] as String)));
-
-        setState(() {
-          analyticsData = {
-            ...Map<String, dynamic>.from(data),
-            'chartData': chartData,
-            'mediaList': displayedMediaItems,
-          };
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          error = "Failed to load analytics.";
-          isLoading = false;
-        });
-      }
-    } catch (e) {
       setState(() {
-        error = "Error: $e";
+        analyticsData = data;
         isLoading = false;
       });
+
+      print("✅ Analytics fetched successfully");
+      print("📦 Media count: ${data['mediaList']?.length ?? 0}");
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+      print("❌ Error fetching analytics: $e");
     }
   }
 
@@ -157,11 +103,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
-      setState(() {
-        startDate = picked;
-      });
-    }
+    if (picked != null) setState(() => startDate = picked);
   }
 
   Future<void> _selectEndDate() async {
@@ -171,11 +113,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
-      setState(() {
-        endDate = picked;
-      });
-    }
+    if (picked != null) setState(() => endDate = picked);
   }
 
   @override
@@ -209,35 +147,31 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   Widget buildDashboard() {
-    final chartData =
-    List<Map<String, dynamic>>.from(analyticsData?['chartData'] ?? []);
-    final mediaItems =
-    List<Map<String, dynamic>>.from(analyticsData?['mediaList'] ?? []);
+    final chartData = List<Map<String, dynamic>>.from(analyticsData?['chartData'] ?? []);
+    final mediaItems = List<Map<String, dynamic>>.from(analyticsData?['mediaList'] ?? []);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔹 Filter Controls
+          // Filters
           Row(
             children: [
               const Text("Start Date:"),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _selectStartDate,
-                child: Text(startDate != null
-                    ? DateFormat("dd MMM yyyy").format(startDate!)
-                    : "Select"),
+                child: Text(
+                    startDate != null ? DateFormat("dd MMM yyyy").format(startDate!) : "Select"),
               ),
               const SizedBox(width: 16),
               const Text("End Date:"),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _selectEndDate,
-                child: Text(endDate != null
-                    ? DateFormat("dd MMM yyyy").format(endDate!)
-                    : "Select"),
+                child:
+                Text(endDate != null ? DateFormat("dd MMM yyyy").format(endDate!) : "Select"),
               ),
               const SizedBox(width: 16),
               ElevatedButton(
@@ -247,15 +181,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: clearFilters,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade400,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade400),
                 child: const Text("Clear Filters"),
               ),
               const SizedBox(width: 20),
               const Text("Media Item:"),
               const SizedBox(width: 8),
-              // 🔹 Dropdown with "All Media" option
               Expanded(
                 child: CustomDropdown<String>.search(
                   hintText: "Select Media Item...",
@@ -264,17 +195,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   controller: mediaController,
                   onChanged: (selectedTitle) {
                     if (selectedTitle == "All Media") {
-                      setState(() {
-                        selectedMediaItem = null;
-                      });
+                      setState(() => selectedMediaItem = null);
                     } else {
                       final selected = allMediaList.firstWhere(
-                            (e) => e['title'] == selectedTitle,
-                        orElse: () => {},
-                      );
-                      setState(() {
-                        selectedMediaItem = selected;
-                      });
+                              (e) => e['title'] == selectedTitle,
+                          orElse: () => {});
+                      setState(() => selectedMediaItem = selected);
                     }
                     fetchAnalytics(filtered: true);
                   },
@@ -289,7 +215,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           ),
           const SizedBox(height: 16),
 
-          // 🔹 Chart
+          // Chart
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 3,
@@ -298,10 +224,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const Text(
-                    "📅 Monthly Device Usage Overview",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                  const Text("📅 Monthly Device Usage Overview",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 350,
@@ -311,9 +235,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                         labelRotation: -45,
                         majorGridLines: MajorGridLines(width: 0),
                       ),
-                      primaryYAxis: const NumericAxis(
-                        title: AxisTitle(text: 'Plays'),
-                      ),
+                      primaryYAxis: const NumericAxis(title: AxisTitle(text: 'Plays')),
                       legend: const Legend(
                         isVisible: true,
                         position: LegendPosition.bottom,
@@ -338,7 +260,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
           const SizedBox(height: 20),
 
-          // 🔹 Media Table
+          // Media Table
           Text(
             "🎬 Media Performance",
             style: Theme.of(context)
@@ -366,7 +288,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             ),
           ),
           const SizedBox(height: 6),
-
           ...mediaItems.map((item) {
             return Container(
               margin: const EdgeInsets.symmetric(vertical: 4),
@@ -405,8 +326,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           Text(
                             DateFormat("dd MMM yyyy").format(
                                 DateTime.tryParse(item['date']) ?? DateTime.now()),
-                            style: const TextStyle(
-                                color: Colors.black54, fontSize: 12),
+                            style:
+                            const TextStyle(color: Colors.black54, fontSize: 12),
                           ),
                       ],
                     ),
