@@ -55,14 +55,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         mediaItemIdValue = selectedMediaItem!['id'] as String?;
       }
 
-      print("🔍 Fetching Analytics...");
-      print("  ▶ Filtered: $filtered");
-      print("  ▶ Selected Media ID: $mediaItemIdValue");
-      print("  ▶ Start Date: ${startDate != null ? DateFormat('yyyy-MM-dd').format(startDate!) : 'null'}");
-      print("  ▶ End Date: ${endDate != null ? DateFormat('yyyy-MM-dd').format(endDate!) : 'null'}");
-
       final data = await analyticsService.getAllMediaAnalytics(
-        limit: 50,
+        limit: limit,
         sortField: sortField,
         sortOrder: sortOrder,
         mediaItemId: mediaItemIdValue,
@@ -70,19 +64,23 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         endDate: endDate,
       );
 
+      // 🔹 Filter chart data to only show values > 0
+      final chartDataRaw = List<Map<String, dynamic>>.from(data['chartData'] ?? []);
+      final filteredChartData = chartDataRaw.map((d) {
+        final filtered = Map<String, dynamic>.from(d);
+        filtered.removeWhere((key, value) => key != 'month' && (value == null || value <= 0));
+        return filtered;
+      }).toList();
+
       setState(() {
-        analyticsData = data;
+        analyticsData = {...data, 'chartData': filteredChartData};
         isLoading = false;
       });
-
-      print("✅ Analytics fetched successfully");
-      print("📦 Media count: ${data['mediaList']?.length ?? 0}");
     } catch (e) {
       setState(() {
         error = e.toString();
         isLoading = false;
       });
-      print("❌ Error fetching analytics: $e");
     }
   }
 
@@ -347,12 +345,17 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   StackedColumnSeries<Map<String, dynamic>, String> _buildStackedSeries(
       List<Map<String, dynamic>> data, String key, String name, Color color) {
+    final filteredData = data
+        .where((d) => d[key] != null && d[key] > 0) // only >0
+        .toList();
+
     return StackedColumnSeries<Map<String, dynamic>, String>(
-      dataSource: data,
+      dataSource: filteredData,
       xValueMapper: (d, _) => d['month'] as String,
       yValueMapper: (d, _) => d[key] as int,
       name: name,
       color: color,
+      width: 0.03, // thinner bars
       dataLabelSettings: const DataLabelSettings(isVisible: false),
     );
   }

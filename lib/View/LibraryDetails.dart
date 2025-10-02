@@ -1,11 +1,24 @@
+import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import '../Controller/Media_analytics_controller.dart';
+
+class _ChartData {
+  final String date; // x-axis: date
+  final double views;
+  final Color color;
+  final String device;
+
+  _ChartData(this.date, this.views, this.color, this.device);
+}
 
 class LibraryDetails extends StatefulWidget {
-  const LibraryDetails({super.key});
+  final String mediaitemid;
+
+  const LibraryDetails({super.key, required this.mediaitemid});
 
   @override
   State<LibraryDetails> createState() => _LibraryDetailsState();
@@ -13,19 +26,35 @@ class LibraryDetails extends StatefulWidget {
 
 class _LibraryDetailsState extends State<LibraryDetails> {
   final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _speakerController = TextEditingController();
+  final TextEditingController _scriptureController = TextEditingController();
+  final TextEditingController _topicsController = TextEditingController();
 
-  String mediaitemid = "68c7b2162e689b810a405344";
-  // Example data for chart
-  final List<_ChartData> chartData = [
-    _ChartData("Mon", 5),
-    _ChartData("Tue", 8),
-    _ChartData("Wed", 6),
-    _ChartData("Thu", 10),
-    _ChartData("Fri", 7),
-  ];
-  final List<String> speakers = ["Speaker 1", "Speaker 2", "Speaker 3", "Speaker 4"];
-  // Tooltip behavior for chart
+  bool isLoading = true;
+  String? error;
   late TooltipBehavior _tooltipBehavior;
+  int totalViews = 0;
+  int peakViews = 0;
+
+  final AnalyticsService analyticsService = AnalyticsService();
+  List<_ChartData> chartData = [];
+  Map<String, dynamic>? analyticsData;
+
+  // Example tag lists
+  final List<String> speakers = ["Speaker 1", "Speaker 2", "Speaker 3", "Speaker 4"];
+  final List<String> scriptures = ["Scripture 1", "Scripture 2", "Scripture 3"];
+  final List<String> topics = ["Topic 1", "Topic 2", "Topic 3"];
+
+  // Device color map
+  final Map<String, Color> deviceColors = {
+    "ios": Colors.amber,
+    "android": Colors.blue,
+    "appleTv": Colors.purple,
+    "roku": Colors.orange,
+    "webApp": Colors.green,
+    "webEmbed": Colors.teal,
+    "other": Colors.grey,
+  };
 
   @override
   void initState() {
@@ -33,15 +62,54 @@ class _LibraryDetailsState extends State<LibraryDetails> {
     _tooltipBehavior = TooltipBehavior(
       enable: true,
       color: Colors.blueAccent.withOpacity(0.9),
-      textStyle: const TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
-      format: 'point.x : point.y views', // Customize content
+      textStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      format: 'point.x : point.y views',
     );
+    fetchAnalytics();
   }
 
-  // Date picker
+  Future<void> fetchAnalytics() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+
+    try {
+      final data = await analyticsService.getSingleMediaAnalytics(widget.mediaitemid);
+
+      final Map<String, dynamic> devicesByDate = Map<String, dynamic>.from(data['devices'] ?? {});
+
+      List<_ChartData> tempChart = [];
+      int maxViews = 0;
+      int total = 0;
+
+      devicesByDate.forEach((date, deviceMap) {
+        final Map<String, dynamic> dMap = Map<String, dynamic>.from(deviceMap);
+        dMap.forEach((device, value) {
+          double views = (value ?? 0).toDouble();
+          if (views > 0) { // ✅ Only include data > 0
+            tempChart.add(_ChartData(date, views, deviceColors[device]!, device));
+            total += views.toInt();
+            if (views > maxViews) maxViews = views.toInt();
+          }
+        });
+      });
+
+      setState(() {
+        analyticsData = data;
+        chartData = tempChart;
+        totalViews = total;
+        peakViews = maxViews;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -56,310 +124,388 @@ class _LibraryDetailsState extends State<LibraryDetails> {
     }
   }
 
+  void _showSideSheet({
+    required BuildContext context,
+    required String title,
+    required List<String> items,
+    List<String>? preSelected,
+    required Function(List<String>) onSelected,
+  }) {
+    List<String> filteredItems = List.from(items);
+    List<String> selected = preSelected != null ? List.from(preSelected) : [];
+    final TextEditingController newItemController = TextEditingController();
+    final TextEditingController searchController = TextEditingController();
+
+    showGeneralDialog(
+      context: context,
+      barrierLabel: "SideSheet",
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        return Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.5,
+                height: MediaQuery.of(context).size.height * 0.8,
+                padding: const EdgeInsets.all(16),
+                child: StatefulBuilder(
+                  builder: (context, setSheetState) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: newItemController,
+                                decoration: const InputDecoration(
+                                  hintText: "Add new item",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                final newItem = newItemController.text.trim();
+                                if (newItem.isNotEmpty && !items.contains(newItem)) {
+                                  setSheetState(() {
+                                    items.add(newItem);
+                                    filteredItems.add(newItem);
+                                    selected.add(newItem);
+                                    newItemController.clear();
+                                  });
+                                }
+                              },
+                              child: const Text("Add"),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: searchController,
+                          decoration: InputDecoration(
+                            hintText: "Search...",
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: searchController.text.isNotEmpty
+                                ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                setSheetState(() {
+                                  searchController.clear();
+                                  filteredItems = List.from(items);
+                                });
+                              },
+                            )
+                                : null,
+                          ),
+                          onChanged: (val) {
+                            setSheetState(() {
+                              filteredItems = items.where((e) => e.toLowerCase().contains(val.toLowerCase())).toList();
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: filteredItems.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredItems[index];
+                              final isSelected = selected.contains(item);
+                              return ListTile(
+                                title: Text(item),
+                                trailing: isSelected
+                                    ? const Icon(Icons.check_circle, color: Colors.blue)
+                                    : const Icon(Icons.circle_outlined),
+                                onTap: () {
+                                  setSheetState(() {
+                                    if (isSelected) {
+                                      selected.remove(item);
+                                    } else {
+                                      selected.add(item);
+                                    }
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () {
+                            onSelected(selected);
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Done"),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return SlideTransition(
+          position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(anim1),
+          child: child,
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(IconData icon, String value, String label) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black26),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.black54),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(label, style: const TextStyle(color: Colors.black54, fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+
+  InputDecoration _inputDecoration({String? hint, IconData? icon}) => InputDecoration(
+    hintText: hint,
+    suffixIcon: icon != null ? Icon(icon) : null,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+    enabledBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.black12),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.blueAccent),
+      borderRadius: BorderRadius.circular(6),
+    ),
+  );
+
+  Widget _buildInputField({String? hint, int maxLines = 1, TextEditingController? controller}) =>
+      TextFormField(controller: controller, maxLines: maxLines, decoration: _inputDecoration(hint: hint));
+
+  Widget _buildSelectableField({required TextEditingController controller, required String hint, required VoidCallback onTap}) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      onTap: onTap,
+      decoration: InputDecoration(
+        hintText: hint,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.black12),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.blueAccent),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (controller.text.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.clear, color: Colors.grey),
+                onPressed: () {
+                  controller.clear();
+                  setState(() {});
+                },
+              ),
+            const Icon(Icons.arrow_drop_down, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaBox(double height) => Container(
+    height: height,
+    width: double.infinity,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: Colors.black12),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final double boxWidth = size.width * 0.85;
+
+    // Group chartData by device for stacked column chart
+    Map<String, List<_ChartData>> seriesMap = {};
+    for (var d in chartData) {
+      seriesMap.putIfAbsent(d.device, () => []).add(d);
+    }
+
+    List<StackedColumnSeries<_ChartData, String>> chartSeries = seriesMap.entries.map((entry) {
+      return StackedColumnSeries<_ChartData, String>(
+        dataSource: entry.value,
+        xValueMapper: (d, _) => d.date,
+        yValueMapper: (d, _) => d.views,
+        name: entry.key,
+        pointColorMapper: (d, _) => d.color,
+        dataLabelSettings: const DataLabelSettings(isVisible: true),
+        width: 0.3,
+      );
+    }).toList();
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: Column(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : error != null
+          ? Center(child: Text("Error: $error"))
+          : Column(
         children: [
-          // 🔹 Chart + Stats Section
-          Container(
-            width: size.width * 0.84,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Chart
-                SizedBox(
-                  height: size.height * 0.25,
-                  child: SfCartesianChart(
-                    title: ChartTitle(text: 'Analytics'),
-                    primaryXAxis: CategoryAxis(),
-                    primaryYAxis: NumericAxis(),
-                    tooltipBehavior: _tooltipBehavior,
-                    legend: const Legend(isVisible: false),
-                    series: <CartesianSeries<_ChartData, String>>[
-                      ColumnSeries<_ChartData, String>(
-                        dataSource: chartData,
-                        xValueMapper: (data, _) => data.day,
-                        yValueMapper: (data, _) => data.views,
-                        color: Colors.blueAccent,
-                        borderRadius: BorderRadius.circular(6),
-                        dataLabelSettings: const DataLabelSettings(
-                          isVisible: true,
-                        ),
-                        enableTooltip: true,
-                      ),
+          // Chart Section
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.075),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: size.height * 0.35,
+                    child: SfCartesianChart(
+                      title: ChartTitle(text: 'Analytics: ${widget.mediaitemid}'),
+                      primaryXAxis: CategoryAxis(title: AxisTitle(text: 'Date'), labelRotation: 45),
+                      primaryYAxis: NumericAxis(title: AxisTitle(text: 'Views')),
+                      legend: Legend(isVisible: true, position: LegendPosition.bottom),
+                      tooltipBehavior: _tooltipBehavior,
+                      series: chartSeries,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildStatCard(Icons.remove_red_eye, '$totalViews', 'Total Plays'),
+                      const SizedBox(width: 12),
+                      _buildStatCard(Icons.bar_chart, '$peakViews', 'Peak Views'),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
-
-                // Stats Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // All Time Plays
-                    Text(
-                      'Media Item id : $mediaitemid',
-                      style: TextStyle(
-                        color: Colors.black54,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.black26),
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.remove_red_eye, color: Colors.black54),
-                            SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '0',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  'All time plays',
-                                  style: TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    // Peak Traffic Plays
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.black26),
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.bar_chart, color: Colors.black54),
-                            SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '0 on Sep 28, 2025',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  'Peak traffic plays',
-                                  style: TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
-          SizedBox(height: size.height * 0.02),
+          const SizedBox(height: 16),
 
-          // 🔹 Form Section
+          // Form Section
           Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Container(
-                  width: size.width * 0.85,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.white,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      /// SECTION: Basic Details
-                      Text(
-                        "Basic Details",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Title
-                      _buildLabel("Title"),
-                      const SizedBox(height: 6),
-                      _buildInputField(hint: "Enter title"),
-                      const SizedBox(height: 16),
-
-                      // Row: Author + Date
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildLabel("Author"),
-                                const SizedBox(height: 6),
-                                _buildInputField(hint: "Enter author"),
-                              ],
-                            ),
+            child: SingleChildScrollView(
+              child: Container(
+                width: boxWidth,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Basic Details", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                    _buildInputField(hint: "Enter title"),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: _buildInputField(hint: "Enter author")),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _dateController,
+                            readOnly: true,
+                            onTap: () => _selectDate(context),
+                            decoration: _inputDecoration(hint: "Select date", icon: Iconsax.calendar_1),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildLabel("Date"),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  controller: _dateController,
-                                  readOnly: true,
-                                  onTap: () => _selectDate(context),
-                                  decoration: InputDecoration(
-                                    suffixIcon: Icon(Iconsax.calendar_1),
-                                    hintText: "Select date",
-                                    filled: false,
-                                    fillColor: Colors.black12, // background color
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: const BorderSide(color: Colors.black12),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: const BorderSide(color: Colors.blueAccent),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Description
-                      _buildLabel("Description"),
-                      const SizedBox(height: 6),
-                      _buildInputField(hint: "Enter description", maxLines: 4),
-                      const SizedBox(height: 24),
-
-                      /// SECTION: Tags
-                      Text(
-                        "Tags",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInputField(hint: "Enter description", maxLines: 4),
+                    const SizedBox(height: 24),
+                    Text("Tags", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    _buildSelectableField(
+                      controller: _speakerController,
+                      hint: "Select Speakers",
+                      onTap: () => _showSideSheet(
+                        context: context,
+                        title: "Select Speakers",
+                        items: speakers,
+                        preSelected: _speakerController.text.isEmpty ? [] : _speakerController.text.split(", "),
+                        onSelected: (selected) => setState(() => _speakerController.text = selected.join(", ")),
                       ),
-                      const SizedBox(height: 14),
-
-                      // Speakers
-                      _buildTagLabel(
-                        "Speakers",
-                        tooltipMessage: "Enter the speakers for this session",
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSelectableField(
+                      controller: _scriptureController,
+                      hint: "Select Scripture",
+                      onTap: () => _showSideSheet(
+                        context: context,
+                        title: "Select Scripture",
+                        items: scriptures,
+                        preSelected: _scriptureController.text.isEmpty ? [] : _scriptureController.text.split(", "),
+                        onSelected: (selected) => setState(() => _scriptureController.text = selected.join(", ")),
                       ),
-                      const SizedBox(height: 6),
-                      _buildInputField(hint: "Add speakers"),
-                      const SizedBox(height: 16),
-
-                      // Scripture
-                      _buildTagLabel(
-                        "Scripture",
-                        tooltipMessage: "Mention relevant scripture references",
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSelectableField(
+                      controller: _topicsController,
+                      hint: "Select Topics",
+                      onTap: () => _showSideSheet(
+                        context: context,
+                        title: "Select Topics",
+                        items: topics,
+                        preSelected: _topicsController.text.isEmpty ? [] : _topicsController.text.split(", "),
+                        onSelected: (selected) => setState(() => _topicsController.text = selected.join(", ")),
                       ),
-                      const SizedBox(height: 6),
-                      _buildInputField(hint: "Add scripture"),
-                      const SizedBox(height: 16),
-
-                      // Topics
-                      _buildTagLabel(
-                        "Topics",
-                        tooltipMessage: "Add main topics covered",
-                      ),
-                      const SizedBox(height: 6),
-                      _buildInputField(hint: "Add topics"),
-                      const SizedBox(height: 32),
-
-                      // Video Section
-                      Text(
-                        "Video",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        height: size.height * 0.2,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.black12),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Audio Section
-                      Text(
-                        "Audio",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        height: size.height * 0.1,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.black12),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                    Text("Video", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                    SizedBox(width: boxWidth, child: _buildMediaBox(size.height * 0.2)),
+                    const SizedBox(height: 16),
+                    Text("Audio", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                    SizedBox(width: boxWidth, child: _buildMediaBox(size.height * 0.1)),
+                  ],
                 ),
               ),
             ),
@@ -368,60 +514,4 @@ class _LibraryDetailsState extends State<LibraryDetails> {
       ),
     );
   }
-
-  /// Helper: Label
-  Widget _buildLabel(String text) => Text(
-    text,
-    style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
-  );
-
-  /// Helper: Tag Label with Info Icon and Tooltip
-  Widget _buildTagLabel(String text, {String? tooltipMessage}) => Row(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      _buildLabel(text),
-      const SizedBox(width: 4),
-      Tooltip(
-        message: tooltipMessage ?? "More info about $text",
-        waitDuration: const Duration(milliseconds: 300),
-        showDuration: const Duration(seconds: 3),
-        decoration: BoxDecoration(
-          color: Colors.grey[800],
-          borderRadius: BorderRadius.circular(6),
-        ),
-        textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-        child: const Icon(Iconsax.info_circle, size: 14, color: Colors.grey),
-      ),
-    ],
-  );
-
-  /// Helper: Input Field
-  Widget _buildInputField({String? hint, int maxLines = 1}) => TextFormField(
-    maxLines: maxLines,
-    decoration: InputDecoration(
-      hintText: hint,
-      filled: false,
-      fillColor: Colors.black12, // background color
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-      enabledBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.black12),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.blueAccent),
-        borderRadius: BorderRadius.circular(6),
-      ),
-    ),
-  );
 }
-
-/// Dummy data model for chart
-class _ChartData {
-  final String day;
-  final double views;
-  _ChartData(this.day, this.views);
-}
-
-
-
-// use this package drop_down_list
