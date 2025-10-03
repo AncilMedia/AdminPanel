@@ -1,3 +1,203 @@
+// // // // // import 'dart:convert';
+// // // // // import 'dart:io';
+// // // // // import 'package:http/http.dart' as http;
+// // // // // import 'package:shared_preferences/shared_preferences.dart';
+// // // // //
+// // // // // import '../environmental variables.dart';
+// // // // //
+// // // // // class MediaItemService {
+// // // // //   // ⬆️ Replace localhost with your backend IP if running on device
+// // // // //
+// // // // //   // 🔹 Create Media Item (upload file + metadata)
+// // // // //   Future<Map<String, dynamic>> createMediaItem({
+// // // // //     required String title,
+// // // // //     required String description,
+// // // // //     String? tags,
+// // // // //     String? seriesId,
+// // // // //     required File file, // video/audio file
+// // // // //   }) async {
+// // // // //     final prefs = await SharedPreferences.getInstance();
+// // // // //
+// // // // //     final userId = prefs.getString("userId");
+// // // // //     final orgId = prefs.getString("organizationId");
+// // // // //     final roleId = prefs.getString("roleId");
+// // // // //
+// // // // //     final uri = Uri.parse("$baseUrl/api/media/item");
+// // // // //     final request = http.MultipartRequest("POST", uri);
+// // // // //
+// // // // //     // 🔹 Add text fields
+// // // // //     request.fields["title"] = title;
+// // // // //     request.fields["description"] = description;
+// // // // //     if (tags != null) request.fields["tags"] = tags; // comma-separated
+// // // // //     if (seriesId != null) request.fields["seriesId"] = seriesId;
+// // // // //     if (userId != null) request.fields["createdBy"] = userId;
+// // // // //     if (orgId != null) request.fields["organization"] = orgId;
+// // // // //     if (roleId != null) request.fields["role"] = roleId;
+// // // // //
+// // // // //     // 🔹 Add file
+// // // // //     request.files.add(
+// // // // //       await http.MultipartFile.fromPath("file", file.path),
+// // // // //     );
+// // // // //
+// // // // //     final response = await request.send();
+// // // // //     final resBody = await response.stream.bytesToString();
+// // // // //
+// // // // //     return jsonDecode(resBody);
+// // // // //   }
+// // // // //
+// // // // //   // 🔹 Get All Media Items
+// // // // //   Future<List<dynamic>> getMediaItems() async {
+// // // // //     final response = await http.get(Uri.parse("$baseUrl/api/media"));
+// // // // //     return jsonDecode(response.body);
+// // // // //   }
+// // // // //
+// // // // //   // 🔹 Bulk Edit Tags
+// // // // //   Future<Map<String, dynamic>> bulkEditMediaItems({
+// // // // //     required List<String> ids,
+// // // // //     required List<String> tags,
+// // // // //   }) async {
+// // // // //     final response = await http.put(
+// // // // //       Uri.parse("$baseUrl/api/media/bulk-edit"),
+// // // // //       headers: {"Content-Type": "application/json"},
+// // // // //       body: jsonEncode({
+// // // // //         "ids": ids,
+// // // // //         "tags": tags,
+// // // // //       }),
+// // // // //     );
+// // // // //
+// // // // //     return jsonDecode(response.body);
+// // // // //   }
+// // // // //
+// // // // //   // 🔹 Delete Media Item
+// // // // //   Future<Map<String, dynamic>> deleteMediaItem(String id) async {
+// // // // //     final response = await http.delete(Uri.parse("$baseUrl/api/media/$id"));
+// // // // //     return jsonDecode(response.body);
+// // // // //   }
+// // // // // }
+// // // //
+// // // //
+// // // // import 'dart:convert';
+// // // // import 'dart:io';
+// // // // import 'package:http/http.dart' as http;
+// // // // import 'package:shared_preferences/shared_preferences.dart';
+// // // //
+// // // // import '../environmental variables.dart';
+// // // //
+// // // // class MediaItemService {
+// // // //   // ✅ Create Media Item (upload file + metadata)
+// // // //   Future<Map<String, dynamic>> createMediaItem({
+// // // //     required String title,
+// // // //     required String description,
+// // // //     String? tags,
+// // // //     String? seriesId,
+// // // //     required File file, // video/audio file
+// // // //   }) async {
+// // // //     final prefs = await SharedPreferences.getInstance();
+// // // //
+// // // //     final userId = prefs.getString("userId");
+// // // //     final orgId = prefs.getString("organizationId");
+// // // //     final roleId = prefs.getString("roleId");
+// // // //
+// // // //     final uri = Uri.parse("$baseUrl/api/media/item");
+// // // //     final request = http.MultipartRequest("POST", uri);
+// // // //
+// // // //     // 🔹 Add text fields
+// // // //     request.fields["title"] = title;
+// // // //     request.fields["description"] = description;
+// // // //     if (tags != null) request.fields["tags"] = tags;
+// // // //     if (seriesId != null) request.fields["seriesId"] = seriesId;
+// // // //     if (userId != null) request.fields["createdBy"] = userId;
+// // // //     if (orgId != null) request.fields["organization"] = orgId;
+// // // //     if (roleId != null) request.fields["role"] = roleId;
+// // // //
+// // // //     // 🔹 Add file
+// // // //     request.files.add(
+// // // //       await http.MultipartFile.fromPath("file", file.path),
+// // // //     );
+// // // //
+// // // //     final response = await request.send();
+// // // //     final resBody = await response.stream.bytesToString();
+// // // //
+// // // //     return jsonDecode(resBody);
+// // // //   }
+// // // //
+// // // //   // ✅ Get All Media Items
+// // // //   Future<List<dynamic>> getMediaItems() async {
+// // // //     final response = await http.get(Uri.parse("$baseUrl/api/media/item"));
+// // // //     return jsonDecode(response.body);
+// // // //   }
+// // // //
+// // // //   // ✅ Get Media Items by User or Organization
+// // // //   Future<List<dynamic>> getMediaItemsByUserOrOrg({
+// // // //     String? userId,
+// // // //     String? organizationId,
+// // // //   }) async {
+// // // //     final queryParams = <String, String>{};
+// // // //     if (userId != null) queryParams['userId'] = userId;
+// // // //     if (organizationId != null) queryParams['organizationId'] = organizationId;
+// // // //
+// // // //     final uri = Uri.parse("$baseUrl/api/media/item/filter")
+// // // //         .replace(queryParameters: queryParams);
+// // // //
+// // // //     final response = await http.get(uri);
+// // // //     return jsonDecode(response.body);
+// // // //   }
+// // // //
+// // // //   // ✅ Get Media Item by ID
+// // // //   Future<Map<String, dynamic>> getMediaItemById(String id) async {
+// // // //     final response = await http.get(Uri.parse("$baseUrl/api/media/item/$id"));
+// // // //     return jsonDecode(response.body);
+// // // //   }
+// // // //
+// // // //   // ✅ Update Media Item by ID
+// // // //   Future<Map<String, dynamic>> updateMediaItem(
+// // // //       String id, {
+// // // //         String? title,
+// // // //         String? description,
+// // // //         List<String>? tags,
+// // // //         String? seriesId,
+// // // //       }) async {
+// // // //     final body = <String, dynamic>{};
+// // // //     if (title != null) body['title'] = title;
+// // // //     if (description != null) body['description'] = description;
+// // // //     if (tags != null) body['tags'] = tags;
+// // // //     if (seriesId != null) body['seriesId'] = seriesId;
+// // // //
+// // // //     final response = await http.put(
+// // // //       Uri.parse("$baseUrl/api/media/item/$id"),
+// // // //       headers: {"Content-Type": "application/json"},
+// // // //       body: jsonEncode(body),
+// // // //     );
+// // // //
+// // // //     return jsonDecode(response.body);
+// // // //   }
+// // // //
+// // // //   // ✅ Bulk Edit Tags
+// // // //   Future<Map<String, dynamic>> bulkEditMediaItems({
+// // // //     required List<String> ids,
+// // // //     required List<String> tags,
+// // // //   }) async {
+// // // //     final response = await http.put(
+// // // //       Uri.parse("$baseUrl/api/media/item/bulk-edit"),
+// // // //       headers: {"Content-Type": "application/json"},
+// // // //       body: jsonEncode({
+// // // //         "ids": ids,
+// // // //         "tags": tags,
+// // // //       }),
+// // // //     );
+// // // //
+// // // //     return jsonDecode(response.body);
+// // // //   }
+// // // //
+// // // //   // ✅ Delete Media Item
+// // // //   Future<Map<String, dynamic>> deleteMediaItem(String id) async {
+// // // //     final response =
+// // // //     await http.delete(Uri.parse("$baseUrl/api/media/item/$id"));
+// // // //     return jsonDecode(response.body);
+// // // //   }
+// // // // }
+// // //
+// // //
 // // // import 'dart:convert';
 // // // import 'dart:io';
 // // // import 'package:http/http.dart' as http;
@@ -6,9 +206,7 @@
 // // // import '../environmental variables.dart';
 // // //
 // // // class MediaItemService {
-// // //   // ⬆️ Replace localhost with your backend IP if running on device
-// // //
-// // //   // 🔹 Create Media Item (upload file + metadata)
+// // //   // ✅ Create Media Item (upload file + metadata)
 // // //   Future<Map<String, dynamic>> createMediaItem({
 // // //     required String title,
 // // //     required String description,
@@ -28,7 +226,7 @@
 // // //     // 🔹 Add text fields
 // // //     request.fields["title"] = title;
 // // //     request.fields["description"] = description;
-// // //     if (tags != null) request.fields["tags"] = tags; // comma-separated
+// // //     if (tags != null) request.fields["tags"] = tags;
 // // //     if (seriesId != null) request.fields["seriesId"] = seriesId;
 // // //     if (userId != null) request.fields["createdBy"] = userId;
 // // //     if (orgId != null) request.fields["organization"] = orgId;
@@ -45,19 +243,80 @@
 // // //     return jsonDecode(resBody);
 // // //   }
 // // //
-// // //   // 🔹 Get All Media Items
+// // //   // ✅ Get All Media Items
 // // //   Future<List<dynamic>> getMediaItems() async {
-// // //     final response = await http.get(Uri.parse("$baseUrl/api/media"));
+// // //     final response = await http.get(Uri.parse("$baseUrl/api/media/item"));
+// // //     final decoded = jsonDecode(response.body);
+// // //
+// // //     if (decoded is List) {
+// // //       return decoded;
+// // //     } else if (decoded is Map && decoded.containsKey("error")) {
+// // //       throw Exception(decoded["error"]);
+// // //     } else {
+// // //       return [];
+// // //     }
+// // //   }
+// // //
+// // //   // ✅ Get Media Items by User or Organization
+// // //   Future<List<dynamic>> getMediaItemsByUserOrOrg({
+// // //     String? userId,
+// // //     String? organizationId,
+// // //   }) async {
+// // //     final queryParams = <String, String>{};
+// // //     if (userId != null) queryParams['userId'] = userId;
+// // //     if (organizationId != null) queryParams['organizationId'] = organizationId;
+// // //
+// // //     final uri = Uri.parse("$baseUrl/api/media/item/filter")
+// // //         .replace(queryParameters: queryParams);
+// // //
+// // //     final response = await http.get(uri);
+// // //     final decoded = jsonDecode(response.body);
+// // //
+// // //     if (decoded is List) {
+// // //       return decoded;
+// // //     } else if (decoded is Map && decoded.containsKey("error")) {
+// // //       throw Exception(decoded["error"]);
+// // //     } else {
+// // //       return [];
+// // //     }
+// // //   }
+// // //
+// // //   // ✅ Get Media Item by ID
+// // //   Future<Map<String, dynamic>> getMediaItemById(String id) async {
+// // //     final response = await http.get(Uri.parse("$baseUrl/api/media/item/$id"));
 // // //     return jsonDecode(response.body);
 // // //   }
 // // //
-// // //   // 🔹 Bulk Edit Tags
+// // //   // ✅ Update Media Item by ID
+// // //   Future<Map<String, dynamic>> updateMediaItem(
+// // //       String id, {
+// // //         String? title,
+// // //         String? description,
+// // //         List<String>? tags,
+// // //         String? seriesId,
+// // //       }) async {
+// // //     final body = <String, dynamic>{};
+// // //     if (title != null) body['title'] = title;
+// // //     if (description != null) body['description'] = description;
+// // //     if (tags != null) body['tags'] = tags;
+// // //     if (seriesId != null) body['seriesId'] = seriesId;
+// // //
+// // //     final response = await http.put(
+// // //       Uri.parse("$baseUrl/api/media/item/$id"),
+// // //       headers: {"Content-Type": "application/json"},
+// // //       body: jsonEncode(body),
+// // //     );
+// // //
+// // //     return jsonDecode(response.body);
+// // //   }
+// // //
+// // //   // ✅ Bulk Edit Tags
 // // //   Future<Map<String, dynamic>> bulkEditMediaItems({
 // // //     required List<String> ids,
 // // //     required List<String> tags,
 // // //   }) async {
 // // //     final response = await http.put(
-// // //       Uri.parse("$baseUrl/api/media/bulk-edit"),
+// // //       Uri.parse("$baseUrl/api/media/item/bulk-edit"),
 // // //       headers: {"Content-Type": "application/json"},
 // // //       body: jsonEncode({
 // // //         "ids": ids,
@@ -68,9 +327,10 @@
 // // //     return jsonDecode(response.body);
 // // //   }
 // // //
-// // //   // 🔹 Delete Media Item
+// // //   // ✅ Delete Media Item
 // // //   Future<Map<String, dynamic>> deleteMediaItem(String id) async {
-// // //     final response = await http.delete(Uri.parse("$baseUrl/api/media/$id"));
+// // //     final response =
+// // //     await http.delete(Uri.parse("$baseUrl/api/media/item/$id"));
 // // //     return jsonDecode(response.body);
 // // //   }
 // // // }
@@ -78,19 +338,24 @@
 // //
 // // import 'dart:convert';
 // // import 'dart:io';
+// // import 'package:file_picker/file_picker.dart';
+// // import 'package:flutter/foundation.dart';
 // // import 'package:http/http.dart' as http;
 // // import 'package:shared_preferences/shared_preferences.dart';
 // //
 // // import '../environmental variables.dart';
 // //
 // // class MediaItemService {
-// //   // ✅ Create Media Item (upload file + metadata)
+// //
 // //   Future<Map<String, dynamic>> createMediaItem({
 // //     required String title,
 // //     required String description,
 // //     String? tags,
 // //     String? seriesId,
-// //     required File file, // video/audio file
+// //     File? file,                // media (mobile/desktop)
+// //     PlatformFile? webFile,     // media (web)
+// //     File? thumbnailFile,       // thumbnail (mobile/desktop)
+// //     PlatformFile? webThumbnailFile, // thumbnail (web)
 // //   }) async {
 // //     final prefs = await SharedPreferences.getInstance();
 // //
@@ -110,21 +375,65 @@
 // //     if (orgId != null) request.fields["organization"] = orgId;
 // //     if (roleId != null) request.fields["role"] = roleId;
 // //
-// //     // 🔹 Add file
-// //     request.files.add(
-// //       await http.MultipartFile.fromPath("file", file.path),
-// //     );
+// //     // 🔹 Add main media file
+// //     if (kIsWeb && webFile != null) {
+// //       request.files.add(
+// //         http.MultipartFile.fromBytes(
+// //           "file",
+// //           webFile.bytes!,
+// //           filename: webFile.name,
+// //         ),
+// //       );
+// //     } else if (!kIsWeb && file != null) {
+// //       request.files.add(
+// //         await http.MultipartFile.fromPath("file", file.path),
+// //       );
+// //     } else {
+// //       throw Exception("No media file selected");
+// //     }
 // //
+// //     // 🔹 Add thumbnail file if provided
+// //     if (kIsWeb && webThumbnailFile != null) {
+// //       request.files.add(
+// //         http.MultipartFile.fromBytes(
+// //           "thumbnail",
+// //           webThumbnailFile.bytes!,
+// //           filename: webThumbnailFile.name,
+// //         ),
+// //       );
+// //     } else if (!kIsWeb && thumbnailFile != null) {
+// //       request.files.add(
+// //         await http.MultipartFile.fromPath("thumbnail", thumbnailFile.path),
+// //       );
+// //     }
+// //
+// //     print("📤 POST $uri with fields: ${request.fields}");
 // //     final response = await request.send();
 // //     final resBody = await response.stream.bytesToString();
+// //
+// //     print("⬇️ Response [${response.statusCode}]: $resBody");
 // //
 // //     return jsonDecode(resBody);
 // //   }
 // //
+// //
+// //
 // //   // ✅ Get All Media Items
 // //   Future<List<dynamic>> getMediaItems() async {
-// //     final response = await http.get(Uri.parse("$baseUrl/api/media/item"));
-// //     return jsonDecode(response.body);
+// //     final uri = Uri.parse("$baseUrl/api/media/item");
+// //     print("📤 GET $uri");
+// //
+// //     final response = await http.get(uri);
+// //     print("⬇️ Response [${response.statusCode}]: ${response.body}");
+// //
+// //     final decoded = jsonDecode(response.body);
+// //     if (decoded is List) {
+// //       return decoded;
+// //     } else if (decoded is Map && decoded.containsKey("error")) {
+// //       throw Exception(decoded["error"]);
+// //     } else {
+// //       return [];
+// //     }
 // //   }
 // //
 // //   // ✅ Get Media Items by User or Organization
@@ -139,13 +448,29 @@
 // //     final uri = Uri.parse("$baseUrl/api/media/item/filter")
 // //         .replace(queryParameters: queryParams);
 // //
+// //     print("📤 GET $uri");
+// //
 // //     final response = await http.get(uri);
-// //     return jsonDecode(response.body);
+// //     print("⬇️ Response [${response.statusCode}]: ${response.body}");
+// //
+// //     final decoded = jsonDecode(response.body);
+// //     if (decoded is List) {
+// //       return decoded;
+// //     } else if (decoded is Map && decoded.containsKey("error")) {
+// //       throw Exception(decoded["error"]);
+// //     } else {
+// //       return [];
+// //     }
 // //   }
 // //
 // //   // ✅ Get Media Item by ID
 // //   Future<Map<String, dynamic>> getMediaItemById(String id) async {
-// //     final response = await http.get(Uri.parse("$baseUrl/api/media/item/$id"));
+// //     final uri = Uri.parse("$baseUrl/api/media/item/$id");
+// //     print("📤 GET $uri");
+// //
+// //     final response = await http.get(uri);
+// //     print("⬇️ Response [${response.statusCode}]: ${response.body}");
+// //
 // //     return jsonDecode(response.body);
 // //   }
 // //
@@ -163,11 +488,16 @@
 // //     if (tags != null) body['tags'] = tags;
 // //     if (seriesId != null) body['seriesId'] = seriesId;
 // //
+// //     final uri = Uri.parse("$baseUrl/api/media/item/$id");
+// //     print("📤 PUT $uri with body: $body");
+// //
 // //     final response = await http.put(
-// //       Uri.parse("$baseUrl/api/media/item/$id"),
+// //       uri,
 // //       headers: {"Content-Type": "application/json"},
 // //       body: jsonEncode(body),
 // //     );
+// //
+// //     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 // //
 // //     return jsonDecode(response.body);
 // //   }
@@ -177,45 +507,56 @@
 // //     required List<String> ids,
 // //     required List<String> tags,
 // //   }) async {
+// //     final uri = Uri.parse("$baseUrl/api/media/item/bulk-edit");
+// //     final body = {"ids": ids, "tags": tags};
+// //
+// //     print("📤 PUT $uri with body: $body");
+// //
 // //     final response = await http.put(
-// //       Uri.parse("$baseUrl/api/media/item/bulk-edit"),
+// //       uri,
 // //       headers: {"Content-Type": "application/json"},
-// //       body: jsonEncode({
-// //         "ids": ids,
-// //         "tags": tags,
-// //       }),
+// //       body: jsonEncode(body),
 // //     );
+// //
+// //     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 // //
 // //     return jsonDecode(response.body);
 // //   }
 // //
 // //   // ✅ Delete Media Item
 // //   Future<Map<String, dynamic>> deleteMediaItem(String id) async {
-// //     final response =
-// //     await http.delete(Uri.parse("$baseUrl/api/media/item/$id"));
+// //     final uri = Uri.parse("$baseUrl/api/media/item/$id");
+// //     print("📤 DELETE $uri");
+// //
+// //     final response = await http.delete(uri);
+// //     print("⬇️ Response [${response.statusCode}]: ${response.body}");
+// //
 // //     return jsonDecode(response.body);
 // //   }
 // // }
 //
-//
 // import 'dart:convert';
 // import 'dart:io';
+// import 'package:file_picker/file_picker.dart';
+// import 'package:flutter/foundation.dart';
 // import 'package:http/http.dart' as http;
 // import 'package:shared_preferences/shared_preferences.dart';
-//
 // import '../environmental variables.dart';
 //
 // class MediaItemService {
-//   // ✅ Create Media Item (upload file + metadata)
+//   // ✅ Create Media Item
 //   Future<Map<String, dynamic>> createMediaItem({
 //     required String title,
 //     required String description,
-//     String? tags,
+//     String? tags, // comma-separated
 //     String? seriesId,
-//     required File file, // video/audio file
+//     List<String>? speakers,
+//     List<String>? topics,
+//     List<String>? scriptures,
+//     File? file, // mobile/desktop
+//     PlatformFile? webFile, // web
 //   }) async {
 //     final prefs = await SharedPreferences.getInstance();
-//
 //     final userId = prefs.getString("userId");
 //     final orgId = prefs.getString("organizationId");
 //     final roleId = prefs.getString("roleId");
@@ -223,7 +564,7 @@
 //     final uri = Uri.parse("$baseUrl/api/media/item");
 //     final request = http.MultipartRequest("POST", uri);
 //
-//     // 🔹 Add text fields
+//     // 🔹 Text fields
 //     request.fields["title"] = title;
 //     request.fields["description"] = description;
 //     if (tags != null) request.fields["tags"] = tags;
@@ -232,32 +573,57 @@
 //     if (orgId != null) request.fields["organization"] = orgId;
 //     if (roleId != null) request.fields["role"] = roleId;
 //
-//     // 🔹 Add file
-//     request.files.add(
-//       await http.MultipartFile.fromPath("file", file.path),
-//     );
+//     // 🔹 Optional arrays (backend expects them as JSON)
+//     if (speakers != null && speakers.isNotEmpty) {
+//       request.fields["speakers"] = jsonEncode(speakers);
+//     }
+//     if (topics != null && topics.isNotEmpty) {
+//       request.fields["topics"] = jsonEncode(topics);
+//     }
+//     if (scriptures != null && scriptures.isNotEmpty) {
+//       request.fields["scriptures"] = jsonEncode(scriptures);
+//     }
 //
+//     // 🔹 File upload (single)
+//     if (kIsWeb && webFile != null) {
+//       request.files.add(
+//         http.MultipartFile.fromBytes(
+//           "file",
+//           webFile.bytes!,
+//           filename: webFile.name,
+//         ),
+//       );
+//     } else if (!kIsWeb && file != null) {
+//       request.files.add(
+//         await http.MultipartFile.fromPath("file", file.path),
+//       );
+//     } else {
+//       throw Exception("No media file selected");
+//     }
+//
+//     print("📤 POST $uri with fields: ${request.fields.keys.toList()}");
 //     final response = await request.send();
 //     final resBody = await response.stream.bytesToString();
+//     print("⬇️ Response [${response.statusCode}]: $resBody");
 //
 //     return jsonDecode(resBody);
 //   }
 //
 //   // ✅ Get All Media Items
 //   Future<List<dynamic>> getMediaItems() async {
-//     final response = await http.get(Uri.parse("$baseUrl/api/media/item"));
-//     final decoded = jsonDecode(response.body);
+//     final uri = Uri.parse("$baseUrl/api/media/item");
+//     print("📤 GET $uri");
 //
-//     if (decoded is List) {
-//       return decoded;
-//     } else if (decoded is Map && decoded.containsKey("error")) {
-//       throw Exception(decoded["error"]);
-//     } else {
-//       return [];
-//     }
+//     final response = await http.get(uri);
+//     print("⬇️ Response [${response.statusCode}]: ${response.body}");
+//
+//     final decoded = jsonDecode(response.body);
+//     if (decoded is List) return decoded;
+//     if (decoded is Map && decoded.containsKey("error")) throw Exception(decoded["error"]);
+//     return [];
 //   }
 //
-//   // ✅ Get Media Items by User or Organization
+//   // ✅ Filter by User / Organization
 //   Future<List<dynamic>> getMediaItemsByUserOrOrg({
 //     String? userId,
 //     String? organizationId,
@@ -268,22 +634,24 @@
 //
 //     final uri = Uri.parse("$baseUrl/api/media/item/filter")
 //         .replace(queryParameters: queryParams);
+//     print("📤 GET $uri");
 //
 //     final response = await http.get(uri);
-//     final decoded = jsonDecode(response.body);
+//     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 //
-//     if (decoded is List) {
-//       return decoded;
-//     } else if (decoded is Map && decoded.containsKey("error")) {
-//       throw Exception(decoded["error"]);
-//     } else {
-//       return [];
-//     }
+//     final decoded = jsonDecode(response.body);
+//     if (decoded is List) return decoded;
+//     if (decoded is Map && decoded.containsKey("error")) throw Exception(decoded["error"]);
+//     return [];
 //   }
 //
 //   // ✅ Get Media Item by ID
 //   Future<Map<String, dynamic>> getMediaItemById(String id) async {
-//     final response = await http.get(Uri.parse("$baseUrl/api/media/item/$id"));
+//     final uri = Uri.parse("$baseUrl/api/media/item/$id");
+//     print("📤 GET $uri");
+//
+//     final response = await http.get(uri);
+//     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 //     return jsonDecode(response.body);
 //   }
 //
@@ -294,19 +662,29 @@
 //         String? description,
 //         List<String>? tags,
 //         String? seriesId,
+//         List<String>? speakers,
+//         List<String>? topics,
+//         List<String>? scriptures,
 //       }) async {
 //     final body = <String, dynamic>{};
 //     if (title != null) body['title'] = title;
 //     if (description != null) body['description'] = description;
 //     if (tags != null) body['tags'] = tags;
 //     if (seriesId != null) body['seriesId'] = seriesId;
+//     if (speakers != null) body['speakers'] = speakers;
+//     if (topics != null) body['topics'] = topics;
+//     if (scriptures != null) body['scriptures'] = scriptures;
+//
+//     final uri = Uri.parse("$baseUrl/api/media/item/$id");
+//     print("📤 PUT $uri with body: $body");
 //
 //     final response = await http.put(
-//       Uri.parse("$baseUrl/api/media/item/$id"),
+//       uri,
 //       headers: {"Content-Type": "application/json"},
 //       body: jsonEncode(body),
 //     );
 //
+//     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 //     return jsonDecode(response.body);
 //   }
 //
@@ -315,22 +693,28 @@
 //     required List<String> ids,
 //     required List<String> tags,
 //   }) async {
+//     final uri = Uri.parse("$baseUrl/api/media/item/bulk-edit");
+//     final body = {"ids": ids, "tags": tags};
+//
+//     print("📤 PUT $uri with body: $body");
+//
 //     final response = await http.put(
-//       Uri.parse("$baseUrl/api/media/item/bulk-edit"),
+//       uri,
 //       headers: {"Content-Type": "application/json"},
-//       body: jsonEncode({
-//         "ids": ids,
-//         "tags": tags,
-//       }),
+//       body: jsonEncode(body),
 //     );
 //
+//     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 //     return jsonDecode(response.body);
 //   }
 //
 //   // ✅ Delete Media Item
 //   Future<Map<String, dynamic>> deleteMediaItem(String id) async {
-//     final response =
-//     await http.delete(Uri.parse("$baseUrl/api/media/item/$id"));
+//     final uri = Uri.parse("$baseUrl/api/media/item/$id");
+//     print("📤 DELETE $uri");
+//
+//     final response = await http.delete(uri);
+//     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 //     return jsonDecode(response.body);
 //   }
 // }
@@ -342,23 +726,23 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../environmental variables.dart';
 
 class MediaItemService {
-
+  // ✅ Create Media Item
   Future<Map<String, dynamic>> createMediaItem({
     required String title,
     required String description,
-    String? tags,
+    DateTime? selectedDate,
+    String? tags, // comma-separated
     String? seriesId,
-    File? file,                // media (mobile/desktop)
-    PlatformFile? webFile,     // media (web)
-    File? thumbnailFile,       // thumbnail (mobile/desktop)
-    PlatformFile? webThumbnailFile, // thumbnail (web)
+    List<String>? speakers,
+    List<String>? topics,
+    List<String>? scriptures,
+    File? file, // mobile/desktop
+    PlatformFile? webFile, // web
   }) async {
     final prefs = await SharedPreferences.getInstance();
-
     final userId = prefs.getString("userId");
     final orgId = prefs.getString("organizationId");
     final roleId = prefs.getString("roleId");
@@ -366,7 +750,7 @@ class MediaItemService {
     final uri = Uri.parse("$baseUrl/api/media/item");
     final request = http.MultipartRequest("POST", uri);
 
-    // 🔹 Add text fields
+    // 🔹 Text fields
     request.fields["title"] = title;
     request.fields["description"] = description;
     if (tags != null) request.fields["tags"] = tags;
@@ -374,8 +758,20 @@ class MediaItemService {
     if (userId != null) request.fields["createdBy"] = userId;
     if (orgId != null) request.fields["organization"] = orgId;
     if (roleId != null) request.fields["role"] = roleId;
+    if (selectedDate != null) request.fields["date"] = selectedDate.toIso8601String();
 
-    // 🔹 Add main media file
+    // 🔹 Optional arrays (backend expects them as JSON)
+    if (speakers != null && speakers.isNotEmpty) {
+      request.fields["speakers"] = jsonEncode(speakers);
+    }
+    if (topics != null && topics.isNotEmpty) {
+      request.fields["topics"] = jsonEncode(topics);
+    }
+    if (scriptures != null && scriptures.isNotEmpty) {
+      request.fields["scriptures"] = jsonEncode(scriptures);
+    }
+
+    // 🔹 File upload (optional)
     if (kIsWeb && webFile != null) {
       request.files.add(
         http.MultipartFile.fromBytes(
@@ -388,35 +784,17 @@ class MediaItemService {
       request.files.add(
         await http.MultipartFile.fromPath("file", file.path),
       );
-    } else {
-      throw Exception("No media file selected");
     }
+    // else: no file uploaded, optional
 
-    // 🔹 Add thumbnail file if provided
-    if (kIsWeb && webThumbnailFile != null) {
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          "thumbnail",
-          webThumbnailFile.bytes!,
-          filename: webThumbnailFile.name,
-        ),
-      );
-    } else if (!kIsWeb && thumbnailFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath("thumbnail", thumbnailFile.path),
-      );
-    }
+    print("📤 POST $uri with fields: ${request.fields.keys.toList()}");
 
-    print("📤 POST $uri with fields: ${request.fields}");
     final response = await request.send();
     final resBody = await response.stream.bytesToString();
-
     print("⬇️ Response [${response.statusCode}]: $resBody");
 
     return jsonDecode(resBody);
   }
-
-
 
   // ✅ Get All Media Items
   Future<List<dynamic>> getMediaItems() async {
@@ -427,16 +805,12 @@ class MediaItemService {
     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 
     final decoded = jsonDecode(response.body);
-    if (decoded is List) {
-      return decoded;
-    } else if (decoded is Map && decoded.containsKey("error")) {
-      throw Exception(decoded["error"]);
-    } else {
-      return [];
-    }
+    if (decoded is List) return decoded;
+    if (decoded is Map && decoded.containsKey("error")) throw Exception(decoded["error"]);
+    return [];
   }
 
-  // ✅ Get Media Items by User or Organization
+  // ✅ Filter by User / Organization
   Future<List<dynamic>> getMediaItemsByUserOrOrg({
     String? userId,
     String? organizationId,
@@ -447,20 +821,15 @@ class MediaItemService {
 
     final uri = Uri.parse("$baseUrl/api/media/item/filter")
         .replace(queryParameters: queryParams);
-
     print("📤 GET $uri");
 
     final response = await http.get(uri);
     print("⬇️ Response [${response.statusCode}]: ${response.body}");
 
     final decoded = jsonDecode(response.body);
-    if (decoded is List) {
-      return decoded;
-    } else if (decoded is Map && decoded.containsKey("error")) {
-      throw Exception(decoded["error"]);
-    } else {
-      return [];
-    }
+    if (decoded is List) return decoded;
+    if (decoded is Map && decoded.containsKey("error")) throw Exception(decoded["error"]);
+    return [];
   }
 
   // ✅ Get Media Item by ID
@@ -470,7 +839,6 @@ class MediaItemService {
 
     final response = await http.get(uri);
     print("⬇️ Response [${response.statusCode}]: ${response.body}");
-
     return jsonDecode(response.body);
   }
 
@@ -479,14 +847,22 @@ class MediaItemService {
       String id, {
         String? title,
         String? description,
+        DateTime? selectedDate,
         List<String>? tags,
         String? seriesId,
+        List<String>? speakers,
+        List<String>? topics,
+        List<String>? scriptures,
       }) async {
     final body = <String, dynamic>{};
     if (title != null) body['title'] = title;
     if (description != null) body['description'] = description;
     if (tags != null) body['tags'] = tags;
     if (seriesId != null) body['seriesId'] = seriesId;
+    if (speakers != null) body['speakers'] = speakers;
+    if (topics != null) body['topics'] = topics;
+    if (scriptures != null) body['scriptures'] = scriptures;
+    if (selectedDate != null) body['date'] = selectedDate.toIso8601String();
 
     final uri = Uri.parse("$baseUrl/api/media/item/$id");
     print("📤 PUT $uri with body: $body");
@@ -498,7 +874,6 @@ class MediaItemService {
     );
 
     print("⬇️ Response [${response.statusCode}]: ${response.body}");
-
     return jsonDecode(response.body);
   }
 
@@ -519,7 +894,6 @@ class MediaItemService {
     );
 
     print("⬇️ Response [${response.statusCode}]: ${response.body}");
-
     return jsonDecode(response.body);
   }
 
@@ -530,7 +904,6 @@ class MediaItemService {
 
     final response = await http.delete(uri);
     print("⬇️ Response [${response.statusCode}]: ${response.body}");
-
     return jsonDecode(response.body);
   }
 }
