@@ -313,19 +313,20 @@ class _ListItemDetailsPageState extends State<ListItemDetailsPage> {
                                           ),
                                         ),
                                       );
-                                    } else {
-                                      showDialog(
-                                        context: context,
-                                        builder: (ctx) => AddItemDialog(
-                                          initialTitle: item.title,
-                                          initialSubtitle: item.subtitle ?? '',
-                                          initialImage: item.image ?? '',
-                                          initialUrl: item.url ?? '',
-                                          initialType: item.type ?? 'link',
-                                          itemId: item.id,
-                                        ),
-                                      );
                                     }
+                                    // else {
+                                    //   showDialog(
+                                    //     context: context,
+                                    //     builder: (ctx) => AddItemDialog(
+                                    //       initialTitle: item.title,
+                                    //       initialSubtitle: item.subtitle ?? '',
+                                    //       initialImage: item.image ?? '',
+                                    //       initialUrl: item.url ?? '',
+                                    //       initialType: item.type ?? 'link',
+                                    //       itemId: item.id,
+                                    //     ),
+                                    //   );
+                                    // }
                                   },
                                   title: Row(
                                     children: [

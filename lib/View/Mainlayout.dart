@@ -3895,7 +3895,7 @@ class _MainLayoutState extends State<MainLayout> {
     'notification': Iconsax.message_text,
     'role': Iconsax.smileys,
     'profile': Iconsax.profile_circle,
-    'sidebar': Iconsax.box,
+    'sidebar': Iconsax.element_2,
   };
 
   @override
