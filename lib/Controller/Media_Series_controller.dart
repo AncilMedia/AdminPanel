@@ -75,6 +75,8 @@
 
 
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../environmental variables.dart';
@@ -82,40 +84,52 @@ import '../environmental variables.dart';
 class MediaSeriesService {
 
   // 🔹 Create Media Series
+
   Future<Map<String, dynamic>> createSeries({
     required String title,
     required String description,
-    required String thumbnail,
+    File? file, // mobile
+    Uint8List? bytes, // web
   }) async {
     final prefs = await SharedPreferences.getInstance();
-
     final userId = prefs.getString("userId");
     final orgId = prefs.getString("organizationId");
     final roleId = prefs.getString("roleId");
 
-    // ✅ Validate IDs
-    if (userId == null || userId.isEmpty ||
-        orgId == null || orgId.isEmpty ||
-        roleId == null || roleId.isEmpty) {
-      throw Exception(
-          "Missing required IDs: userId, organizationId, or roleId in local storage.");
+    if (userId == null || orgId == null || roleId == null) {
+      throw Exception("Missing required IDs in local storage");
     }
 
-    final response = await http.post(
-      Uri.parse("$baseUrl/api/media/series"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "title": title,
-        "description": description,
-        "thumbnail": thumbnail,
-        "createdBy": userId,
-        "organization": orgId,
-        "role": roleId,
-      }),
-    );
+    var uri = Uri.parse("$baseUrl/api/media/series");
+    var request = http.MultipartRequest('POST', uri);
 
-    print("🔹 Create Series Response: ${response.body}");
-    return jsonDecode(response.body);
+    request.fields['title'] = title;
+    request.fields['description'] = description;
+    request.fields['createdBy'] = userId;
+    request.fields['organization'] = orgId;
+    request.fields['role'] = roleId;
+
+    if (kIsWeb && bytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'thumbnail',
+          bytes,
+          filename: 'thumbnail.png',
+        ),
+      );
+    } else if (!kIsWeb && file != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'thumbnail',
+        file.path,
+      ));
+    }
+
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode >= 400) {
+      throw Exception("Failed to create series: ${response.body}");
+    }
+    return response.body.isNotEmpty ? Map<String, dynamic>.from(jsonDecode(response.body)) : {};
   }
 
   // 🔹 Get All Series
@@ -151,25 +165,53 @@ class MediaSeriesService {
   }
 
   // 🔹 Update Series by ID
+  // Future<Map<String, dynamic>> updateSeries({
+  //   required String id,
+  //   String? title,
+  //   String? description,
+  //   String? thumbnail,
+  // }) async {
+  //   final body = <String, dynamic>{};
+  //   if (title != null) body["title"] = title;
+  //   if (description != null) body["description"] = description;
+  //   if (thumbnail != null) body["thumbnail"] = thumbnail;
+  //
+  //   final response = await http.put(
+  //     Uri.parse("$baseUrl/api/media/series/$id"),
+  //     headers: {"Content-Type": "application/json"},
+  //     body: jsonEncode(body),
+  //   );
+  //
+  //   return jsonDecode(response.body);
+  // }
   Future<Map<String, dynamic>> updateSeries({
     required String id,
     String? title,
     String? description,
-    String? thumbnail,
+    File? file,
+    Uint8List? bytes,
   }) async {
-    final body = <String, dynamic>{};
-    if (title != null) body["title"] = title;
-    if (description != null) body["description"] = description;
-    if (thumbnail != null) body["thumbnail"] = thumbnail;
+    var uri = Uri.parse("$baseUrl/api/media/series/$id");
+    var request = http.MultipartRequest('PUT', uri);
 
-    final response = await http.put(
-      Uri.parse("$baseUrl/api/media/series/$id"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(body),
-    );
+    if (title != null) request.fields['title'] = title;
+    if (description != null) request.fields['description'] = description;
 
-    return jsonDecode(response.body);
+    if (kIsWeb && bytes != null) {
+      request.files.add(http.MultipartFile.fromBytes('thumbnail', bytes, filename: 'thumbnail.png'));
+    } else if (!kIsWeb && file != null) {
+      request.files.add(await http.MultipartFile.fromPath('thumbnail', file.path));
+    }
+
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode >= 400) {
+      throw Exception("Failed to update series: ${response.body}");
+    }
+
+    return response.body.isNotEmpty ? Map<String, dynamic>.from(jsonDecode(response.body)) : {};
   }
+
 
   // 🔹 Delete Series by ID
   Future<Map<String, dynamic>> deleteSeries(String id) async {
