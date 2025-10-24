@@ -1,16 +1,353 @@
+// import 'dart:math';
+// import 'package:ancilmediaadminpanel/View/Mainlayout.dart';
+// import 'package:ancilmediaadminpanel/View/Register_page.dart';
+// import 'package:ancilmediaadminpanel/View_model/Authentication_state.dart';
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:iconsax/iconsax.dart';
+// import 'package:lottie/lottie.dart';
+// import 'package:provider/provider.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import '../Controller/Login_controller.dart';
+// import '../View_model/Custom_snackbar.dart';
+// import '../View_model/Splash_Animation.dart';
+//
+// class LoginPage extends StatefulWidget {
+//   const LoginPage({super.key});
+//
+//   @override
+//   State<LoginPage> createState() => _LoginPageState();
+// }
+//
+// class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+//   final identifierController = TextEditingController();
+//   final passwordController = TextEditingController();
+//   final _formKey = GlobalKey<FormState>();
+//   bool obscureText = true;
+//   List<Offset> _dotPositions = [];
+//   late AnimationController _controller;
+//   bool _isLoading = false;
+//   late AuthState authState; // ✅ Moved authState to class scope
+//
+//   List<Offset> _generateDotPositions(double width, double height, int count) {
+//     final random = Random();
+//     return List.generate(count, (_) {
+//       return Offset(random.nextDouble() * width, random.nextDouble() * height);
+//     });
+//   }
+//
+//   Future<void> _checkIfAlreadyLoggedIn() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     final accessToken = prefs.getString('accessToken');
+//     final refreshToken = prefs.getString('refreshToken');
+//
+//     if (accessToken != null && accessToken.isNotEmpty) {
+//       if (context.mounted) {
+//         Navigator.pushReplacement(
+//           context,
+//           MaterialPageRoute(builder: (_) => const MainLayout()),
+//         );
+//       }
+//     } else if (refreshToken != null && refreshToken.isNotEmpty) {
+//       final newAccessToken = await AuthService().refreshAccessToken(authState);
+//       if (newAccessToken != null) {
+//         if (context.mounted) {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(builder: (_) => const MainLayout()),
+//           );
+//         }
+//       }
+//     }
+//   }
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//
+//     _controller = AnimationController(
+//       vsync: this,
+//       duration: const Duration(seconds: 5),
+//     )..repeat(reverse: true);
+//
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       final size = MediaQuery.of(context).size;
+//       setState(() {
+//         _dotPositions = _generateDotPositions(size.width, size.height, 250);
+//       });
+//
+//       // ✅ Initialize AuthState here
+//       authState = Provider.of<AuthState>(context, listen: false);
+//       _checkIfAlreadyLoggedIn();
+//     });
+//   }
+//
+//   @override
+//   void dispose() {
+//     identifierController.dispose();
+//     passwordController.dispose();
+//     _controller.dispose();
+//     super.dispose();
+//   }
+//
+//   Future<void> _handleLogin() async {
+//     setState(() {
+//       _isLoading = true;
+//     });
+//
+//     final identifier = identifierController.text.trim();
+//     final password = passwordController.text;
+//
+//     final result = await AuthService().login(identifier, password);
+//
+//     setState(() {
+//       _isLoading = false;
+//     });
+//
+//     final status = result['status'];
+//     final parsed = result['parsed'];
+//
+//     if (status == 200 && parsed['accessToken'] != null) {
+//       if (!context.mounted) return;
+//
+//       Navigator.pushReplacement(
+//         context,
+//         MaterialPageRoute(builder: (_) => const MainLayout()),
+//       );
+//     } else {
+//       if (!context.mounted) return;
+//
+//       final errorMessage = parsed['error'] ?? parsed['message'] ?? "Login failed. Please try again.";
+//       showCustomSnackBar(context, errorMessage, false);
+//     }
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final screenWidth = MediaQuery.of(context).size.width;
+//     final screenHeight = MediaQuery.of(context).size.height;
+//     final bool isWideScreen = screenWidth > 800;
+//
+//     return Scaffold(
+//       body: Stack(
+//         children: [
+//           CustomPaint(
+//             painter: BackgroundDotsPainter(positions: _dotPositions),
+//             size: Size(screenWidth, screenHeight),
+//           ),
+//           Positioned(
+//             top: -100,
+//             left: -100,
+//             child: Container(
+//               width: 300,
+//               height: 300,
+//               decoration: BoxDecoration(
+//                 shape: BoxShape.circle,
+//                 gradient: LinearGradient(
+//                   colors: [Colors.cyan.shade100, Colors.purple.shade100],
+//                   begin: Alignment.topLeft,
+//                   end: Alignment.bottomRight,
+//                 ),
+//               ),
+//             ),
+//           ),
+//           Positioned(
+//             bottom: -50,
+//             right: -80,
+//             child: Container(
+//               width: 200,
+//               height: 200,
+//               decoration: BoxDecoration(
+//                 shape: BoxShape.circle,
+//                 color: Colors.cyan.withOpacity(0.1),
+//               ),
+//             ),
+//           ),
+//
+//           if (isWideScreen)
+//             AnimatedBuilder(
+//               animation: _controller,
+//               builder: (_, __) {
+//                 final progress = sin(_controller.value * 2 * pi);
+//                 return Positioned(
+//                   top: screenHeight * 0.150,
+//                   left: screenWidth * 0.2,
+//                   child: CustomPaint(
+//                     painter: SplashPainter(progress: progress),
+//                     size: Size(screenWidth * 0.6, screenHeight * 0.750),
+//                   ),
+//                 );
+//               },
+//             ),
+//           Center(
+//             child: Container(
+//               padding: const EdgeInsets.all(20),
+//               decoration: BoxDecoration(
+//                 borderRadius: BorderRadius.circular(25),
+//                 color: Colors.grey.shade100,
+//                 boxShadow: const [
+//                   BoxShadow(
+//                     color: Colors.black12,
+//                     blurRadius: 10,
+//                     offset: Offset(0, 4),
+//                   ),
+//                 ],
+//               ),
+//               height: screenHeight * 0.5,
+//               width: screenWidth < 600
+//                   ? screenWidth * 0.85
+//                   : screenWidth * 0.25,
+//               child: Form(
+//                 key: _formKey,
+//                 child: Column(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: [
+//                     TextFormField(
+//                       controller: identifierController,
+//                       decoration: const InputDecoration(
+//                         border: OutlineInputBorder(),
+//                         labelText: 'Email or Phone',
+//                         filled: true,
+//                         fillColor: Colors.white,
+//                       ),
+//                       validator: (value) {
+//                         if (value == null || value.isEmpty) {
+//                           return 'Please enter your email or phone number';
+//                         }
+//                         return null;
+//                       },
+//                     ),
+//                     const SizedBox(height: 25),
+//                     TextFormField(
+//                       controller: passwordController,
+//                       obscureText: obscureText,
+//                       decoration: InputDecoration(
+//                         border: const OutlineInputBorder(),
+//                         labelText: 'Password',
+//                         filled: true,
+//                         fillColor: Colors.white,
+//                         suffixIcon: IconButton(
+//                           icon: Icon(
+//                             obscureText ? Iconsax.eye_slash : Iconsax.eye,
+//                             color: Colors.grey,
+//                           ),
+//                           tooltip: obscureText ? 'Show password' : 'Hide password',
+//                           onPressed: () {
+//                             setState(() {
+//                               obscureText = !obscureText;
+//                             });
+//                           },
+//                         ),
+//                       ),
+//                       validator: (value) {
+//                         if (value == null || value.isEmpty) {
+//                           return 'Please enter your password';
+//                         }
+//                         return null;
+//                       },
+//                     ),
+//                     const SizedBox(height: 25),
+//
+//                     _isLoading
+//                         ? SizedBox(
+//                       height: 50,
+//                       width: 50,
+//                       child: Lottie.asset('assets/signin_button.json'),
+//                     )
+//                         : MouseRegion(
+//                       cursor: SystemMouseCursors.click,
+//                       child: GestureDetector(
+//                         onTap: () {
+//                           if (_formKey.currentState!.validate()) {
+//                             _handleLogin();
+//                           }
+//                         },
+//                         child: Container(
+//                           padding: const EdgeInsets.symmetric(horizontal: 16),
+//                           constraints: BoxConstraints(
+//                             minWidth: 120,
+//                             maxWidth: screenWidth < 600
+//                                 ? double.infinity
+//                                 : screenWidth * 0.2,
+//                           ),
+//                           height: 45,
+//                           decoration: BoxDecoration(
+//                             borderRadius: BorderRadius.circular(15),
+//                             color: Colors.cyan.shade200,
+//                           ),
+//                           child: Center(
+//                             child: Text(
+//                               'Sign In',
+//                               style: GoogleFonts.poppins(
+//                                 textStyle: const TextStyle(
+//                                   color: Colors.white,
+//                                   fontSize: 18,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//
+//                     const SizedBox(height: 25),
+//                     Wrap(
+//                       children: [
+//                         Text(
+//                           "Don't Have an Account?",
+//                           style: GoogleFonts.poppins(
+//                             textStyle: const TextStyle(fontSize: 16),
+//                           ),
+//                         ),
+//                         MouseRegion(
+//                           cursor: SystemMouseCursors.click,
+//                           child: GestureDetector(
+//                             onTap: () {
+//                               Navigator.push(
+//                                 context,
+//                                 MaterialPageRoute(builder: (_) => const SignupPage()),
+//                               );
+//                             },
+//                             child: Text(
+//                               "SignUp",
+//                               style: GoogleFonts.poppins(
+//                                 textStyle: const TextStyle(
+//                                   fontSize: 16,
+//                                   color: Colors.purple,
+//                                   fontWeight: FontWeight.w600,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
 import 'dart:math';
 import 'package:ancilmediaadminpanel/View/Mainlayout.dart';
-import 'package:ancilmediaadminpanel/View/Register_page.dart';
-import 'package:ancilmediaadminpanel/View_model/Authentication_state.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../Controller/Login_controller.dart';
+import 'package:go_router/go_router.dart';
+import '../View_model/Authentication_state.dart';
 import '../View_model/Custom_snackbar.dart';
 import '../View_model/Splash_Animation.dart';
+import '../Controller/Login_controller.dart';
+import 'Register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,7 +364,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   List<Offset> _dotPositions = [];
   late AnimationController _controller;
   bool _isLoading = false;
-  late AuthState authState; // ✅ Moved authState to class scope
+  late AuthState authState;
 
   List<Offset> _generateDotPositions(double width, double height, int count) {
     final random = Random();
@@ -43,20 +380,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     if (accessToken != null && accessToken.isNotEmpty) {
       if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainLayout()),
-        );
+        context.go('/home'); // ✅ Use GoRouter
       }
     } else if (refreshToken != null && refreshToken.isNotEmpty) {
       final newAccessToken = await AuthService().refreshAccessToken(authState);
-      if (newAccessToken != null) {
-        if (context.mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const MainLayout()),
-          );
-        }
+      if (newAccessToken != null && context.mounted) {
+        context.go('/home'); // ✅ Use GoRouter
       }
     }
   }
@@ -64,7 +393,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
@@ -75,8 +403,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       setState(() {
         _dotPositions = _generateDotPositions(size.width, size.height, 250);
       });
-
-      // ✅ Initialize AuthState here
       authState = Provider.of<AuthState>(context, listen: false);
       _checkIfAlreadyLoggedIn();
     });
@@ -91,32 +417,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Future<void> _handleLogin() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     final identifier = identifierController.text.trim();
     final password = passwordController.text;
 
     final result = await AuthService().login(identifier, password);
-
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
 
     final status = result['status'];
     final parsed = result['parsed'];
 
     if (status == 200 && parsed['accessToken'] != null) {
       if (!context.mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainLayout()),
-      );
+      context.go('/home'); // ✅ GoRouter navigation
     } else {
       if (!context.mounted) return;
-
       final errorMessage = parsed['error'] ?? parsed['message'] ?? "Login failed. Please try again.";
       showCustomSnackBar(context, errorMessage, false);
     }
@@ -126,7 +441,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final bool isWideScreen = screenWidth > 800;
+    final isWideScreen = screenWidth > 800;
 
     return Scaffold(
       body: Stack(
@@ -135,46 +450,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             painter: BackgroundDotsPainter(positions: _dotPositions),
             size: Size(screenWidth, screenHeight),
           ),
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Colors.cyan.shade100, Colors.purple.shade100],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            right: -80,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.cyan.withOpacity(0.1),
-              ),
-            ),
-          ),
-
+          // Animated splash effect
           if (isWideScreen)
             AnimatedBuilder(
               animation: _controller,
               builder: (_, __) {
                 final progress = sin(_controller.value * 2 * pi);
                 return Positioned(
-                  top: screenHeight * 0.150,
+                  top: screenHeight * 0.15,
                   left: screenWidth * 0.2,
                   child: CustomPaint(
                     painter: SplashPainter(progress: progress),
-                    size: Size(screenWidth * 0.6, screenHeight * 0.750),
+                    size: Size(screenWidth * 0.6, screenHeight * 0.75),
                   ),
                 );
               },
@@ -185,18 +472,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
                 color: Colors.grey.shade100,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
               ),
               height: screenHeight * 0.5,
-              width: screenWidth < 600
-                  ? screenWidth * 0.85
-                  : screenWidth * 0.25,
+              width: screenWidth < 600 ? screenWidth * 0.85 : screenWidth * 0.25,
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -210,12 +489,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         filled: true,
                         fillColor: Colors.white,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email or phone number';
-                        }
-                        return null;
-                      },
+                      validator: (value) => (value == null || value.isEmpty) ? 'Enter your email or phone' : null,
                     ),
                     const SizedBox(height: 25),
                     TextFormField(
@@ -227,97 +501,41 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         filled: true,
                         fillColor: Colors.white,
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            obscureText ? Iconsax.eye_slash : Iconsax.eye,
-                            color: Colors.grey,
-                          ),
-                          tooltip: obscureText ? 'Show password' : 'Hide password',
-                          onPressed: () {
-                            setState(() {
-                              obscureText = !obscureText;
-                            });
-                          },
+                          icon: Icon(obscureText ? Iconsax.eye_slash : Iconsax.eye, color: Colors.grey),
+                          onPressed: () => setState(() => obscureText = !obscureText),
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
+                      validator: (value) => (value == null || value.isEmpty) ? 'Enter your password' : null,
                     ),
                     const SizedBox(height: 25),
-
                     _isLoading
-                        ? SizedBox(
-                      height: 50,
-                      width: 50,
-                      child: Lottie.asset('assets/signin_button.json'),
-                    )
+                        ? SizedBox(height: 50, width: 50, child: Lottie.asset('assets/signin_button.json'))
                         : MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: GestureDetector(
                         onTap: () {
-                          if (_formKey.currentState!.validate()) {
-                            _handleLogin();
-                          }
+                          if (_formKey.currentState!.validate()) _handleLogin();
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          constraints: BoxConstraints(
-                            minWidth: 120,
-                            maxWidth: screenWidth < 600
-                                ? double.infinity
-                                : screenWidth * 0.2,
-                          ),
+                          constraints: BoxConstraints(minWidth: 120, maxWidth: screenWidth < 600 ? double.infinity : screenWidth * 0.2),
                           height: 45,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            color: Colors.cyan.shade200,
-                          ),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.cyan.shade200),
                           child: Center(
-                            child: Text(
-                              'Sign In',
-                              style: GoogleFonts.poppins(
-                                textStyle: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
+                            child: Text('Sign In', style: GoogleFonts.poppins(textStyle: const TextStyle(color: Colors.white, fontSize: 18))),
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 25),
                     Wrap(
                       children: [
-                        Text(
-                          "Don't Have an Account?",
-                          style: GoogleFonts.poppins(
-                            textStyle: const TextStyle(fontSize: 16),
-                          ),
-                        ),
+                        Text("Don't Have an Account?", style: GoogleFonts.poppins(textStyle: const TextStyle(fontSize: 16))),
                         MouseRegion(
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const SignupPage()),
-                              );
-                            },
-                            child: Text(
-                              "SignUp",
-                              style: GoogleFonts.poppins(
-                                textStyle: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.purple,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                            onTap: () => context.go('/register'), // ✅ optional register page route
+                            child: Text("SignUp", style: GoogleFonts.poppins(textStyle: const TextStyle(fontSize: 16, color: Colors.purple, fontWeight: FontWeight.w600))),
                           ),
                         ),
                       ],

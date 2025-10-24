@@ -1,4 +1,74 @@
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:lottie/lottie.dart';
+// import 'package:provider/provider.dart';
+//
+// import '../Controller/Login_controller.dart';
+// import '../View/Login_page.dart';
+// import '../View_model/Authentication_state.dart';
+//
+// class LogoutButton extends StatefulWidget {
+//   const LogoutButton({super.key});
+//
+//   @override
+//   State<LogoutButton> createState() => _LogoutButtonState();
+// }
+//
+// class _LogoutButtonState extends State<LogoutButton> {
+//   bool _isLoggingOut = false;
+//
+//   Future<void> _logout(BuildContext context) async {
+//     setState(() {
+//       _isLoggingOut = true;
+//     });
+//
+//     final authState = Provider.of<AuthState>(context, listen: false);
+//     await AuthService().logout(authState);
+//
+//     if (context.mounted) {
+//       Navigator.of(context).pushAndRemoveUntil(
+//         MaterialPageRoute(builder: (_) => const LoginPage()),
+//             (route) => false,
+//       );
+//     }
+//
+//     setState(() {
+//       _isLoggingOut = false;
+//     });
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return ElevatedButton.icon(
+//       icon: _isLoggingOut
+//           ? SizedBox(
+//         width: 24,
+//         height: 24,
+//         child: Lottie.asset(
+//           'assets/Hour_glass_Loading.json',
+//           fit: BoxFit.contain,
+//         ),
+//       )
+//           : const Icon(Icons.logout),
+//       label: Text(_isLoggingOut ? 'Logging out...' : 'Logout',style: GoogleFonts.poppins(
+//         textStyle: TextStyle(
+//           fontWeight: FontWeight.w400,
+//           fontSize: 14
+//         )
+//       ),),
+//       onPressed: _isLoggingOut ? null : () => _logout(context),
+//       style: ElevatedButton.styleFrom(
+//         backgroundColor: Colors.red.shade600,
+//         foregroundColor: Colors.white,
+//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//       ),
+//     );
+//   }
+// }
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +76,7 @@ import 'package:provider/provider.dart';
 import '../Controller/Login_controller.dart';
 import '../View/Login_page.dart';
 import '../View_model/Authentication_state.dart';
+import 'dart:html' as html; // only used for web
 
 class LogoutButton extends StatefulWidget {
   const LogoutButton({super.key});
@@ -25,11 +96,14 @@ class _LogoutButtonState extends State<LogoutButton> {
     final authState = Provider.of<AuthState>(context, listen: false);
     await AuthService().logout(authState);
 
+    if (kIsWeb) {
+      // Clear URL in browser
+      html.window.history.pushState(null, '', '/');
+    }
+
     if (context.mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-      );
+      // Use GoRouter to navigate to login and remove all previous routes
+      GoRouter.of(context).go('/');
     }
 
     setState(() {
@@ -50,12 +124,15 @@ class _LogoutButtonState extends State<LogoutButton> {
         ),
       )
           : const Icon(Icons.logout),
-      label: Text(_isLoggingOut ? 'Logging out...' : 'Logout',style: GoogleFonts.poppins(
-        textStyle: TextStyle(
-          fontWeight: FontWeight.w400,
-          fontSize: 14
-        )
-      ),),
+      label: Text(
+        _isLoggingOut ? 'Logging out...' : 'Logout',
+        style: GoogleFonts.poppins(
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+          ),
+        ),
+      ),
       onPressed: _isLoggingOut ? null : () => _logout(context),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.red.shade600,
