@@ -33,7 +33,7 @@ class ProfileController {
     required String phone,
     XFile? imageFile,
   }) async {
-    final ngrokUrl = await fetchNgrokUrl();
+    // final ngrokUrl = await fetchNgrokUrl();
 
     final uri = Uri.parse('$NgrokUrl/api/settings');
     final request = http.MultipartRequest('PUT', uri);

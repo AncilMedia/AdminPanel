@@ -56,7 +56,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         mediaItemIdValue = selectedMediaItem!['id'] as String?;
       }
 
-      final data = await analyticsService.getAllMediaAnalytics(
+      final data = await analyticsService.getAllMediaAnalyticsByOrganization(
         limit: limit,
         sortField: sortField,
         sortOrder: sortOrder,

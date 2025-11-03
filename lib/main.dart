@@ -209,6 +209,7 @@ Future<void> main() async {
         Provider(create: (context) => ApiClient(context.read<AuthState>())),
       ],
       child: const MyApp(),
+      // child: const ScriptureSelector(),
     ),
   );
 }
