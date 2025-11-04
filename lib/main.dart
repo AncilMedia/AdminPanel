@@ -186,6 +186,7 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'View/Mainlayout.dart';
+import 'View/Scripture_Selector.dart';
 import 'View/router.dart';
 import 'firebase_options.dart';
 
