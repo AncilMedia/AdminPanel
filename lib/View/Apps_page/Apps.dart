@@ -82,7 +82,7 @@ class Apps extends StatelessWidget {
 
   // All pages in order of enum
   static final List<Widget> _pages = [
-    const HomePage(),
+    // const HomePage(),
     const MobileApps(),
     const TvApps(),
     const PushNotification(),

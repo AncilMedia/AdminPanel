@@ -18,7 +18,7 @@ class AppSubDrawer extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        _buildDrawerTile(context, Iconsax.home, 'Home', SubDrawerItem.home, selectedItem),
+        // _buildDrawerTile(context, Iconsax.home, 'Home', SubDrawerItem.home, selectedItem),
         _buildDrawerTile(context, Iconsax.mobile, 'Mobile Apps', SubDrawerItem.mobile, selectedItem),
         _buildDrawerTile(context, Iconsax.monitor, 'TV Apps', SubDrawerItem.tv, selectedItem),
         _buildDrawerTile(context, Iconsax.notification_bing, 'Push Notifications', SubDrawerItem.push, selectedItem),

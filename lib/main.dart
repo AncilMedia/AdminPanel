@@ -187,6 +187,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'View/Mainlayout.dart';
 import 'View/Scripture_Selector.dart';
+import 'View/Speakerpage.dart';
 import 'View/router.dart';
 import 'firebase_options.dart';
 
@@ -210,7 +211,10 @@ Future<void> main() async {
         Provider(create: (context) => ApiClient(context.read<AuthState>())),
       ],
       child: const MyApp(),
-      // child: const ScriptureSelector(),
+      // child: const MaterialApp(
+      //   debugShowCheckedModeBanner: false,
+      //   home: SpeakerPage(),
+      // ),
     ),
   );
 }
