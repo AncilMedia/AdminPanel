@@ -16,7 +16,7 @@ IconData mapIcon(String name) {
     case 'bible':
       return Iconsax.book;
     case 'give':
-    case 'wallet':
+    case 'empty_wallet_tick':
       return Iconsax.empty_wallet_tick;
     default:
       return Iconsax.component; // fallback
