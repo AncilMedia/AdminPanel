@@ -3,7 +3,7 @@
 // String baseUrl = 'https://panel-backend-sable.vercel.app';
 String baseUrl = 'https://backendnew-beige.vercel.app';
 
-String NgrokUrl ="https://37b166cf377d.ngrok-free.app";
+String NgrokUrl ="https://76401e284742.ngrok-free.app";
 
 // environmental variables.dart
 String NgrokConfigGist = "https://gist.githubusercontent.com/AncilMedia/3841f093493b90be688371e7dd837373/raw/gistfile1.json";

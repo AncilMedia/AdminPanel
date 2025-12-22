@@ -509,7 +509,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     ),
                     const SizedBox(height: 25),
                     _isLoading
-                        ? SizedBox(height: 50, width: 50, child: Lottie.asset('assets/signin_button.json'))
+                        ? SizedBox(height: 50, width: 50, child: Lottie.asset('assets/signin_button.json',options: LottieOptions(enableMergePaths: false),))
                         : MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: GestureDetector(

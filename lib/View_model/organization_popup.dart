@@ -255,7 +255,7 @@ class _OrganizationRowState extends State<OrganizationRow> {
             flex: columnFlex[1],
             child: Center(
               child: _isLoading
-                  ? Lottie.asset('assets/smudging dots.json', height: 30)
+                  ? Lottie.asset('assets/smudging dots.json', height: 30,options: LottieOptions(enableMergePaths: false),)
                   : _isAssigning
                   ? const CircularProgressIndicator(strokeWidth: 2)
                   : TextButton.icon(

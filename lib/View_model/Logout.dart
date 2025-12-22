@@ -120,6 +120,7 @@ class _LogoutButtonState extends State<LogoutButton> {
         height: 24,
         child: Lottie.asset(
           'assets/Hour_glass_Loading.json',
+          options: LottieOptions(enableMergePaths: false),
           fit: BoxFit.contain,
         ),
       )

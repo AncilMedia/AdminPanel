@@ -32,6 +32,7 @@ class DeleteUser extends StatelessWidget {
         children: [
           Lottie.asset(
             'assets/Trash_trash.json',
+            options: LottieOptions(enableMergePaths: false),
             height: MediaQuery.of(context).size.height * .12,
             width: MediaQuery.of(context).size.width * .12,
           ),

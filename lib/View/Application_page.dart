@@ -355,6 +355,7 @@ class _ApplicationPageState extends State<ApplicationPage> {
                 'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722682/bass_loading_vottxs.json',
                 height: 350,
                 width: 350,
+                options: LottieOptions(enableMergePaths: false),
               ),
             )
           : Column(

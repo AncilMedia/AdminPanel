@@ -368,7 +368,7 @@ class _RolesPageState extends State<RolesPage> with TickerProviderStateMixin {
           body: controller.isLoading
               ? Center(
               child: Lottie.network(
-                  'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724442/career_c3zrnl.json'))
+                  'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724442/career_c3zrnl.json',options: LottieOptions(enableMergePaths: false),))
               : SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -720,6 +720,7 @@ class _RolesPageState extends State<RolesPage> with TickerProviderStateMixin {
                               ? Lottie.network(
                             "https://res.cloudinary.com/dggylwwqk/raw/upload/v1756718762/Loading_please_wait_xlp2jp.json",
                             height: MediaQuery.of(context).size.height * .2,
+                            options: LottieOptions(enableMergePaths: false),
                           )
                               : Text(
                             'Save Sidebar',

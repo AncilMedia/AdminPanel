@@ -78,7 +78,7 @@ class _NotificationPageState extends State<NotificationPage> {
         // ),
       ),
       body: notifications.isEmpty
-          ? Center(child: Lottie.asset('assets/Mailpc.json'))
+          ? Center(child: Lottie.asset('assets/Mailpc.json',options: LottieOptions(enableMergePaths: false),))
           : ListView.builder(
         itemCount: notifications.length,
         itemBuilder: (_, i) {
@@ -177,7 +177,7 @@ class _NotificationPageState extends State<NotificationPage> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Align(
-                          alignment: Alignment.centerLeft,
+                          alignment: Alignment.center,
                           child: Text(
                             notif['body'],
                             style: GoogleFonts.poppins(
@@ -189,7 +189,7 @@ class _NotificationPageState extends State<NotificationPage> {
                       ),
                     if (hasImage)
                       Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: Alignment.center,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(

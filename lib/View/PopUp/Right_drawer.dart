@@ -476,7 +476,7 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
         Divider(thickness: 2, color: Colors.purple.shade200),
         const SizedBox(height: 16),
         if (isLoading)
-          Center(child: Lottie.asset('assets/Loading star.json'))
+          Center(child: Lottie.asset('assets/Loading star.json',options: LottieOptions(enableMergePaths: false),))
         else if (filteredLists.isEmpty)
           Text("No items found", style: GoogleFonts.poppins(color: Colors.grey))
         else
@@ -618,7 +618,7 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
                     ? SizedBox(
                   height: 24,
                   width: 24,
-                  child: Lottie.asset('assets/Bouncing_dots.json'),
+                  child: Lottie.asset('assets/Bouncing_dots.json',options: LottieOptions(enableMergePaths: false),),
                 )
                     : const Icon(Iconsax.save_2),
                 onPressed: isSaving || newTitle.trim().isEmpty ? null : _handleCreateNewList,

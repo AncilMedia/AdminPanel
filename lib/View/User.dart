@@ -828,7 +828,7 @@ class _UserPageState extends State<UserPage> {
                     child: SizedBox(
                       height: MediaQuery.of(context).size.height * 0.2,
                       width: MediaQuery.of(context).size.width * 0.2,
-                      child: Lottie.asset('assets/circular.json'),
+                      child: Lottie.asset('assets/circular.json',options: LottieOptions(enableMergePaths: false),),
                     ),
                   );
                 } else if (snapshot.hasError) {
@@ -841,7 +841,7 @@ class _UserPageState extends State<UserPage> {
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.3,
                           width: MediaQuery.of(context).size.width * 0.3,
-                          child: Lottie.asset('assets/surf search.json'),
+                          child: Lottie.asset('assets/surf search.json',options: LottieOptions(enableMergePaths: false),),
                         ),
                         Text(
                           "No User Found",

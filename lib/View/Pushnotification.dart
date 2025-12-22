@@ -125,7 +125,7 @@ class _PushNotificationState extends State<PushNotification> {
 
     return Scaffold(
       body: isLoading
-          ?  Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724306/New_Notification_Bell_krzyrx.json'))
+          ?  Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724306/New_Notification_Bell_krzyrx.json',options: LottieOptions(enableMergePaths: false),))
           : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -439,7 +439,7 @@ class _PushNotificationState extends State<PushNotification> {
         ),
         child: Center(
           child: isSending
-              ? Lottie.asset('assets/signin_button.json', fit: BoxFit.contain)
+              ? Lottie.asset('assets/signin_button.json', fit: BoxFit.contain,options: LottieOptions(enableMergePaths: false),)
               : Text(
             "Send",
             style: GoogleFonts.poppins(

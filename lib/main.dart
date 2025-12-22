@@ -186,9 +186,11 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'View/Mainlayout.dart';
+import 'View/Navigation.dart';
 import 'View/Scripture_Selector.dart';
 import 'View/Speakerpage.dart';
 import 'View/router.dart';
+import 'demo.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -213,7 +215,8 @@ Future<void> main() async {
       child: const MyApp(),
       // child: const MaterialApp(
       //   debugShowCheckedModeBanner: false,
-      //   home: SpeakerPage(),
+      //   // home: LiveDashboard(orgId: '0rg1',),
+      //   home: MyApp1(),
       // ),
     ),
   );

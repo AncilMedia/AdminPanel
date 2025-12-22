@@ -42,7 +42,9 @@ class _HomeContentState extends State<HomeContent> {
     return widget.items.where((item) {
       final orgName = item['organizationName'] ?? 'Unknown';
       final matchesOrg = selectedOrg == 'All' || orgName == selectedOrg;
-      final matchesSearch = orgName.toLowerCase().contains(searchQuery.toLowerCase());
+      final matchesSearch = orgName.toLowerCase().contains(
+        searchQuery.toLowerCase(),
+      );
       return matchesOrg && matchesSearch;
     }).toList();
   }
@@ -55,7 +57,10 @@ class _HomeContentState extends State<HomeContent> {
       final item = filteredItems[i];
       final orgName = item['organizationName'] ?? 'Unknown';
       groupedItems.putIfAbsent(orgName, () => []);
-      groupedItems[orgName]!.add({...item, '_originalIndex': widget.items.indexOf(item)});
+      groupedItems[orgName]!.add({
+        ...item,
+        '_originalIndex': widget.items.indexOf(item),
+      });
     }
 
     return Container(
@@ -80,7 +85,10 @@ class _HomeContentState extends State<HomeContent> {
                     children: [
                       Text(
                         "Filter by Company: ",
-                        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       DropdownButton<String>(
@@ -109,8 +117,13 @@ class _HomeContentState extends State<HomeContent> {
                           },
                           decoration: InputDecoration(
                             hintText: 'Search company name',
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
@@ -118,7 +131,13 @@ class _HomeContentState extends State<HomeContent> {
                   ),
                   const SizedBox(height: 12),
 
-                  Text("Content", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(
+                    "Content",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const Divider(),
 
                   InkWell(
@@ -127,14 +146,25 @@ class _HomeContentState extends State<HomeContent> {
                       children: [
                         const Icon(Iconsax.add_circle),
                         const SizedBox(width: 8),
-                        Text("Add Item", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w500)),
+                        Text(
+                          "Add Item",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   if (filteredItems.isEmpty)
-                    Center(child: Lottie.asset('assets/Animation - 1749442430422.json'))
+                    Center(
+                      child: Lottie.asset(
+                        'assets/Animation - 1749442430422.json',
+                        options: LottieOptions(enableMergePaths: false),
+                      ),
+                    )
                   else
                     ...groupedItems.entries.map((entry) {
                       final orgName = entry.key;
@@ -170,42 +200,61 @@ class _HomeContentState extends State<HomeContent> {
                               final originalIndex = item['_originalIndex'];
 
                               final imageWidget = item['image'] is Uint8List
-                                  ? Image.memory(item['image'], height: 50, width: 50, fit: BoxFit.cover)
-                                  : (item['image'] != null && item['image'].toString().isNotEmpty
-                                  ? Image.network(
-                                Uri.decodeFull(item['image']),
-                                height: 50,
-                                width: 50,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(
-                                  width: 50,
-                                  height: 50,
-                                  color: Colors.grey.shade300,
-                                  child: const Icon(Icons.broken_image),
-                                ),
-                              )
-                                  : Container(
-                                width: 50,
-                                height: 50,
-                                color: Colors.grey.shade300,
-                                child: const Icon(Icons.image_not_supported),
-                              ));
+                                  ? Image.memory(
+                                      item['image'],
+                                      height: 50,
+                                      width: 50,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : (item['image'] != null &&
+                                            item['image'].toString().isNotEmpty
+                                        ? Image.network(
+                                            Uri.decodeFull(item['image']),
+                                            height: 50,
+                                            width: 50,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Container(
+                                                      width: 50,
+                                                      height: 50,
+                                                      color:
+                                                          Colors.grey.shade300,
+                                                      child: const Icon(
+                                                        Icons.broken_image,
+                                                      ),
+                                                    ),
+                                          )
+                                        : Container(
+                                            width: 50,
+                                            height: 50,
+                                            color: Colors.grey.shade300,
+                                            child: const Icon(
+                                              Icons.image_not_supported,
+                                            ),
+                                          ));
 
                               return ListTile(
                                 key: ValueKey('item_$originalIndex'),
-                                onTap: () => widget.onShowItemDetails(originalIndex),
+                                onTap: () =>
+                                    widget.onShowItemDetails(originalIndex),
                                 leading: ReorderableDragStartListener(
                                   index: index,
                                   child: const Icon(Iconsax.element_3),
                                 ),
                                 title: Row(
                                   children: [
-                                    ClipRRect(borderRadius: BorderRadius.circular(12), child: imageWidget),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: imageWidget,
+                                    ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
                                         item['title'],
-                                        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
                                     Tooltip(

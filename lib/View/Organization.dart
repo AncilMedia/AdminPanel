@@ -319,6 +319,7 @@ class _OrganizationState extends State<Organization> {
                       'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722683/Organization_yqbizz.json',
                       height: 500,
                       width: 500,
+                      options: LottieOptions(enableMergePaths: false),
                     ),
                   )
                 : filteredOrganizations.isEmpty

@@ -191,6 +191,7 @@ class _ProfileState extends State<Profile> {
             'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722682/profile_c67ivh.json',
             width: 400,
             height: 400,
+            options: LottieOptions(enableMergePaths: false),
           ),
         ),
       );

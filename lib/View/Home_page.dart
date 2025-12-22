@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756718521/home_lguelw.json')),
+                Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756718521/home_lguelw.json',options: LottieOptions(enableMergePaths: false),)),
               ],
             ),
           ),

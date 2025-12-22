@@ -25,7 +25,7 @@ class _GivingState extends State<Giving> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722681/loading_circle_v2ikmh.json',height: 200,width: 200)),
+              Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722681/loading_circle_v2ikmh.json',height: 200,width: 200,options: LottieOptions(enableMergePaths: false),)),
             ],
           ),
         ),
