@@ -43,7 +43,7 @@ class ItemService {
     Uint8List? imageBytes,
     String? imageUrl,
   }) async {
-    final uri = Uri.parse('$baseUrl/api/item');
+    final uri = Uri.parse('$NgrokUrl/api/item');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('accessToken');
     final userId = prefs.getString('user_Id');
@@ -95,7 +95,7 @@ class ItemService {
     final token = prefs.getString('accessToken');
 
     final response = await http.delete(
-      Uri.parse('$baseUrl/api/item/$id'),
+      Uri.parse('$NgrokUrl/api/item/$id'),
       headers: {
         'x-user-id': userId ?? '',
         'Authorization': 'Bearer $token',
