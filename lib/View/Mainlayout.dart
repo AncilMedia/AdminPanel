@@ -10,6 +10,7 @@ import '../View/Login_page.dart';
 import 'Home_page.dart';
 import 'Events.dart';
 import 'Giving.dart';
+import 'Navigation_screen.dart';
 import 'Notifications/notification_bell.dart';
 import 'Sermons.dart';
 import 'Apps_page/Apps.dart';
@@ -54,6 +55,7 @@ class _MainLayoutState extends State<MainLayout> {
     'role': Iconsax.smileys,
     'profile': Iconsax.profile_circle,
     'sidebar': Iconsax.element_2,
+    'navigation': Iconsax.route_square,
   };
 
   late String selectedKey;
@@ -259,6 +261,8 @@ class _MainLayoutState extends State<MainLayout> {
         return const NotificationPage();
       case 'sidebar':
         return const ManageSidebar();
+      case 'navigation' :
+        return const NavigationFormPage();
       default:
         return const Center(
             child: Text(

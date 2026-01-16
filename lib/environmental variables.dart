@@ -4,7 +4,7 @@
 String baseUrl = 'https://backendnew-beige.vercel.app';
 
 
-String NgrokUrl ="https://b071c99b4026.ngrok-free.app";
+String NgrokUrl ="https://5e1aa1bc36df.ngrok-free.app";
 
 // String baseUrl ="https://b071c99b4026.ngrok-free.app";
 
