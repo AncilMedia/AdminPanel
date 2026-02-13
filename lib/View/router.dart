@@ -66,5 +66,9 @@ final GoRouter router = GoRouter(
       path: '/sidebar',
       builder: (context, state) => const MainLayout(initialPage: 'sidebar'),
     ),
+    GoRoute(
+      path: '/navigation',
+      builder: (context, state) => const MainLayout(initialPage: 'navigation'),
+    ),
   ],
 );

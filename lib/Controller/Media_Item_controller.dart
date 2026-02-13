@@ -23,6 +23,8 @@ class MediaItemService {
     PlatformFile? webFile,
     File? thumbnailFile,
     PlatformFile? webThumbnailFile,
+    String source = "file",
+    String? mediaUrl,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString("userId");
@@ -33,8 +35,12 @@ class MediaItemService {
       throw Exception("User, organization, or role not set in SharedPreferences");
     }
 
-    if (file == null && webFile == null) {
+    // Only require file if source is 'file'
+    if (source == "file" && file == null && webFile == null) {
       throw Exception("Main media file is required");
+    }
+    if ((source == "youtube" || source == "vimeo") && (mediaUrl == null || mediaUrl.isEmpty)) {
+      throw Exception("Media URL is required for $source");
     }
 
     final uri = Uri.parse("$baseUrl/api/media/item");
@@ -47,6 +53,8 @@ class MediaItemService {
     request.fields["createdBy"] = userId;
     request.fields["organization"] = orgId;
     request.fields["role"] = roleId;
+    request.fields["source"] = source;
+    if (mediaUrl != null && source != "file") request.fields["mediaUrl"] = mediaUrl;
 
     // ✅ Optional fields
     if (tags?.isNotEmpty == true) request.fields["tags"] = tags!;

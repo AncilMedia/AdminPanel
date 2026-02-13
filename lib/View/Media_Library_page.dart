@@ -699,76 +699,104 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    // PopupMenuButton<String>(
+                    //   onSelected: (value) {
+                    //     if (value == "item") {
+                    //       showCreateMediaItemDialog(
+                    //         context,
+                    //         _itemService,
+                    //         _seriesService,
+                    //       );
+                    //     } else if (value == "series") {
+                    //       showCreateMediaSeriesDialog(
+                    //         context,
+                    //         _seriesService,
+                    //       );
+                    //     }
+                    //   },
+                    //   shape: RoundedRectangleBorder(
+                    //     borderRadius: BorderRadius.circular(12),
+                    //   ),
+                    //   offset: const Offset(0, 50),
+                    //   itemBuilder: (context) => [
+                    //     PopupMenuItem(
+                    //       value: "item",
+                    //       child: Row(
+                    //         children: [
+                    //           const Icon(Iconsax.video, size: 18, color: Colors.purple),
+                    //           const SizedBox(width: 8),
+                    //           Text(
+                    //             "Create Media Item",
+                    //             style: GoogleFonts.poppins(fontSize: 14),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //     PopupMenuItem(
+                    //       value: "series",
+                    //       child: Row(
+                    //         children: [
+                    //           const Icon(Iconsax.video_add, size: 18, color: Colors.purple),
+                    //           const SizedBox(width: 8),
+                    //           Text(
+                    //             "Create Media Series",
+                    //             style: GoogleFonts.poppins(fontSize: 14),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ],
+                    //   child: Container(
+                    //     decoration: BoxDecoration(
+                    //       borderRadius: BorderRadius.circular(10),
+                    //       color: Colors.purple,
+                    //     ),
+                    //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    //     child: Row(
+                    //       children: [
+                    //         const Icon(Iconsax.video, color: Colors.white),
+                    //         const SizedBox(width: 8),
+                    //         Text(
+                    //           "Create Media",
+                    //           style: GoogleFonts.poppins(
+                    //             fontWeight: FontWeight.w500,
+                    //             fontSize: 14,
+                    //             color: Colors.white,
+                    //           ),
+                    //         ),
+                    //         const SizedBox(width: 6),
+                    //         const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                    //       ],
+                    //     ),
+                    //   ),
+                    // ),
                     PopupMenuButton<String>(
-                      onSelected: (value) {
+                      // ⭐ KEY CHANGE: Made this async to wait for dialog to close
+                      onSelected: (value) async {
                         if (value == "item") {
-                          showCreateMediaItemDialog(
+                          await showCreateMediaItemDialog(
                             context,
                             _itemService,
                             _seriesService,
                           );
                         } else if (value == "series") {
-                          showCreateMediaSeriesDialog(
+                          await showCreateMediaSeriesDialog(
                             context,
                             _seriesService,
                           );
                         }
+                        // After the dialog is closed, refresh the list automatically
+                        _fetchUserMedia();
                       },
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       offset: const Offset(0, 50),
                       itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: "item",
-                          child: Row(
-                            children: [
-                              const Icon(Iconsax.video, size: 18, color: Colors.purple),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Create Media Item",
-                                style: GoogleFonts.poppins(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: "series",
-                          child: Row(
-                            children: [
-                              const Icon(Iconsax.video_add, size: 18, color: Colors.purple),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Create Media Series",
-                                style: GoogleFonts.poppins(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
+                        _buildPopupItem("item", Iconsax.video, "Create Media Item"),
+                        _buildPopupItem("series", Iconsax.video_add, "Create Media Series"),
                       ],
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.purple,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            const Icon(Iconsax.video, color: Colors.white),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Create Media",
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-                          ],
-                        ),
-                      ),
+                      child: _buildCreateButton(),
                     ),
                   ],
                 ),
@@ -797,7 +825,7 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: _mediaItems.isEmpty
                     ? const Center(child: Text("No media items yet."))
                     : ListView.builder(
-                  itemCount: _mediaItems.length > 5 ? 5 : _mediaItems.length,
+                  itemCount:_mediaItems.length,
                   itemBuilder: (context, index) {
                     final item = _mediaItems[index];
 
@@ -958,6 +986,45 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
+
+  Widget _buildCreateButton() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.purple,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          const Icon(Iconsax.video, color: Colors.white),
+          const SizedBox(width: 8),
+          Text(
+            "Create Media",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 6),
+          const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildPopupItem(String value, IconData icon, String label) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.purple),
+          const SizedBox(width: 8),
+          Text(label, style: GoogleFonts.poppins(fontSize: 14)),
+        ],
+      ),
+    );
+  }
   // Helper UI components
   Widget _buildThumbnailPlaceholder() => Container(
     height: 200,

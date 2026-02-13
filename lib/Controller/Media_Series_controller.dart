@@ -294,17 +294,6 @@ class MediaSeriesService {
   }
 
   // ===============================
-  // GET ALL SERIES
-  // ===============================
-  Future<List<dynamic>> getSeries() async {
-    final response =
-    await http.get(Uri.parse("$baseUrl/api/media/series")).timeout(_timeout);
-
-    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-    return decoded is List ? decoded : [];
-  }
-
-  // ===============================
   // GET SERIES BY FILTER
   // ===============================
   Future<List<dynamic>> getSeriesByFilter({

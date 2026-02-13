@@ -88,4 +88,3 @@ class _MediaPageState extends State<MediaPage> {
   }
 }
 
-

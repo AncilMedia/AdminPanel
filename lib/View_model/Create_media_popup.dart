@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../Controller/Media_Item_controller.dart';
 import '../Controller/Media_Series_controller.dart';
 
@@ -14,245 +13,150 @@ Future<void> showCreateMediaItemDialog(
     MediaSeriesService seriesService,
     ) async {
   String? selectedSeries;
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+  String mediaSource = "file";
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final mediaUrlController = TextEditingController();
 
-  File? pickedFile; // For media (mobile/desktop)
-  PlatformFile? webFile; // For media (web)
-
-  File? thumbnailFile; // For thumbnail (mobile/desktop)
-  PlatformFile? webThumbnailFile; // For thumbnail (web)
+  File? pickedFile; PlatformFile? webFile;
+  File? thumbnailFile; PlatformFile? webThumbnailFile;
 
   List<dynamic> mediaSeries = [];
-  bool loadingSeries = true;
-
-  // 🔹 Fetch Series List
-  Future<void> fetchSeries() async {
+  try {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString("userId");
-
-    if (userId != null) {
-      try {
-        final response = await seriesService.getSeries();
-        mediaSeries = response;
-      } catch (e) {
-        debugPrint("⚠️ Error fetching series: $e");
-      }
-    }
-    loadingSeries = false;
-  }
-
-  await fetchSeries();
+    final orgId = prefs.getString("organizationId");
+    mediaSeries = await seriesService.getSeriesByFilter(organizationId: orgId);
+  } catch (e) { debugPrint("⚠️ Series Error: $e"); }
 
   return showDialog(
     context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: SizedBox(
-              width: 400,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Create Media Item",
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 450, maxHeight: 750),
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Create Media Item", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                TextField(controller: titleController, decoration: const InputDecoration(labelText: "Title", border: OutlineInputBorder())),
+                const SizedBox(height: 12),
+                TextField(controller: descriptionController, maxLines: 2, decoration: const InputDecoration(labelText: "Description", border: OutlineInputBorder())),
+                const SizedBox(height: 12),
 
-                      // 🔹 Title
-                      TextField(
-                        controller: titleController,
-                        decoration: InputDecoration(
-                          labelText: "Title",
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                // Series Dropdown
+                DropdownButtonFormField<String>(
+                  value: selectedSeries,
+                  hint: const Text("Select Series"),
+                  items: mediaSeries.map<DropdownMenuItem<String>>((s) => DropdownMenuItem(value: s["_id"].toString(), child: Text(s["title"] ?? "Untitled"))).toList(),
+                  onChanged: (val) => setState(() => selectedSeries = val),
+                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
 
-                      // 🔹 Description
-                      TextField(
-                        controller: descriptionController,
-                        decoration: InputDecoration(
-                          labelText: "Description",
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                // Source Selector
+                DropdownButtonFormField<String>(
+                  value: mediaSource,
+                  items: const [
+                    DropdownMenuItem(value: "file", child: Text("Upload File")),
+                    DropdownMenuItem(value: "youtube", child: Text("YouTube")),
+                    DropdownMenuItem(value: "vimeo", child: Text("Vimeo")),
+                  ],
+                  onChanged: (val) => setState(() => mediaSource = val!),
+                  decoration: const InputDecoration(labelText: "Source Type", border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
 
-                      // 🔹 Media Series Dropdown
-                      loadingSeries
-                          ? const Center(child: CircularProgressIndicator())
-                          : DropdownButtonFormField<String>(
-                        value: selectedSeries,
-                        items: mediaSeries.map<DropdownMenuItem<String>>((series) {
-                          return DropdownMenuItem<String>(
-                            value: series["_id"],
-                            child: Text(series["title"] ?? "Untitled Series"),
+                // Input based on source
+                if (mediaSource == "file")
+                  _buildPicker(
+                    label: pickedFile?.path.split('/').last ?? webFile?.name ?? "Select Media File",
+                    onTap: () async {
+                      FilePickerResult? res = await FilePicker.platform.pickFiles(type: FileType.video);
+                      if (res != null) { setState(() { if (kIsWeb) webFile = res.files.single; else pickedFile = File(res.files.single.path!); }); }
+                    },
+                  )
+                else
+                  TextField(controller: mediaUrlController, decoration: InputDecoration(labelText: "$mediaSource URL", border: const OutlineInputBorder())),
+
+                const SizedBox(height: 12),
+
+                // Thumbnail
+                _buildPicker(
+                  label: thumbnailFile?.path.split('/').last ?? webThumbnailFile?.name ?? "Select Thumbnail Image",
+                  onTap: () async {
+                    FilePickerResult? res = await FilePicker.platform.pickFiles(type: FileType.image);
+                    if (res != null) { setState(() { if (kIsWeb) webThumbnailFile = res.files.single; else thumbnailFile = File(res.files.single.path!); }); }
+                  },
+                ),
+
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+                    onPressed: () async {
+                      if (mediaSource == "file" && pickedFile == null && webFile == null) {
+                        debugPrint("❌ No media file selected");
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please select a media file to upload."))
                           );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSeries = value;
-                          });
-                        },
-                        decoration: InputDecoration(
-                          labelText: "Media Series (optional)",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // 🔹 Pick Main Media File
-                      GestureDetector(
-                        onTap: () async {
-                          FilePickerResult? result = await FilePicker.platform.pickFiles(
-                            type: FileType.custom,
-                            allowedExtensions: ['mp4', 'mp3', 'mov', 'wav'],
+                        }
+                        return;
+                      }
+                      if ((mediaSource == "youtube" || mediaSource == "vimeo") && mediaUrlController.text.isEmpty) {
+                        debugPrint("❌ No URL provided for $mediaSource");
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Please enter a $mediaSource URL."))
                           );
-
-                          if (result != null) {
-                            if (kIsWeb) {
-                              setState(() {
-                                webFile = result.files.single;
-                              });
-                            } else {
-                              setState(() {
-                                pickedFile = File(result.files.single.path!);
-                              });
-                            }
-                          }
-                        },
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            color: Colors.purpleAccent.shade200,
-                          ),
-                          child: Center(
-                            child: Text(
-                              pickedFile == null && webFile == null
-                                  ? "Pick Media File"
-                                  : "Selected: ${kIsWeb ? webFile!.name : pickedFile!.path.split('/').last}",
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // 🔹 Pick Thumbnail File
-                      GestureDetector(
-                        onTap: () async {
-                          FilePickerResult? result = await FilePicker.platform.pickFiles(
-                            type: FileType.image,
-                          );
-
-                          if (result != null) {
-                            if (kIsWeb) {
-                              setState(() {
-                                webThumbnailFile = result.files.single;
-                              });
-                            } else {
-                              setState(() {
-                                thumbnailFile = File(result.files.single.path!);
-                              });
-                            }
-                          }
-                        },
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
-                            color: Colors.orangeAccent,
-                          ),
-                          child: Center(
-                            child: Text(
-                              thumbnailFile == null && webThumbnailFile == null
-                                  ? "Pick Thumbnail"
-                                  : "Thumbnail: ${kIsWeb ? webThumbnailFile!.name : thumbnailFile!.path.split('/').last}",
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // 🔹 Submit Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: (pickedFile == null && webFile == null)
-                              ? null
-                              : () async {
-                            try {
-                              final response = await itemService.createMediaItem(
-                                title: titleController.text,
-                                description: descriptionController.text,
-                                seriesId: selectedSeries,
-                                file: pickedFile,
-                                webFile: webFile,
-                                thumbnailFile: thumbnailFile,
-                                webThumbnailFile: webThumbnailFile,
-                              );
-
-                              debugPrint("✅ Created media item: $response");
-                              Navigator.pop(context, true);
-                            } catch (e) {
-                              debugPrint("❌ Error creating media item: $e");
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Failed to create media item")),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          child: Text(
-                            "Create",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                        }
+                        return;
+                      }
+                      try {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Processing upload... Please wait.")));
+                        await itemService.createMediaItem(
+                          title: titleController.text,
+                          description: descriptionController.text,
+                          file: mediaSource == "file" ? pickedFile : null,
+                          webFile: mediaSource == "file" ? webFile : null,
+                          thumbnailFile: thumbnailFile,
+                          webThumbnailFile: webThumbnailFile,
+                          seriesId: selectedSeries,
+                          source: mediaSource,
+                          mediaUrl: mediaSource != "file" ? mediaUrlController.text : null,
+                          // Use tags or other fields as needed
+                        );
+                        if (context.mounted) Navigator.pop(context, true);
+                      } catch (e) {
+                        debugPrint("❌ Media item upload error: $e");
+                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+                      }
+                    },
+                    child: const Text("Create Item"),
                   ),
                 ),
-              ),
+              ],
             ),
-          );
-        },
-      );
-    },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildPicker({required String label, required VoidCallback onTap}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[300]!)),
+      child: Row(children: [const Icon(Icons.upload_file, color: Colors.purple), const SizedBox(width: 10), Expanded(child: Text(label, style: GoogleFonts.poppins(fontSize: 13), overflow: TextOverflow.ellipsis))]),
+    ),
   );
 }
