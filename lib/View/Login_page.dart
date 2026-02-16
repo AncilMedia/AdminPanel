@@ -534,7 +534,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         MouseRegion(
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: () => context.go('/register'), // ✅ optional register page route
+                            onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=>SignupPage())), // ✅ optional register page route
                             child: Text("SignUp", style: GoogleFonts.poppins(textStyle: const TextStyle(fontSize: 16, color: Colors.purple, fontWeight: FontWeight.w600))),
                           ),
                         ),

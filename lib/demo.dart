@@ -8959,3 +8959,243 @@
 //     );
 //   }
 // }
+
+
+
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:lottie/lottie.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+class HomeContent extends StatefulWidget {
+  final BoxConstraints constraints;
+  final List<Map<String, dynamic>> items;
+  final void Function(int index) onShowItemDetails;
+  final void Function(int oldIndex, int newIndex) onReorder;
+  final void Function(int index) onRemoveItem;
+  final void Function() onOpenDrawer;
+
+  const HomeContent({
+    super.key,
+    required this.constraints,
+    required this.items,
+    required this.onShowItemDetails,
+    required this.onReorder,
+    required this.onRemoveItem,
+    required this.onOpenDrawer,
+  });
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  String selectedOrg = 'All';
+  String searchQuery = '';
+
+  String selectedLayout = "column";
+
+  final String baseUrl = "http://YOUR_SERVER_IP:5000/api";
+
+  String? organizationId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrgAndFetchLayout();
+  }
+
+  Future<void> _loadOrgAndFetchLayout() async {
+    final prefs = await SharedPreferences.getInstance();
+    organizationId = prefs.getString('organizationId');
+
+    if (organizationId == null) {
+      debugPrint("❌ organizationId missing in SharedPreferences");
+      return;
+    }
+
+    fetchLayoutFromBackend();
+  }
+
+  // ================= API =================
+
+  Future<void> fetchLayoutFromBackend() async {
+    try {
+      final url = Uri.parse("$baseUrl/homelayout/$organizationId");
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200 &&
+          response.headers['content-type']!.contains("application/json")) {
+        final data = jsonDecode(response.body);
+
+        if (mounted) {
+          setState(() {
+            selectedLayout = data['layout'] ?? "column";
+          });
+        }
+      } else {
+        debugPrint("❌ Invalid response: ${response.body}");
+      }
+    } catch (e) {
+      debugPrint("❌ Fetch Layout Error: $e");
+    }
+  }
+
+  Future<void> updateLayoutBackend(String layout) async {
+    try {
+      if (organizationId == null) return;
+
+      final url = Uri.parse("$baseUrl/homelayout/$organizationId");
+
+      await http.put(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"layout": layout}),
+      );
+    } catch (e) {
+      debugPrint("❌ Update Layout Error: $e");
+    }
+  }
+
+  // ================= FILTER LOGIC =================
+
+  List<String> getUniqueOrganizations() {
+    final orgSet = <String>{};
+    for (var item in widget.items) {
+      final name = item['organizationName'];
+      if (name != null && name.toString().isNotEmpty) {
+        orgSet.add(name.toString());
+      }
+    }
+    return ['All', ...orgSet.toList()..sort()];
+  }
+
+  List<Map<String, dynamic>> get filteredItems {
+    return widget.items.where((item) {
+      final orgName = (item['organizationName'] ?? 'Unknown').toString();
+      final matchesOrg = selectedOrg == 'All' || orgName == selectedOrg;
+      final matchesSearch =
+      orgName.toLowerCase().contains(searchQuery.toLowerCase());
+      return matchesOrg && matchesSearch;
+    }).toList();
+  }
+
+  // ================= BUILD =================
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _mobilePreview(),
+        const SizedBox(height: 16),
+        _layoutBuilder(),
+      ],
+    );
+  }
+
+  // ================= UI =================
+
+  Widget _layoutBuilder() {
+    return Wrap(
+      spacing: 10,
+      children: [
+        _layoutButton("Row"),
+        _layoutButton("Column"),
+        _layoutButton("Stack"),
+      ],
+    );
+  }
+
+  Widget _layoutButton(String title) {
+    final isSelected = selectedLayout == title.toLowerCase();
+
+    return InkWell(
+      onTap: () {
+        final layout = title.toLowerCase();
+
+        setState(() => selectedLayout = layout);
+
+        updateLayoutBackend(layout);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? Colors.blue : Colors.white,
+          border: Border.all(
+            color: isSelected ? Colors.blueAccent : Colors.grey.shade300,
+            width: 1.5,
+          ),
+        ),
+        child: Text(title,
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+                color: isSelected ? Colors.white : Colors.black)),
+      ),
+    );
+  }
+
+  Widget _mobilePreview() {
+    return Container(
+      height: 280,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.grey.shade100,
+      ),
+      child: _renderMobileLayout(),
+    );
+  }
+
+  Widget _renderMobileLayout() {
+    if (selectedLayout == "row") {
+      return Row(children: [_mobileBox("A"), _mobileBox("B")]);
+    }
+
+    if (selectedLayout == "column") {
+      return Column(children: [_mobileBox("A"), _mobileBox("B")]);
+    }
+
+    if (selectedLayout == "stack") {
+      return Stack(
+        children: [
+          _mobileStackBox("Bottom"),
+          Positioned(top: 40, left: 40, child: _mobileStackBox("Top")),
+        ],
+      );
+    }
+
+    return const Center(child: Text("Select Layout"));
+  }
+
+  Widget _mobileBox(String text) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.all(6),
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.blue.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(child: Text(text)),
+      ),
+    );
+  }
+
+  Widget _mobileStackBox(String text) {
+    return Container(
+      width: 100,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.green.shade200,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(child: Text(text)),
+    );
+  }
+}
