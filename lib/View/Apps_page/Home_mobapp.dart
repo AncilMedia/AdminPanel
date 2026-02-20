@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../environmental variables.dart';
 
 class HomeContent extends StatefulWidget {
   final BoxConstraints constraints;
@@ -31,45 +34,70 @@ class _HomeContentState extends State<HomeContent> {
   String selectedOrg = 'All';
   String searchQuery = '';
 
-  // ===== Layout Builder State =====
-  String selectedLayout = "none";
+  /// layout state
+  String selectedLayout = "column";
+  String? organizationId;
 
-  Map<String, dynamic> layoutConfig = {
-    "layoutType": null,
-    "components": [],
-    "settings": {},
-  };
-
-  Map<String, dynamic> buildBackendPayload() {
-    return {
-      "projectId": "demo_project_001",
-      "page": "home",
-      "layout": layoutConfig,
-      "meta": {
-        "user": "admin",
-        "platform": "flutter_web",
-        "timestamp": DateTime.now().toIso8601String(),
-      },
-    };
+  @override
+  void initState() {
+    super.initState();
+    _loadOrgAndFetchLayout();
   }
 
-  Future<void> _sendLayoutToBackend() async {
-    final payload = buildBackendPayload();
+  // ================= LOAD ORG + LAYOUT =================
 
-    debugPrint("=========== BACKEND PAYLOAD ===========");
-    debugPrint(jsonEncode(payload));
-    debugPrint("======================================");
+  Future<void> _loadOrgAndFetchLayout() async {
+    final prefs = await SharedPreferences.getInstance();
+    organizationId = prefs.getString('organizationId');
 
-    /*
-    final response = await http.post(
-      Uri.parse("https://your-backend.com/api/layout"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(payload),
-    );
-    */
+    if (organizationId == null) {
+      debugPrint("❌ organizationId missing");
+      return;
+    }
+
+    fetchLayoutFromBackend();
   }
 
-  // ================= FILTER LOGIC =================
+  // ================= API =================
+
+  Future<void> fetchLayoutFromBackend() async {
+    try {
+      final url = Uri.parse("$baseUrl/api/homelayout/$organizationId");
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final backendLayout = data['layout']?.toString().toLowerCase();
+
+        if (mounted) {
+          setState(() {
+            selectedLayout = backendLayout ?? "column";
+          });
+        }
+      } else {
+        setState(() => selectedLayout = "column");
+      }
+    } catch (e) {
+      debugPrint("❌ Fetch Layout Error: $e");
+      setState(() => selectedLayout = "column");
+    }
+  }
+
+  Future<void> updateLayoutBackend(String layout) async {
+    try {
+      final url = Uri.parse("$baseUrl/api/homelayout/$organizationId");
+
+      await http.put(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"layout": layout}),
+      );
+    } catch (e) {
+      debugPrint("❌ Update Layout Error: $e");
+    }
+  }
+
+  // ================= FILTER =================
 
   List<String> getUniqueOrganizations() {
     final orgSet = <String>{};
@@ -96,7 +124,6 @@ class _HomeContentState extends State<HomeContent> {
 
   @override
   Widget build(BuildContext context) {
-    /// group items by org
     final Map<String, List<Map<String, dynamic>>> groupedItems = {};
 
     for (int i = 0; i < filteredItems.length; i++) {
@@ -127,52 +154,33 @@ class _HomeContentState extends State<HomeContent> {
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-
                   children: [
-                    // 🔍 Filter & Search
+                    /// FILTER BAR
                     Row(
                       children: [
-                        Text(
-                          "Filter by Company:",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        Text("Filter:", style: GoogleFonts.poppins()),
                         const SizedBox(width: 8),
                         DropdownButton<String>(
                           value: selectedOrg,
-                          items: getUniqueOrganizations().map((org) {
-                            return DropdownMenuItem<String>(
-                              value: org,
-                              child: Text(org),
-                            );
-                          }).toList(),
+                          items: getUniqueOrganizations()
+                              .map((org) => DropdownMenuItem(
+                            value: org,
+                            child: Text(org),
+                          ))
+                              .toList(),
                           onChanged: (value) {
-                            if (!mounted) return;
                             if (value != null) {
-                              setState(() {
-                                selectedOrg = value;
-                              });
+                              setState(() => selectedOrg = value);
                             }
                           },
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
-                            onChanged: (value) {
-                              if (!mounted) return;
-                              setState(() {
-                                searchQuery = value;
-                              });
-                            },
+                            onChanged: (v) =>
+                                setState(() => searchQuery = v),
                             decoration: InputDecoration(
-                              hintText: 'Search company name',
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
+                              hintText: 'Search',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -182,17 +190,9 @@ class _HomeContentState extends State<HomeContent> {
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                    Text(
-                      "Content",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Divider(),
-
+                    /// ADD ITEM
                     InkWell(
                       onTap: widget.onOpenDrawer,
                       child: Row(
@@ -345,12 +345,10 @@ class _HomeContentState extends State<HomeContent> {
               flex: 1,
               child: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Preview
+                    /// MOBILE PREVIEW
                     Container(
                       padding: const EdgeInsets.all(12),
-                      width: double.infinity,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.grey.shade100,
@@ -358,14 +356,10 @@ class _HomeContentState extends State<HomeContent> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Mobile Preview",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          Text("Mobile Preview",
+                              style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600)),
                           const SizedBox(height: 12),
-
                           Center(
                             child: Container(
                               width: 260,
@@ -374,37 +368,15 @@ class _HomeContentState extends State<HomeContent> {
                               decoration: BoxDecoration(
                                 color: Colors.black,
                                 borderRadius: BorderRadius.circular(40),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 20,
-                                  ),
-                                ],
                               ),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      height: 22,
-                                      width: 120,
-                                      margin: const EdgeInsets.only(top: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                    ),
-
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12),
-                                        child: _renderMobileLayout(),
-                                      ),
-                                    ),
-                                  ],
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: _renderMobileLayout(),
                                 ),
                               ),
                             ),
@@ -415,10 +387,9 @@ class _HomeContentState extends State<HomeContent> {
 
                     const SizedBox(height: 16),
 
-                    // Layout Builder
+                    /// LAYOUT BUILDER
                     Container(
                       padding: const EdgeInsets.all(16),
-                      width: double.infinity,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.grey.shade200,
@@ -427,84 +398,40 @@ class _HomeContentState extends State<HomeContent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "Layout Builder",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                "Apply",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              Text("Layout Builder",
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600)),
+                              InkWell(
+                                onTap: () async {
+                                  await updateLayoutBackend(selectedLayout);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            "Applied ${selectedLayout.toUpperCase()} layout")),
+                                  );
+                                },
+                                child: Text("Apply",
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.w600)),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-
                           Wrap(
                             spacing: 10,
-                            runSpacing: 10,
                             children: [
                               _layoutButton("Row"),
                               _layoutButton("Column"),
                               _layoutButton("Stack"),
                             ],
                           ),
-
-                          const SizedBox(height: 14),
-
-                          Text(
-                            "Selected Layout:",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.white,
-                            ),
-                            child: Text(
-                              selectedLayout.toUpperCase(),
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Settings
-                    Container(
-                      height: MediaQuery.of(context).size.height * .25,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: Colors.grey.shade100,
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Settings Panel",
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -515,56 +442,172 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  // ================= HELPERS =================
+  // ================= MOBILE PREVIEW =================
+
+  Widget _renderMobileLayout() {
+    final previewItems = filteredItems.take(5).toList();
+
+    if (previewItems.isEmpty) {
+      return Center(child: Text("No content"));
+    }
+
+    switch (selectedLayout) {
+      case "row":
+        return _mobileRowPreview(previewItems);
+      case "stack":
+        return _mobileStackPreview(previewItems);
+      case "column":
+      default:
+        return _mobileColumnPreview(previewItems);
+    }
+  }
+
+  Widget _mobileColumnPreview(List<Map<String, dynamic>> items) {
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (_, i) {
+        final item = items[i];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                _previewImage(item),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black87, Colors.transparent],
+                      ),
+                    ),
+                    child: Text(item['title'] ?? '',
+                        style: GoogleFonts.poppins(
+                            color: Colors.white, fontSize: 12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _mobileRowPreview(List<Map<String, dynamic>> items) {
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      children: items.map((item) {
+        return Container(
+          width: 120,
+          margin: const EdgeInsets.only(right: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 9 / 12,
+                  child: _previewImage(item),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(item['title'] ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(fontSize: 11)),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _mobileStackPreview(List<Map<String, dynamic>> items) {
+    return Stack(
+      children: items.take(3).toList().asMap().entries.map((entry) {
+        final i = entry.key;
+        final item = entry.value;
+
+        return Positioned(
+          top: i * 25,
+          left: i * 25,
+          right: i * 10,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: AspectRatio(
+              aspectRatio: 16 / 10,
+              child: Stack(
+                children: [
+                  _previewImage(item),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [Colors.black87, Colors.transparent],
+                        ),
+                      ),
+                      child: Text(item['title'] ?? '',
+                          style: GoogleFonts.poppins(
+                              color: Colors.white, fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _previewImage(Map<String, dynamic> item) {
+    final img = item['image'];
+
+    if (img != null && img.toString().isNotEmpty) {
+      return Container(
+        height: 150,
+        width: MediaQuery.of(context).size.width,
+        child: Image.network(
+          img.toString(),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _errorImage(),
+        ),
+      );
+    }
+    return _errorImage();
+  }
 
   Widget _errorImage() {
     return Container(
-      width: 50,
-      height: 50,
+      width: 80,
+      height: 80,
       color: Colors.grey.shade300,
       child: const Icon(Icons.image_not_supported),
     );
   }
 
-
-  Widget _componentTile(String title) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(12),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-      ),
-      child: Row(
-        children: [
-          const Icon(Iconsax.add),
-          const SizedBox(width: 10),
-          Text(
-            title,
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
-  // ================= SELECTABLE LAYOUT BUTTON =================
   Widget _layoutButton(String title) {
-    final isSelected = selectedLayout == title.toLowerCase();
+    final key = title.toLowerCase();
+    final isSelected = selectedLayout == key;
 
     return InkWell(
       onTap: () {
         setState(() {
-          selectedLayout = title.toLowerCase();
-
-          layoutConfig = {
-            "layoutType": selectedLayout,
-            "components": [],
-            "settings": {"updatedAt": DateTime.now().toIso8601String()},
-          };
+          selectedLayout = key;
         });
-
-        _sendLayoutToBackend();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -576,7 +619,6 @@ class _HomeContentState extends State<HomeContent> {
             color: isSelected ? Colors.blueAccent : Colors.grey.shade300,
             width: 1.5,
           ),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
         child: Text(
           title,
@@ -586,62 +628,6 @@ class _HomeContentState extends State<HomeContent> {
           ),
         ),
       ),
-    );
-  }
-
-  // ================= MOBILE LAYOUT RENDERER =================
-  Widget _renderMobileLayout() {
-    if (selectedLayout == "row") {
-      return Row(children: [_mobileBox("A"), _mobileBox("B"), _mobileBox("C")]);
-    }
-
-    if (selectedLayout == "column") {
-      return Column(
-        children: [_mobileBox("A"), _mobileBox("B"), _mobileBox("C")],
-      );
-    }
-
-    if (selectedLayout == "stack") {
-      return Stack(
-        children: [
-          _mobileStackBox("Bottom"),
-          Positioned(top: 40, left: 40, child: _mobileStackBox("Middle")),
-          Positioned(top: 80, left: 80, child: _mobileStackBox("Top")),
-        ],
-      );
-    }
-
-    return Center(
-      child: Text(
-        "Select Layout",
-        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-      ),
-    );
-  }
-
-  Widget _mobileBox(String text) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.all(6),
-        height: 80,
-        decoration: BoxDecoration(
-          color: Colors.blue.shade100,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(child: Text(text, style: GoogleFonts.poppins())),
-      ),
-    );
-  }
-
-  Widget _mobileStackBox(String text) {
-    return Container(
-      width: 100,
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.green.shade200,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(child: Text(text, style: GoogleFonts.poppins())),
     );
   }
 }

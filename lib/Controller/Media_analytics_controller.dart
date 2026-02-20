@@ -51,9 +51,9 @@ class AnalyticsService {
         queryParameters['endDate'] = DateFormat('yyyy-MM-dd').format(endDate);
       }
 
-      final endpoint = useDashboard ? 'dashboard' : '';
-      final uri = Uri.parse('$baseUrl/api/media/analytics/$endpoint')
-          .replace(queryParameters: queryParameters);
+      // final endpoint = useDashboard ? 'dashboard' : '';
+      final uri = Uri.parse('$baseUrl/api/media/analytics');
+          // .replace(queryParameters: queryParameters);
 
       print("🌐 GET: $uri");
 
@@ -108,9 +108,9 @@ class AnalyticsService {
         queryParameters['endDate'] = DateFormat('yyyy-MM-dd').format(endDate);
       }
 
-      final endpoint = useDashboard ? 'dashboard' : '';
-      final uri = Uri.parse('$baseUrl/api/media/analytics/org/$orgId/$endpoint')
-          .replace(queryParameters: queryParameters);
+      // final endpoint = useDashboard ? 'dashboard' : '';
+      final uri = Uri.parse('$baseUrl/api/media/analytics/org/$orgId');
+          // .replace(queryParameters: queryParameters);
 
       if (kDebugMode) print("🌐 GET: $uri");
 

@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb; // For platform check
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Controller/Organization_Controller.dart';
 import '../Controller/PushNotification_controller.dart';
@@ -22,10 +23,14 @@ class PushNotification extends StatefulWidget {
 }
 
 class _PushNotificationState extends State<PushNotification> {
-  final TextEditingController titleController = TextEditingController(text: 'Title');
-  final TextEditingController bodyController = TextEditingController(text: 'Body');
-  final TextEditingController eventController = TextEditingController(text: 'Event');
-  final TextEditingController typeController = TextEditingController(text: 'Type');
+  final TextEditingController titleController =
+  TextEditingController(text: 'Title');
+  final TextEditingController bodyController =
+  TextEditingController(text: 'Body');
+  final TextEditingController eventController =
+  TextEditingController(text: 'Event');
+  final TextEditingController typeController =
+  TextEditingController(text: 'Type');
 
   Color? selectedColor;
   IconData? selectedIcon;
@@ -36,19 +41,10 @@ class _PushNotificationState extends State<PushNotification> {
 
   bool isSending = false;
   bool isLoading = true;
+  bool isAdmin = false;
 
   List<Map<String, dynamic>> organizations = [];
   List<UserModel> users = [];
-
-  final List<IconData?> availableIcons = [
-    null,
-    Iconsax.notification_bing,
-    Iconsax.message,
-    Iconsax.menu_board,
-    Iconsax.calendar_remove,
-    Iconsax.warning_2,
-    Iconsax.tick_circle,
-  ];
 
   @override
   void initState() {
@@ -58,18 +54,37 @@ class _PushNotificationState extends State<PushNotification> {
 
   Future<void> _loadData() async {
     setState(() => isLoading = true);
-    await _loadOrganizations();
+
+    await _loadUserRole();
+
+    if (isAdmin) {
+      await _loadOrganizations();
+    }
+
     await _fetchUsers();
+
     setState(() => isLoading = false);
+  }
+
+  Future<void> _loadUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('userRole');
+
+    setState(() {
+      isAdmin = role == 'admin';
+    });
+
+    print("🔐 User Role: $role");
   }
 
   Future<void> _fetchUsers() async {
     final authState = Provider.of<AuthState>(context, listen: false);
     try {
-      final fetchedUsers = await UsergetController.fetchUsers(authState: authState);
+      final fetchedUsers =
+      await UsergetController.fetchUsers(authState: authState);
       setState(() => users = fetchedUsers);
     } catch (e) {
-      print("Error fetching users: $e");
+      debugPrint("Error fetching users: $e");
     }
   }
 
@@ -79,9 +94,10 @@ class _PushNotificationState extends State<PushNotification> {
       final uniqueOrgs = {
         for (var org in orgs) org['_id']: org,
       }.values.toList();
+
       setState(() => organizations = uniqueOrgs);
     } catch (e) {
-      print("Error loading organizations: $e");
+      debugPrint("Error loading organizations: $e");
     }
   }
 
@@ -92,42 +108,44 @@ class _PushNotificationState extends State<PushNotification> {
   }
 
   String? _getSelectedOrgId() {
+    if (!isAdmin || selectedOrganization == null) return null;
+
     final org = organizations.firstWhere(
-          (element) => element['name'] == selectedOrganization,
+          (e) => e['name'] == selectedOrganization,
       orElse: () => {},
     );
+
     return org['_id'] as String?;
   }
 
-  // String? _getSelectedUserId() {
-  //   final user = users.firstWhere(
-  //         (element) => element.username == selectedIndividual,
-  //     orElse: () => UserModel.empty(),
-  //   );
-  //   return user.userId.isEmpty ? null : user.userId;
-  // }
-
   String? _getSelectedUserId() {
+    if (selectedIndividual == null ||
+        selectedIndividual == "All Users") return null;
+
     final user = users.firstWhere(
-          (element) => element.username == selectedIndividual,
+          (e) => e.username == selectedIndividual,
       orElse: () => UserModel.empty(),
     );
-    return user.userId.isNotEmpty ? user.userId : null; // If backend expects _id, replace user.userId with user.id
-  }
 
+    return user.userId.isNotEmpty ? user.userId : null;
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final isFormValid = titleController.text.isNotEmpty && bodyController.text.isNotEmpty;
+    final isFormValid =
+        titleController.text.isNotEmpty && bodyController.text.isNotEmpty;
 
     return Scaffold(
       body: isLoading
-          ?  Center(child: Lottie.network('https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724306/New_Notification_Bell_krzyrx.json',options: LottieOptions(enableMergePaths: false),))
+          ? Center(
+        child: Lottie.network(
+            'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724306/New_Notification_Bell_krzyrx.json'),
+      )
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
@@ -137,31 +155,41 @@ class _PushNotificationState extends State<PushNotification> {
                   flex: 2,
                   child: Column(
                     children: [
-                      _buildFieldRow("Title", titleController, "Body", bodyController),
+                      _buildFieldRow("Title", titleController, "Body",
+                          bodyController),
                       const SizedBox(height: 12),
-                      _buildFieldRow("Event", eventController, "Type", typeController),
-                      const SizedBox(height: 12),
-                      const SizedBox(height: 20),
+                      _buildFieldRow("Event", eventController, "Type",
+                          typeController),
+                      const SizedBox(height: 16),
                       Row(
                         children: [
-                          Expanded(
-                            child: _buildDropdownField(
-                              label: "Organization",
-                              value: selectedOrganization,
-                              items: organizations.map((org) => org['name'] as String).toList(),
-                              onChanged: (value) => setState(() => selectedOrganization = value),
+                          if (isAdmin)
+                            Expanded(
+                              child: _buildDropdownField(
+                                label: "Organization",
+                                value: selectedOrganization,
+                                items: organizations
+                                    .map((e) => e['name'] as String)
+                                    .toList(),
+                                onChanged: (v) => setState(
+                                        () => selectedOrganization = v),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
+                          if (isAdmin) const SizedBox(width: 16),
                           Expanded(
                             child: _buildDropdownField(
                               label: "Individual",
                               value: selectedIndividual,
-                              items: users
-                                  .where((user) => user.username.isNotEmpty)
-                                  .map((user) => user.username)
-                                  .toList(),
-                              onChanged: (value) => setState(() => selectedIndividual = value),
+                              items: [
+                                "All Users",
+                                ...users
+                                    .where((u) =>
+                                u.username.isNotEmpty)
+                                    .map((u) => u.username)
+                                    .toList(),
+                              ],
+                              onChanged: (v) => setState(
+                                      () => selectedIndividual = v),
                             ),
                           ),
                         ],
@@ -170,21 +198,21 @@ class _PushNotificationState extends State<PushNotification> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  flex: 1,
-                  child: _buildImageBox(screenHeight),
-                ),
+                Expanded(flex: 1, child: _buildImageBox(screenHeight)),
               ],
             ),
-            // const SizedBox(height: 24),
-            _buildSendButton(screenWidth, screenHeight, isFormValid),
+            const SizedBox(height: 24),
+            _buildSendButton(
+                screenWidth, screenHeight, isFormValid),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFieldRow(String label1, TextEditingController controller1, String label2, TextEditingController controller2) {
+  Widget _buildFieldRow(String label1,
+      TextEditingController controller1, String label2,
+      TextEditingController controller2) {
     return Row(
       children: [
         Expanded(child: _buildTextField(label1, controller1)),
@@ -198,7 +226,9 @@ class _PushNotificationState extends State<PushNotification> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 14)),
+        Text(label,
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500, fontSize: 14)),
         const SizedBox(height: 4),
         TextFormField(
           controller: controller,
@@ -220,12 +250,17 @@ class _PushNotificationState extends State<PushNotification> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16)),
+        Text(label,
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500, fontSize: 16)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
           isExpanded: true,
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+          items: items
+              .map((item) =>
+              DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
           onChanged: onChanged,
           decoration: const InputDecoration(
             contentPadding: EdgeInsets.symmetric(horizontal: 12),
@@ -236,116 +271,13 @@ class _PushNotificationState extends State<PushNotification> {
     );
   }
 
-  // Widget _buildColorPickerField() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text("Color", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 14)),
-  //       const SizedBox(height: 8),
-  //       InkWell(
-  //         onTap: _showColorPickerDialog,
-  //         child: Container(
-  //           height: 50,
-  //           decoration: BoxDecoration(
-  //             color: selectedColor ?? Colors.grey[200],
-  //             borderRadius: BorderRadius.circular(6),
-  //             border: Border.all(color: Colors.black26),
-  //           ),
-  //           child: selectedColor == null
-  //               ? Center(child: Text("None", style: GoogleFonts.poppins(color: Colors.grey)))
-  //               : null,
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
-
-  // void _showColorPickerDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (_) => AlertDialog(
-  //       title: const Text("Pick a color"),
-  //       content: BlockPicker(
-  //         pickerColor: selectedColor ?? Colors.white,
-  //         onColorChanged: (color) => setState(() => selectedColor = color),
-  //       ),
-  //       actions: [
-  //         TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
-  //         TextButton(
-  //           onPressed: () {
-  //             setState(() => selectedColor = null);
-  //             Navigator.pop(context);
-  //           },
-  //           child: const Text("Clear"),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildIconPickerField() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text("Icon", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 14)),
-  //       const SizedBox(height: 8),
-  //       InkWell(
-  //         onTap: _showIconPickerDialog,
-  //         child: Container(
-  //           height: 50,
-  //           alignment: Alignment.center,
-  //           decoration: BoxDecoration(
-  //             borderRadius: BorderRadius.circular(6),
-  //             border: Border.all(color: Colors.black26),
-  //           ),
-  //           child: selectedIcon == null
-  //               ? Text("None", style: GoogleFonts.poppins(color: Colors.grey))
-  //               : Icon(selectedIcon),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
-
-  // void _showIconPickerDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (_) => AlertDialog(
-  //       title: const Text("Pick an icon"),
-  //       content: Wrap(
-  //         spacing: 12,
-  //         runSpacing: 12,
-  //         children: availableIcons.map((icon) {
-  //           return GestureDetector(
-  //             onTap: () {
-  //               setState(() => selectedIcon = icon);
-  //               Navigator.pop(context);
-  //             },
-  //             child: Container(
-  //               padding: const EdgeInsets.all(8),
-  //               decoration: BoxDecoration(
-  //                 border: Border.all(color: selectedIcon == icon ? Colors.blue : Colors.grey),
-  //                 borderRadius: BorderRadius.circular(6),
-  //               ),
-  //               child: icon == null
-  //                   ? Text("None", style: GoogleFonts.poppins(color: Colors.grey))
-  //                   : Icon(icon, size: 28),
-  //             ),
-  //           );
-  //         }).toList(),
-  //       ),
-  //       actions: [
-  //         TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildImageBox(double screenHeight) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Image", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16)),
+        Text("Image",
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500, fontSize: 16)),
         const SizedBox(height: 8),
         InkWell(
           onTap: _pickImage,
@@ -360,54 +292,44 @@ class _PushNotificationState extends State<PushNotification> {
             alignment: Alignment.center,
             child: selectedImage != null
                 ? kIsWeb
-                ? Image.network(
-              selectedImage!.path,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            )
+                ? Image.network(selectedImage!.path,
+                fit: BoxFit.cover)
                 : ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.file(
-                File(selectedImage!.path),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
+              child: Image.file(File(selectedImage!.path),
+                  fit: BoxFit.cover),
             )
-                : Text("Tap to pick image", style: GoogleFonts.poppins(color: Colors.grey)),
+                : Text("Tap to pick image",
+                style: GoogleFonts.poppins(color: Colors.grey)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSendButton(double screenWidth, double screenHeight, bool isFormValid) {
+  Widget _buildSendButton(
+      double screenWidth, double screenHeight, bool isFormValid) {
     return GestureDetector(
       onTap: isSending || !isFormValid
           ? null
           : () async {
         setState(() => isSending = true);
         try {
-          final selectedUserId = _getSelectedUserId();
-          print('📤 Sending push notification to userId: $selectedUserId');
-
           await PushNotificationController.sendNotification(
             title: titleController.text,
             body: bodyController.text,
             event: eventController.text,
             type: typeController.text,
-            userId: selectedUserId,
+            userId: _getSelectedUserId(),
             organizationId: _getSelectedOrgId(),
-            color: selectedColor != null
-                ? '#${selectedColor!.value.toRadixString(16).padLeft(8, '0')}'
+            imageFile: (!kIsWeb && selectedImage != null)
+                ? File(selectedImage!.path)
                 : null,
-            icon: selectedIcon?.codePoint.toString(),
-            imageFile: (!kIsWeb && selectedImage != null) ? File(selectedImage!.path) : null,
           );
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notification sent successfully')),
+            const SnackBar(
+                content: Text('Notification sent successfully')),
           );
 
           setState(() {
@@ -415,14 +337,11 @@ class _PushNotificationState extends State<PushNotification> {
             bodyController.clear();
             eventController.clear();
             typeController.clear();
-            selectedColor = null;
-            selectedIcon = null;
             selectedImage = null;
             selectedOrganization = null;
             selectedIndividual = null;
           });
         } catch (e) {
-          print('Error : $e');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: $e')),
           );
@@ -435,19 +354,18 @@ class _PushNotificationState extends State<PushNotification> {
         width: screenWidth * 0.2,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: isSending || !isFormValid ? Colors.grey : const Color(0xFF00CED1),
+          color: isSending || !isFormValid
+              ? Colors.grey
+              : const Color(0xFF00CED1),
         ),
         child: Center(
           child: isSending
-              ? Lottie.asset('assets/signin_button.json', fit: BoxFit.contain,options: LottieOptions(enableMergePaths: false),)
-              : Text(
-            "Send",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w500,
-              fontSize: 16,
-              color: Colors.white,
-            ),
-          ),
+              ? Lottie.asset('assets/signin_button.json')
+              : Text("Send",
+              style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  color: Colors.white)),
         ),
       ),
     );
