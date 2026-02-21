@@ -3,17 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:html' as html;
 import '../Controller/Sidebar_controller.dart';
-import '../View/Login_page.dart';
+import '../View_model/side_navbar_drawer.dart';
+import '../View_model/Notification_dropdown_state.dart';
+import '../View_model/Logout.dart';
+
+// --- Page Imports (Ensure paths are correct) ---
 import 'Home_page.dart';
 import 'Events.dart';
 import 'Giving.dart';
-import 'Navigation_screen.dart';
-import 'Notifications/notification_bell.dart';
 import 'Sermons.dart';
-import 'Apps_page/Apps.dart';
 import 'User.dart';
 import 'Organization.dart';
 import 'Application_page.dart';
@@ -21,11 +21,11 @@ import 'Pushnotification.dart';
 import 'Role.dart';
 import 'Profile_page.dart';
 import 'Media_page.dart';
-import 'Notifications/Notification_page.dart';
 import 'Sidebar_Manger.dart';
-import '../View_model/side_navbar_drawer.dart';
-import '../View_model/Logout.dart';
-import '../View_model/Notification_dropdown_state.dart';
+import 'Navigation_screen.dart';
+import 'Apps_page/Apps.dart';
+import 'Notifications/Notification_page.dart';
+import 'Notifications/notification_bell.dart';
 
 class MainLayout extends StatefulWidget {
   final String initialPage;
@@ -39,6 +39,7 @@ class _MainLayoutState extends State<MainLayout> {
   String? orgName;
   String? role;
   String? orgImage;
+  late String selectedKey;
 
   final Map<String, IconData> iconMap = {
     'home': Iconsax.home,
@@ -58,8 +59,6 @@ class _MainLayoutState extends State<MainLayout> {
     'navigation': Iconsax.route_square,
   };
 
-  late String selectedKey;
-
   @override
   void initState() {
     super.initState();
@@ -73,98 +72,128 @@ class _MainLayoutState extends State<MainLayout> {
     role = prefs.getString('userRole') ?? 'user';
     orgImage = prefs.getString('orgImage');
 
-    final sidebarController =
-    Provider.of<SidebarController>(context, listen: false);
+    final sidebarController = Provider.of<SidebarController>(context, listen: false);
     if (role != null) {
       await sidebarController.fetchSidebarForRole(role!);
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final sidebarController = Provider.of<SidebarController>(context);
-    final provider = Provider.of<SidebarsubProvider>(context);
+    final isDesktop = MediaQuery.of(context).size.width >= 1100;
 
     return Scaffold(
-      appBar: MediaQuery.of(context).size.width >= 1100
-          ? null
-          : AppBar(
-        title: Text(
-          sidebarController.roleSidebarItems
-              .firstWhere(
-                (item) => item['key'] == selectedKey,
-            orElse: () => {'label': 'Loading...'},
-          )['label'] ??
-              '',
-          style: GoogleFonts.poppins(
-            textStyle: const TextStyle(color: Colors.black),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
-      ),
+      backgroundColor: const Color(0xFFF0F2F5), // Soft modern background
+      appBar: isDesktop ? null : _buildMobileAppBar(sidebarController),
       body: Row(
         children: [
-          // Sidebar
-          if (MediaQuery.of(context).size.width >= 1100 &&
-              selectedKey != "apps" &&
-              selectedKey != "media")
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(30),
-                  bottomRight: Radius.circular(30)),
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.18,
-                color: Colors.grey.shade100,
-                child: Column(
-                  children: [
-                    _buildCurvedDrawerHeader(),
-                    Expanded(
-                      child: sidebarController.isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : _buildSidebarItems(context),
-                    ),
-                    _buildLogoutSection(),
-                  ],
-                ),
+          // --- MODERN SIDEBAR ---
+          if (isDesktop && selectedKey != "apps" && selectedKey != "media")
+            _buildModernSidebar(sidebarController),
+
+          // --- MAIN WORKSPACE ---
+          Expanded(
+            child: Container(
+              margin: isDesktop ? const EdgeInsets.all(16) : EdgeInsets.zero,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: isDesktop ? BorderRadius.circular(30) : BorderRadius.zero,
+                boxShadow: [
+                  if (isDesktop)
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    )
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: isDesktop ? BorderRadius.circular(30) : BorderRadius.zero,
+                child: _getContent(selectedKey),
               ),
             ),
-          // Main content
-          Expanded(child: _getContent(selectedKey)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCurvedDrawerHeader() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.cyan,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(35),
-          bottomRight: Radius.circular(35),
-        ),
+  PreferredSizeWidget _buildMobileAppBar(SidebarController controller) {
+    return AppBar(
+      title: Text(
+        controller.roleSidebarItems.firstWhere(
+              (item) => item['key'] == selectedKey,
+          orElse: () => {'label': 'Dashboard'},
+        )['label'],
+        style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.w600),
       ),
-      height: 150,
+      backgroundColor: Colors.white,
+      elevation: 0.5,
+      iconTheme: const IconThemeData(color: Colors.black87),
+    );
+  }
+
+  Widget _buildModernSidebar(SidebarController controller) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.18,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          const SizedBox(height: 24),
+          _buildFloatingHeader(),
+          const SizedBox(height: 24),
+          Expanded(
+            child: controller.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _buildSidebarList(controller),
+          ),
+          _buildLogoutSection(),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingHeader() {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.cyan.shade700, Colors.cyan.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: Colors.cyan.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))
+        ],
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundImage: orgImage != null
-                ? NetworkImage(orgImage!)
-                : const AssetImage('assets/favicon.png') as ImageProvider,
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundImage: orgImage != null
+                  ? NetworkImage(orgImage!)
+                  : const AssetImage('assets/favicon.png') as ImageProvider,
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              orgName ?? '',
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                  textStyle:
-                  const TextStyle(color: Colors.white, fontSize: 20)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(orgName ?? 'Organization',
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(role?.toUpperCase() ?? 'USER',
+                    style: GoogleFonts.poppins(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+              ],
             ),
           ),
           if (role == 'admin') const NotificationIconDropdown(),
@@ -173,121 +202,126 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  Widget _buildSidebarItems(BuildContext context) {
-    final sidebarController = Provider.of<SidebarController>(context);
-    final provider = Provider.of<SidebarsubProvider>(context);
-
-    return ReorderableListView(
+  Widget _buildSidebarList(SidebarController controller) {
+    return ReorderableListView.builder(
       buildDefaultDragHandles: false,
-      shrinkWrap: true,
+      itemCount: controller.roleSidebarItems.length,
       onReorder: (oldIndex, newIndex) async {
         if (newIndex > oldIndex) newIndex -= 1;
-        final item = sidebarController.roleSidebarItems.removeAt(oldIndex);
-        sidebarController.roleSidebarItems.insert(newIndex, item);
-
-        for (int i = 0; i < sidebarController.roleSidebarItems.length; i++) {
-          sidebarController.roleSidebarItems[i]["order"] = i + 1;
-        }
-
-        if (role != null) {
-          await sidebarController
-              .reorderSidebar(sidebarController.roleSidebarItems);
-        }
+        final item = controller.roleSidebarItems.removeAt(oldIndex);
+        controller.roleSidebarItems.insert(newIndex, item);
+        if (role != null) await controller.reorderSidebar(controller.roleSidebarItems);
         setState(() {});
       },
-      children: [
-        for (int i = 0; i < sidebarController.roleSidebarItems.length; i++)
-          ListTile(
-            key: ValueKey(sidebarController.roleSidebarItems[i]['key']),
-            leading: Icon(
-              iconMap[sidebarController.roleSidebarItems[i]['key']] ??
-                  Iconsax.element_3,
-            ),
-            title: Text(sidebarController.roleSidebarItems[i]['label']),
-            trailing: ReorderableDragStartListener(
-              index: i,
-              child: const Icon(Iconsax.activity),
-            ),
-            // onTap: () {
-            //   final key = sidebarController.roleSidebarItems[i]['key'];
-            //   provider.selectItem(key);
-            //   setState(() => selectedKey = key);
-            //
-            //   // ✅ Only update the browser URL without navigating
-            //   final uri = Uri(path: '/$key');
-            //   GoRouter.of(context).routerDelegate.setNewRoutePath(uri);
-            // },
-            onTap: () {
-              final key = sidebarController.roleSidebarItems[i]['key'];
-              provider.selectItem(key);
-              setState(() => selectedKey = key);
+      itemBuilder: (context, i) {
+        final item = controller.roleSidebarItems[i];
+        final key = item['key'];
+        final isSelected = selectedKey == key;
 
-              // ✅ Update the browser URL without navigating
-              html.window.history.pushState(null, '', '/$key');
-            },
+        return _buildModernTile(
+          key: ValueKey(key),
+          index: i,
+          icon: iconMap[key] ?? Iconsax.element_3,
+          label: item['label'],
+          isSelected: isSelected,
+          onTap: () {
+            setState(() => selectedKey = key);
+            html.window.history.pushState(null, '', '/$key');
+          },
+        );
+      },
+    );
+  }
 
+  Widget _buildModernTile({
+    required Key key,
+    required int index,
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      key: key,
+      padding: const EdgeInsets.only(bottom: 6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.cyan.withOpacity(0.12) : Colors.transparent,
+            borderRadius: BorderRadius.circular(15),
           ),
-      ],
+          child: Row(
+            children: [
+              Icon(icon, color: isSelected ? Colors.cyan.shade800 : Colors.blueGrey.shade600, size: 20),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    color: isSelected ? Colors.cyan.shade900 : Colors.blueGrey.shade700,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              if (!isSelected)
+                ReorderableDragStartListener(
+                  index: index,
+                  child: Icon(Iconsax.grid_3, size: 14, color: Colors.grey.shade300),
+                )
+              else
+                Container(
+                  width: 5,
+                  height: 15,
+                  decoration: BoxDecoration(color: Colors.cyan, borderRadius: BorderRadius.circular(10)),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: const LogoutButton(),
     );
   }
 
   Widget _getContent(String key) {
     switch (key) {
-      case 'home':
-        return const HomePage();
-      case 'events':
-        return const Events();
-      case 'sermons':
-        return const Sermons();
-      case 'giving':
-        return const Giving();
-      case 'apps':
-        return const Apps();
-      case 'user':
-        return const UserPage();
-      case 'organization':
-        return const Organization();
-      case 'applications':
-        return const ApplicationPage();
-      case 'pushnotification':
-        return const PushNotification();
-      case 'role':
-        return const RolesPage();
-      case 'profile':
-        return const Profile();
-      case 'media':
-        return const MediaPage();
-      case 'notification':
-        return const NotificationPage();
-      case 'sidebar':
-        return const ManageSidebar();
-      case 'navigation' :
-        return const NavigationFormPage();
+      case 'home': return const HomePage();
+      case 'events': return const Events();
+      case 'sermons': return const Sermons();
+      case 'giving': return const Giving();
+      case 'apps': return const Apps();
+      case 'user': return const UserPage();
+      case 'organization': return const Organization();
+      case 'applications': return const ApplicationPage();
+      case 'pushnotification': return const PushNotification();
+      case 'role': return const RolesPage();
+      case 'profile': return const Profile();
+      case 'media': return const MediaPage();
+      case 'notification': return const NotificationPage();
+      case 'sidebar': return const ManageSidebar();
+      case 'navigation': return const NavigationFormPage();
       default:
-        return const Center(
-            child: Text(
-              "Page not found",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ));
+        return Center(child: Text("Page $key not found", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)));
     }
-  }
-
-  Widget _buildLogoutSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.cyan.shade300,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(15),
-          topRight: Radius.circular(15),
-        ),
-      ),
-      width: double.infinity,
-      padding: const EdgeInsets.all(8),
-      child: const LogoutButton(),
-    );
   }
 }
 
+// Ensure the SidebarsubProvider is managed via your main.dart provider list.
 class SidebarsubProvider extends ChangeNotifier {
   String? _selectedKey;
   String? get selectedKey => _selectedKey;

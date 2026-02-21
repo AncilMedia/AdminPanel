@@ -1,579 +1,3 @@
-// import 'package:ancilmediaadminpanel/View/PopUp/Add_user.dart';
-// import 'package:ancilmediaadminpanel/View/PopUp/User_block_popup.dart';
-// import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:iconsax/iconsax.dart';
-// import 'package:lottie/lottie.dart';
-// import 'package:provider/provider.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import '../Controller/User_controller.dart';
-// import '../Model/User_Model.dart';
-// import '../View_model/Authentication_state.dart';
-// import 'PopUp/Delete_user.dart';
-// import 'PopUp/Edit_user.dart';
-//
-// class UserPage extends StatefulWidget {
-//   const UserPage({super.key});
-//
-//   @override
-//   State<UserPage> createState() => _UserPageState();
-// }
-//
-// class _UserPageState extends State<UserPage> {
-//   final TextEditingController _searchController = TextEditingController();
-//   late Future<List<UserModel>> userListFuture;
-//
-//   String selectedRole = 'All';
-//   String selectedApprovalStatus = 'All';
-//   String selectedBlockStatus = 'All';
-//
-//   final List<String> approvalOptions = [
-//     'All',
-//     'Approved',
-//     'Rejected',
-//     'Pending',
-//   ];
-//   final List<String> blockOptions = ['All', 'Blocked', 'Unblocked'];
-//   List<String> roles = ['All'];
-//   List<String> availableRoles = [];
-//   String? userId;
-//
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     final authState = Provider.of<AuthState>(context, listen: false);
-//     userListFuture = Future.value([]);
-//     _initData(authState);
-//     loadUserId();
-//   }
-//
-//   void loadUserId() async {
-//     final prefs = await SharedPreferences.getInstance();
-//     setState(() {
-//       userId = prefs.getString('userId');
-//     });
-//   }
-//
-//   void _initData(AuthState authState) async {
-//     try {
-//       final fetchedRoles = await UserController.fetchRoles(
-//         authState: authState,
-//       );
-//       final fetchedUsers = await UserController.fetchUsers(
-//         authState: authState,
-//       );
-//
-//       setState(() {
-//         availableRoles = fetchedRoles;
-//         roles = [
-//           'All',
-//           ...fetchedRoles.map((r) => r[0].toUpperCase() + r.substring(1)),
-//         ];
-//         userListFuture = Future.value(fetchedUsers);
-//       });
-//     } catch (e) {
-//       print("Failed to load roles or users: $e");
-//       setState(() {
-//         userListFuture = Future.error(e.toString());
-//       });
-//     }
-//   }
-//
-//   void _fetchUsers() {
-//     final authState = Provider.of<AuthState>(context, listen: false);
-//     final search = _searchController.text.trim();
-//     final role = selectedRole != 'All' ? selectedRole.toLowerCase() : null;
-//
-//     String? approved;
-//     if (selectedApprovalStatus == 'Approved')
-//       approved = 'true';
-//     else if (selectedApprovalStatus == 'Rejected')
-//       approved = 'false';
-//     else if (selectedApprovalStatus == 'Pending')
-//       approved = 'null';
-//
-//     String? blocked;
-//     if (selectedBlockStatus == 'Blocked')
-//       blocked = 'true';
-//     else if (selectedBlockStatus == 'Unblocked')
-//       blocked = 'false';
-//
-//     setState(() {
-//       userListFuture = UserController.fetchUsers(
-//         authState: authState,
-//         search: search,
-//         role: role,
-//         approved: approved,
-//         blocked: blocked,
-//       );
-//     });
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final columnFlex = [2, 3, 2, 2, 2, 2, 2, 1];
-//
-//     return Scaffold(
-//       body: Column(
-//         children: [
-//           SizedBox(height: MediaQuery.of(context).size.height * 0.09),
-//           Padding(
-//             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-//             child: Row(
-//               children: [
-//                 // Add User Button
-//                 MouseRegion(
-//                   cursor: SystemMouseCursors.click,
-//                   child: GestureDetector(
-//                     onTap: () {
-//                       showDialog(
-//                         context: context,
-//                         builder: (_) => AddUserDialog(onSave: _fetchUsers),
-//                       );
-//                     },
-//                     child: Container(
-//                       height: MediaQuery.of(context).size.height * 0.04,
-//                       width: MediaQuery.of(context).size.width * 0.06,
-//                       decoration: BoxDecoration(
-//                         borderRadius: BorderRadius.circular(10),
-//                         color: Colors.teal.shade300,
-//                       ),
-//                       child: Row(
-//                         mainAxisAlignment: MainAxisAlignment.center,
-//                         children: [
-//                           Icon(Iconsax.add, color: Colors.white),
-//                           Text(
-//                             "Add new",
-//                             style: GoogleFonts.poppins(
-//                               textStyle: TextStyle(
-//                                 fontSize: 16,
-//                                 color: Colors.white,
-//                                 fontWeight: FontWeight.w500,
-//                               ),
-//                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-//                 SizedBox(width: MediaQuery.of(context).size.width * 0.010),
-//                 // Search Field
-//                 Expanded(
-//                   child: TextField(
-//                     controller: _searchController,
-//                     decoration: InputDecoration(
-//                       prefixIcon: const Icon(Icons.search),
-//                       hintText: "Search by name or email",
-//                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(10),
-//                       ),
-//                     ),
-//                     onChanged: (value) => _fetchUsers(),
-//                   ),
-//                 ),
-//                 SizedBox(width: MediaQuery.of(context).size.width * .250),
-//                 // Filter Dropdowns
-//                 Expanded(
-//                   child: DropdownButtonFormField<String>(
-//                     value: selectedRole,
-//                     items: roles
-//                         .map(
-//                           (role) =>
-//                               DropdownMenuItem(value: role, child: Text(role)),
-//                         )
-//                         .toList(),
-//                     decoration: InputDecoration(
-//                       labelText: "Filter by Role",
-//                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(10),
-//                       ),
-//                     ),
-//                     onChanged: (value) {
-//                       setState(() => selectedRole = value!);
-//                       _fetchUsers();
-//                     },
-//                   ),
-//                 ),
-//                 const SizedBox(width: 16),
-//                 Expanded(
-//                   child: DropdownButtonFormField<String>(
-//                     value: selectedBlockStatus,
-//                     items: blockOptions
-//                         .map(
-//                           (status) => DropdownMenuItem(
-//                             value: status,
-//                             child: Text(status),
-//                           ),
-//                         )
-//                         .toList(),
-//                     decoration: InputDecoration(
-//                       labelText: "Filter by Block Status",
-//                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(10),
-//                       ),
-//                     ),
-//                     onChanged: (value) {
-//                       setState(() => selectedBlockStatus = value!);
-//                       _fetchUsers();
-//                     },
-//                   ),
-//                 ),
-//                 const SizedBox(width: 16),
-//                 Expanded(
-//                   child: DropdownButtonFormField<String>(
-//                     value: selectedApprovalStatus,
-//                     items: approvalOptions
-//                         .map(
-//                           (status) => DropdownMenuItem(
-//                             value: status,
-//                             child: Text(status),
-//                           ),
-//                         )
-//                         .toList(),
-//                     decoration: InputDecoration(
-//                       labelText: "Filter by Approval",
-//                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(10),
-//                       ),
-//                     ),
-//                     onChanged: (value) {
-//                       setState(() => selectedApprovalStatus = value!);
-//                       _fetchUsers();
-//                     },
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//
-//           // Header Row
-//           Container(
-//             height: MediaQuery.of(context).size.height * 0.07,
-//             width: double.infinity,
-//             padding: const EdgeInsets.symmetric(horizontal: 16),
-//             decoration: BoxDecoration(
-//               color: Colors.cyan.shade300,
-//               borderRadius: const BorderRadius.only(
-//                 bottomLeft: Radius.circular(30),
-//                 bottomRight: Radius.circular(25),
-//               ),
-//             ),
-//             child: Row(
-//               children: [
-//                 Expanded(flex: columnFlex[0], child: headerItem("Name")),
-//                 Expanded(flex: columnFlex[1], child: headerItem("E-mail")),
-//                 Expanded(
-//                   flex: columnFlex[2],
-//                   child: headerItem("Phone Number"),
-//                 ),
-//                 Expanded(flex: columnFlex[3], child: headerItem("Approve")),
-//                 Expanded(flex: columnFlex[4], child: headerItem("Block")),
-//                 Expanded(flex: columnFlex[5], child: headerItem("Role")),
-//                 Expanded(flex: columnFlex[6], child: headerItem("Update")),
-//               ],
-//             ),
-//           ),
-//
-//           // User List
-//           Expanded(
-//             child: FutureBuilder<List<UserModel>>(
-//               future: userListFuture,
-//               builder: (context, snapshot) {
-//                 if (snapshot.connectionState == ConnectionState.waiting) {
-//                   return Center(
-//                     child: Container(
-//                       height: MediaQuery.of(context).size.height * .2,
-//                       width: MediaQuery.of(context).size.width * .2,
-//                       child: Lottie.asset('assets/circular.json'),
-//                     ),
-//                   );
-//                 } else if (snapshot.hasError) {
-//                   return Center(child: Text('Error: ${snapshot.error}'));
-//                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-//                   return Center(
-//                     child: Column(
-//                       mainAxisAlignment: MainAxisAlignment.center,
-//                       crossAxisAlignment: CrossAxisAlignment.center,
-//                       children: [
-//                         Container(
-//                           height: MediaQuery.of(context).size.height * .3,
-//                           width: MediaQuery.of(context).size.width * .3,
-//                           child: Lottie.asset('assets/surf search.json'),
-//                         ),
-//                         Text(
-//                           "No User Found",
-//                           style: GoogleFonts.poppins(
-//                             textStyle: TextStyle(
-//                               fontWeight: FontWeight.w500,
-//                               fontSize: 18,
-//                             ),
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   );
-//                 }
-//
-//                 final users = snapshot.data!;
-//                 return ListView.builder(
-//                   itemCount: users.length,
-//                   itemBuilder: (context, index) {
-//                     final user = users[index];
-//                     return Container(
-//                       height: MediaQuery.of(context).size.height * 0.07,
-//                       padding: const EdgeInsets.symmetric(horizontal: 16),
-//                       child: Row(
-//                         children: [
-//                           Expanded(
-//                             flex: columnFlex[0],
-//                             child: dataItem(user.username),
-//                           ),
-//                           Expanded(
-//                             flex: columnFlex[1],
-//                             child: dataItem(user.email),
-//                           ),
-//                           Expanded(
-//                             flex: columnFlex[2],
-//                             child: dataItem(user.phone),
-//                           ),
-//                           // Approval Status
-//                           Expanded(
-//                             flex: columnFlex[3],
-//                             child: Center(
-//                               child: user.approved == true
-//                                   ? const Text(
-//                                       'Accepted',
-//                                       style: TextStyle(
-//                                         color: Colors.green,
-//                                         fontWeight: FontWeight.bold,
-//                                       ),
-//                                     )
-//                                   : user.approved == false
-//                                   ? const Text(
-//                                       'Rejected',
-//                                       style: TextStyle(
-//                                         color: Colors.red,
-//                                         fontWeight: FontWeight.bold,
-//                                       ),
-//                                     )
-//                                   : Row(
-//                                       mainAxisAlignment:
-//                                           MainAxisAlignment.center,
-//                                       children: [
-//                                         IconButton(
-//                                           icon: const Icon(
-//                                             Iconsax.tick_circle,
-//                                             color: Colors.green,
-//                                           ),
-//                                           onPressed: () async {
-//                                             final success =
-//                                                 await UserController.updateApprovalStatus(
-//                                                   authState:
-//                                                       Provider.of<AuthState>(
-//                                                         context,
-//                                                         listen: false,
-//                                                       ),
-//                                                   userId: user.id,
-//                                                   approve: true,
-//                                                 );
-//                                             if (success) _fetchUsers();
-//                                           },
-//                                         ),
-//                                         IconButton(
-//                                           icon: const Icon(
-//                                             Iconsax.close_circle,
-//                                             color: Colors.red,
-//                                           ),
-//                                           onPressed: () async {
-//                                             final success =
-//                                                 await UserController.updateApprovalStatus(
-//                                                   authState:
-//                                                       Provider.of<AuthState>(
-//                                                         context,
-//                                                         listen: false,
-//                                                       ),
-//                                                   userId: user.id,
-//                                                   approve: false,
-//                                                 );
-//                                             if (success) _fetchUsers();
-//                                           },
-//                                         ),
-//                                       ],
-//                                     ),
-//                             ),
-//                           ),
-//                           // Block/Unblock Button (Disabled for Rejected)
-//                           Expanded(
-//                             flex: columnFlex[4],
-//                             child: Center(
-//                               child: user.approved == false || user.id == userId
-//                                   ? Tooltip(
-//                                 message: user.id == userId
-//                                     ? "You cannot block/unblock yourself"
-//                                     : "Rejected users cannot be blocked/unblocked",
-//                                 child: Opacity(
-//                                   opacity: 0.4,
-//                                   child: Container(
-//                                     height: MediaQuery.of(context).size.height * 0.05,
-//                                     decoration: BoxDecoration(
-//                                       borderRadius: BorderRadius.circular(10),
-//                                       color: Colors.grey.shade200,
-//                                     ),
-//                                     child: const Center(
-//                                       child: Text(
-//                                         "Disabled",
-//                                         style: TextStyle(color: Colors.grey),
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ),
-//                               )
-//                                   : GestureDetector(
-//                                 onTap: () {
-//                                   showDialog(
-//                                     context: context,
-//                                     builder: (context) => Block_User(user: user, onSave: _fetchUsers),
-//                                   );
-//                                 },
-//                                 child: Container(
-//                                   height: MediaQuery.of(context).size.height * 0.05,
-//                                   decoration: BoxDecoration(
-//                                     borderRadius: BorderRadius.circular(10),
-//                                     color: user.blocked
-//                                         ? Colors.red.shade100
-//                                         : Colors.yellow.shade100,
-//                                   ),
-//                                   child: Center(
-//                                     child: Row(
-//                                       mainAxisAlignment: MainAxisAlignment.center,
-//                                       children: [
-//                                          Icon(
-//                                           Icons.block_rounded,
-//                                           color:  user.blocked
-//                                               ? Colors.red
-//                                               : Colors.orangeAccent,
-//                                         ),
-//                                         const SizedBox(width: 10),
-//                                         Text(
-//                                           user.blocked ? "Unblock" : "Block",
-//                                           style: TextStyle(
-//                                             color: user.blocked
-//                                                 ? Colors.red
-//                                                 : Colors.orangeAccent,
-//                                             fontWeight: FontWeight.bold,
-//                                           ),
-//                                         ),
-//                                       ],
-//                                     ),
-//                                   ),
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                           // Role Dropdown
-//                           Expanded(
-//                             flex: columnFlex[5],
-//                             child: Center(
-//                               child: DropdownButton<String>(
-//                                 value: user.role,
-//                                 underline: const SizedBox(),
-//                                 items: availableRoles.map((role) {
-//                                   return DropdownMenuItem(
-//                                     value: role,
-//                                     child: Text(
-//                                       role[0].toUpperCase() + role.substring(1),
-//                                     ),
-//                                   );
-//                                 }).toList(),
-//                                 onChanged: (newRole) async {
-//                                   if (newRole != null && newRole != user.role) {
-//                                     final success =
-//                                         await UserController.updateUserRole(
-//                                           authState: Provider.of<AuthState>(
-//                                             context,
-//                                             listen: false,
-//                                           ),
-//                                           userId: user.id,
-//                                           newRole: newRole,
-//                                         );
-//                                     if (success) _fetchUsers();
-//                                   }
-//                                 },
-//                               ),
-//                             ),
-//                           ),
-//                           // Edit/Delete
-//                           Expanded(
-//                             flex: columnFlex[6],
-//                             child: PopupMenuButton<String>(
-//                               icon: const Icon(Iconsax.card_edit),
-//                               onSelected: (value) {
-//                                 if (value == 'edit') {
-//                                   showDialog(
-//                                     context: context,
-//                                     builder: (_) => EditUserDialog(
-//                                       user: user,
-//                                       onSave: _fetchUsers,
-//                                     ),
-//                                   );
-//                                 } else if (value == 'delete') {
-//                                   showDialog(
-//                                     context: context,
-//                                     builder: (_) => DeleteUser(
-//                                       user: user,
-//                                       onDelete: _fetchUsers,
-//                                     ),
-//                                   );
-//                                 }
-//                               },
-//                               itemBuilder: (context) => [
-//                                 const PopupMenuItem(
-//                                   value: 'edit',
-//                                   child: Text("Edit"),
-//                                 ),
-//                                 if(userId != user.id)
-//                                 const PopupMenuItem(
-//                                   value: 'delete',
-//                                   child: Text("Delete"),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     );
-//                   },
-//                 );
-//               },
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget headerItem(String title) => Center(
-//     child: Text(
-//       title,
-//       style: GoogleFonts.poppins(
-//         fontSize: 16,
-//         color: Colors.white,
-//         fontWeight: FontWeight.w500,
-//       ),
-//     ),
-//   );
-//
-//   Widget dataItem(String value) => Center(
-//     child: Text(
-//       value,
-//       style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
-//     ),
-//   );
-// }
-
-
 import 'package:ancilmediaadminpanel/View/PopUp/Add_user.dart';
 import 'package:ancilmediaadminpanel/View/PopUp/User_block_popup.dart';
 import 'package:flutter/material.dart';
@@ -620,9 +44,7 @@ class _UserPageState extends State<UserPage> {
 
   void loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userId = prefs.getString('userId');
-    });
+    setState(() => userId = prefs.getString('userId'));
   }
 
   void _initData(AuthState authState) async {
@@ -636,10 +58,7 @@ class _UserPageState extends State<UserPage> {
         userListFuture = Future.value(fetchedUsers);
       });
     } catch (e) {
-      print("Failed to load roles or users: $e");
-      setState(() {
-        userListFuture = Future.error(e.toString());
-      });
+      setState(() => userListFuture = Future.error(e.toString()));
     }
   }
 
@@ -670,361 +89,33 @@ class _UserPageState extends State<UserPage> {
 
   @override
   Widget build(BuildContext context) {
-    final columnFlex = [2, 3, 2, 2, 2, 2, 2];
+    // Adjusted flex for better proportion on dashboard
+    final columnFlex = [2, 3, 2, 2, 2, 2, 1];
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FD),
       body: Column(
         children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.09),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: Row(
-              children: [
-                // Add User Button
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AddUserDialog(onSave: _fetchUsers),
-                      );
-                    },
-                    child: Container(
-                      height: MediaQuery.of(context).size.height * 0.04,
-                      width: MediaQuery.of(context).size.width * 0.06,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.teal.shade300,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Iconsax.add, color: Colors.white),
-                          Text(
-                            "Add new",
-                            style: GoogleFonts.poppins(
-                              textStyle: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // Search Field
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      hintText: "Search by name or email",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onChanged: (value) => _fetchUsers(),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Filter Dropdowns
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: selectedRole,
-                    items: roles
-                        .map((role) => DropdownMenuItem(value: role, child: Text(role)))
-                        .toList(),
-                    decoration: InputDecoration(
-                      labelText: "Filter by Role",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() => selectedRole = value!);
-                      _fetchUsers();
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: selectedBlockStatus,
-                    items: blockOptions
-                        .map((status) => DropdownMenuItem(value: status, child: Text(status)))
-                        .toList(),
-                    decoration: InputDecoration(
-                      labelText: "Filter by Block Status",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() => selectedBlockStatus = value!);
-                      _fetchUsers();
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: selectedApprovalStatus,
-                    items: approvalOptions
-                        .map((status) => DropdownMenuItem(value: status, child: Text(status)))
-                        .toList(),
-                    decoration: InputDecoration(
-                      labelText: "Filter by Approval",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() => selectedApprovalStatus = value!);
-                      _fetchUsers();
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Header Row
-          Container(
-            height: MediaQuery.of(context).size.height * 0.07,
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.cyan.shade300,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(25),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(flex: columnFlex[0], child: headerItem("Name")),
-                Expanded(flex: columnFlex[1], child: headerItem("E-mail")),
-                Expanded(flex: columnFlex[2], child: headerItem("Phone Number")),
-                Expanded(flex: columnFlex[3], child: headerItem("Approve")),
-                Expanded(flex: columnFlex[4], child: headerItem("Block")),
-                Expanded(flex: columnFlex[5], child: headerItem("Role")),
-                Expanded(flex: columnFlex[6], child: headerItem("Update")),
-              ],
-            ),
-          ),
-
-          // User List
+          const SizedBox(height: 20),
+          _buildTopActionCard(),
+          _buildModernHeader(columnFlex),
           Expanded(
             child: FutureBuilder<List<UserModel>>(
               future: userListFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.2,
-                      width: MediaQuery.of(context).size.width * 0.2,
-                      child: Lottie.asset('assets/circular.json',options: LottieOptions(enableMergePaths: false),),
-                    ),
-                  );
+                  return Center(child: Lottie.asset('assets/circular.json', height: 150));
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.3,
-                          width: MediaQuery.of(context).size.width * 0.3,
-                          child: Lottie.asset('assets/surf search.json',options: LottieOptions(enableMergePaths: false),),
-                        ),
-                        Text(
-                          "No User Found",
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                  return _buildEmptyState();
                 }
 
                 final users = snapshot.data!;
                 return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   itemCount: users.length,
-                  itemBuilder: (context, index) {
-                    final user = users[index];
-                    return Container(
-                      height: MediaQuery.of(context).size.height * 0.07,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(flex: columnFlex[0], child: dataItem(user.username)),
-                          Expanded(flex: columnFlex[1], child: dataItem(user.email)),
-                          Expanded(flex: columnFlex[2], child: dataItem(user.phone)),
-                          // Approval
-                          Expanded(
-                            flex: columnFlex[3],
-                            child: Center(
-                              child: user.approved == true
-                                  ? const Text(
-                                'Accepted',
-                                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                              )
-                                  : user.approved == false
-                                  ? const Text(
-                                'Rejected',
-                                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                              )
-                                  : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Iconsax.tick_circle, color: Colors.green),
-                                    onPressed: () async {
-                                      final success = await UserController.updateApprovalStatus(
-                                        authState: Provider.of<AuthState>(context, listen: false),
-                                        userId: user.id,
-                                        approve: true,
-                                      );
-                                      if (success) _fetchUsers();
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Iconsax.close_circle, color: Colors.red),
-                                    onPressed: () async {
-                                      final success = await UserController.updateApprovalStatus(
-                                        authState: Provider.of<AuthState>(context, listen: false),
-                                        userId: user.id,
-                                        approve: false,
-                                      );
-                                      if (success) _fetchUsers();
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          // Block/Unblock
-                          Expanded(
-                            flex: columnFlex[4],
-                            child: Center(
-                              child: user.approved == false || user.id == userId
-                                  ? Tooltip(
-                                message: user.id == userId
-                                    ? "You cannot block/unblock yourself"
-                                    : "Rejected users cannot be blocked/unblocked",
-                                child: Opacity(
-                                  opacity: 0.4,
-                                  child: Container(
-                                    height: MediaQuery.of(context).size.height * 0.05,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.grey.shade200,
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        "Disabled",
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                                  : GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => Block_User(user: user, onSave: _fetchUsers),
-                                  );
-                                },
-                                child: Container(
-                                  height: MediaQuery.of(context).size.height * 0.05,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: user.blocked ? Colors.red.shade100 : Colors.yellow.shade100,
-                                  ),
-                                  child: Center(
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.block_rounded,
-                                            color: user.blocked ? Colors.red : Colors.orangeAccent),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          user.blocked ? "Unblock" : "Block",
-                                          style: TextStyle(
-                                            color: user.blocked ? Colors.red : Colors.orangeAccent,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Role Dropdown
-                          Expanded(
-                            flex: columnFlex[5],
-                            child: Center(
-                              child: DropdownButton<String>(
-                                value: user.role,
-                                underline: const SizedBox(),
-                                items: availableRoles.map((role) {
-                                  return DropdownMenuItem(
-                                    value: role,
-                                    child: Text(role[0].toUpperCase() + role.substring(1)),
-                                  );
-                                }).toList(),
-                                onChanged: (newRole) async {
-                                  if (newRole != null && newRole != user.role) {
-                                    final success = await UserController.updateUserRole(
-                                      authState: Provider.of<AuthState>(context, listen: false),
-                                      userId: user.id,
-                                      newRole: newRole,
-                                    );
-                                    if (success) _fetchUsers();
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                          // Edit/Delete
-                          Expanded(
-                            flex: columnFlex[6],
-                            child: PopupMenuButton<String>(
-                              icon: const Icon(Iconsax.card_edit),
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => EditUserDialog(user: user, onSave: _fetchUsers),
-                                  );
-                                } else if (value == 'delete') {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => DeleteUser(user: user, onDelete: _fetchUsers),
-                                  );
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(value: 'edit', child: Text("Edit")),
-                                if (userId != user.id) const PopupMenuItem(value: 'delete', child: Text("Delete")),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  itemBuilder: (context, index) => _buildUserRow(users[index], columnFlex),
                 );
               },
             ),
@@ -1034,21 +125,254 @@ class _UserPageState extends State<UserPage> {
     );
   }
 
-  Widget headerItem(String title) => Center(
-    child: Text(
-      title,
-      style: GoogleFonts.poppins(
-        fontSize: 16,
-        color: Colors.white,
-        fontWeight: FontWeight.w500,
-      ),
-    ),
-  );
+  // ================= MODERN UI COMPONENTS =================
 
-  Widget dataItem(String value) => Center(
-    child: Text(
-      value,
-      style: GoogleFonts.poppins(fontSize: 14, color: Colors.black),
-    ),
-  );
+  Widget _buildTopActionCard() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20)],
+      ),
+      child: Row(
+        children: [
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal.shade400,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            onPressed: () => showDialog(context: context, builder: (_) => AddUserDialog(onSave: _fetchUsers)),
+            icon: const Icon(Iconsax.user_add, size: 20),
+            label: Text("Add New User", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          ),
+          const SizedBox(width: 20),
+          Expanded(flex: 2, child: _modernSearchField()),
+          const SizedBox(width: 12),
+          Expanded(child: _modernDropdown(selectedRole, roles, "Filter Role")),
+          const SizedBox(width: 12),
+          Expanded(child: _modernDropdown(selectedApprovalStatus, approvalOptions, "Filter Status")),
+        ],
+      ),
+    );
+  }
+
+  Widget _modernSearchField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (v) => _fetchUsers(),
+        style: GoogleFonts.poppins(fontSize: 14),
+        decoration: const InputDecoration(
+          hintText: "Search name or email...",
+          prefixIcon: Icon(Iconsax.search_normal, size: 18, color: Colors.grey),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(vertical: 15),
+        ),
+      ),
+    );
+  }
+
+  Widget _modernDropdown(String value, List<String> items, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isExpanded: true,
+          icon: const Icon(Iconsax.arrow_down_1, size: 16),
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.poppins(fontSize: 13)))).toList(),
+          onChanged: (v) {
+            setState(() {
+              if (label.contains("Role")) selectedRole = v!;
+              else selectedApprovalStatus = v!;
+            });
+            _fetchUsers();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernHeader(List<int> flexes) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.cyan.shade600,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        children: [
+          Expanded(flex: flexes[0], child: _headerText("Name")),
+          Expanded(flex: flexes[1], child: _headerText("E-mail")),
+          Expanded(flex: flexes[2], child: _headerText("Approval")),
+          Expanded(flex: flexes[3], child: _headerText("Block Status")),
+          Expanded(flex: flexes[4], child: _headerText("Role")),
+          Expanded(flex: flexes[5], child: _headerText("Actions")),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserRow(UserModel user, List<int> flexes) {
+    bool isMe = user.id == userId;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Row(
+        children: [
+          Expanded(flex: flexes[0], child: _dataText(user.username, isBold: true)),
+          Expanded(flex: flexes[1], child: _dataText(user.email)),
+          Expanded(flex: flexes[2], child: _buildApprovalStatus(user)),
+          Expanded(flex: flexes[3], child: _buildBlockAction(user, isMe)),
+          Expanded(flex: flexes[4], child: _buildRoleSelector(user)),
+          Expanded(flex: flexes[5], child: _buildActionMenu(user, isMe)),
+        ],
+      ),
+    );
+  }
+
+  // ================= DATA HELPERS =================
+
+  Widget _buildApprovalStatus(UserModel user) {
+    if (user.approved == true) return _statusChip("Approved", Colors.green);
+    if (user.approved == false) return _statusChip("Rejected", Colors.red);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Iconsax.tick_circle, color: Colors.green, size: 22),
+          onPressed: () => _updateApproval(user.id, true),
+        ),
+        IconButton(
+          icon: const Icon(Iconsax.close_circle, color: Colors.red, size: 22),
+          onPressed: () => _updateApproval(user.id, false),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBlockAction(UserModel user, bool isMe) {
+    bool disabled = user.approved == false || isMe;
+    return Center(
+      child: InkWell(
+        onTap: disabled ? null : () => showDialog(context: context, builder: (_) => Block_User(user: user, onSave: _fetchUsers)),
+        child: Opacity(
+          opacity: disabled ? 0.4 : 1.0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: user.blocked ? Colors.red.shade50 : Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              user.blocked ? "Unblock" : "Block",
+              style: TextStyle(color: user.blocked ? Colors.red : Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleSelector(UserModel user) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8)),
+        child: DropdownButton<String>(
+          value: user.role,
+          underline: const SizedBox(),
+          style: GoogleFonts.poppins(fontSize: 12, color: Colors.blueGrey),
+          items: availableRoles.map((role) => DropdownMenuItem(value: role, child: Text(role[0].toUpperCase() + role.substring(1)))).toList(),
+          onChanged: (newRole) async {
+            if (newRole != null && newRole != user.role) {
+              final success = await UserController.updateUserRole(
+                authState: Provider.of<AuthState>(context, listen: false),
+                userId: user.id,
+                newRole: newRole,
+              );
+              if (success) _fetchUsers();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionMenu(UserModel user, bool isMe) {
+    return PopupMenuButton<String>(
+      icon: const Icon(Iconsax.more, color: Colors.blueGrey),
+      onSelected: (val) {
+        if (val == 'edit') {
+          showDialog(context: context, builder: (_) => EditUserDialog(user: user, onSave: _fetchUsers));
+        } else if (val == 'delete') {
+          showDialog(context: context, builder: (_) => DeleteUser(user: user, onDelete: _fetchUsers));
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Iconsax.edit, size: 18), SizedBox(width: 8), Text("Edit")])),
+        if (!isMe) const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Iconsax.trash, size: 18, color: Colors.red), SizedBox(width: 8), Text("Delete", style: TextStyle(color: Colors.red))])),
+      ],
+    );
+  }
+
+  // --- REUSABLE MINI WIDGETS ---
+
+  Widget _headerText(String t) => Center(child: Text(t, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)));
+
+  Widget _dataText(String t, {bool isBold = false}) => Center(child: Text(t, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.blueGrey.shade800)));
+
+  Widget _statusChip(String label, Color color) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+        child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.asset('assets/surf search.json', height: 200),
+          Text("No users found matching your criteria", style: GoogleFonts.poppins(color: Colors.blueGrey, fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  void _updateApproval(String id, bool approve) async {
+    final success = await UserController.updateApprovalStatus(
+      authState: Provider.of<AuthState>(context, listen: false),
+      userId: id,
+      approve: approve,
+    );
+    if (success) _fetchUsers();
+  }
 }

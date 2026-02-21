@@ -5,6 +5,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
 import '../../Controller/User_controller.dart';
 import '../../View_model/Authentication_state.dart';
+import '../../View_model/Custom_snackbar.dart';
 
 class AddUserDialog extends StatefulWidget {
   final VoidCallback onSave;
@@ -50,202 +51,258 @@ class _AddUserDialogState extends State<AddUserDialog> {
   Widget build(BuildContext context) {
     final authState = Provider.of<AuthState>(context, listen: false);
 
-    return AlertDialog(
-      backgroundColor: Colors.cyan.shade100,
-      title: Text(
-        "Add User",
-        style: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        // Constraining width for a better web/desktop admin feel
+        width: 450,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 30,
+              offset: const Offset(0, 15),
+            )
+          ],
         ),
-      ),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(width: MediaQuery.of(context).size.width *.250,),
-              TextFormField(
-                controller: usernameController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Username',
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Please enter username' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Email',
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                    if (!emailRegex.hasMatch(value)) {
-                      return 'Enter valid email';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\+?[0-9]*$')),
-                ],
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Phone Number',
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)) {
-                      return 'Enter valid phone number';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: passwordController,
-                obscureText: obscureText,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  labelText: 'Password',
-                  filled: true,
-                  fillColor: Colors.white,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscureText ? Iconsax.eye_slash : Iconsax.eye,
-                      color: Colors.grey,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with Close Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Add New User",
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey.shade900,
+                      ),
                     ),
+                    IconButton(
+                      icon: const Icon(Iconsax.close_circle, color: Colors.grey),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const Divider(height: 32, thickness: 1),
+
+                // Username Field
+                _buildLabel("Username"),
+                _modernTextField(
+                  controller: usernameController,
+                  hint: "JohnDoe",
+                  icon: Iconsax.user,
+                  validator: (v) => v == null || v.isEmpty ? 'Please enter a username' : null,
+                ),
+
+                // Email Field
+                _buildLabel("Email Address"),
+                _modernTextField(
+                  controller: emailController,
+                  hint: "john@example.com",
+                  icon: Iconsax.sms,
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                      if (!emailRegex.hasMatch(value)) return 'Enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+
+                // Phone Field
+                _buildLabel("Phone Number"),
+                _modernTextField(
+                  controller: phoneController,
+                  hint: "+1 234 567 890",
+                  icon: Iconsax.call,
+                  inputType: TextInputType.phone,
+                  formatters: [FilteringTextInputFormatter.allow(RegExp(r'^\+?[0-9]*$'))],
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)) return 'Enter valid phone number';
+                    }
+                    return null;
+                  },
+                ),
+
+                // Password Field
+                _buildLabel("Secure Password"),
+                _modernTextField(
+                  controller: passwordController,
+                  hint: "••••••••",
+                  icon: Iconsax.lock,
+                  obscure: obscureText,
+                  suffix: IconButton(
+                    icon: Icon(obscureText ? Iconsax.eye_slash : Iconsax.eye, size: 20, color: Colors.grey),
                     onPressed: () => setState(() => obscureText = !obscureText),
                   ),
+                  validator: (v) => v == null || v.isEmpty ? 'Please enter a password' : null,
                 ),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Please enter password' : null,
-              ),
-            ],
+
+                const SizedBox(height: 32),
+
+                // Action Buttons Row
+                _buildActionButtons(authState),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        SizedBox(
-          width: double.infinity,
-          child: Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade300,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    "Cancel",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade300,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: isSaving
-                      ? null
-                      : () async {
-                    if (_formKey.currentState!.validate()) {
-                      final username = usernameController.text.trim();
-                      final email = emailController.text.trim();
-                      final phone = phoneController.text.trim();
-                      final password = passwordController.text;
+    );
+  }
 
-                      if (email.isEmpty && phone.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter email or phone')),
-                        );
-                        return;
-                      }
+  // ================= MODERN STYLING COMPONENTS =================
 
-                      setState(() => isSaving = true);
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Text(
+        text,
+        style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.blueGrey.shade700
+        ),
+      ),
+    );
+  }
 
-                      try {
-                        final result = await UserController.createUser(
-                          authState: authState,
-                          username: username,
-                          email: email,
-                          phone: phone,
-                          password: password,
-                        );
+  Widget _modernTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+    Widget? suffix,
+    String? Function(String?)? validator,
+    TextInputType? inputType,
+    List<TextInputFormatter>? formatters,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        keyboardType: inputType,
+        inputFormatters: formatters,
+        validator: validator,
+        style: GoogleFonts.poppins(fontSize: 14),
+        decoration: InputDecoration(
+          hintText: hint,
+          prefixIcon: Icon(icon, size: 20, color: Colors.teal.shade400),
+          suffixIcon: suffix,
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide.none
+          ),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide(color: Colors.grey.shade200)
+          ),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide(color: Colors.teal.shade400, width: 1.5)
+          ),
+          errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: Colors.redAccent)
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        ),
+      ),
+    );
+  }
 
-                        if (result['success'] == true) {
-                          widget.onSave();
-                          Navigator.pop(context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(result['message'] ?? 'Failed to create user'),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Something went wrong. Please try again.'),
-                          ),
-                        );
-                      } finally {
-                        if (mounted) setState(() => isSaving = false);
-                      }
-                    }
-                  },
-                  child: isSaving
-                      ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                      : Text(
-                    "Save",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  Widget _buildActionButtons(AuthState authState) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              side: BorderSide(color: Colors.grey.shade300),
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+                "Cancel",
+                style: GoogleFonts.poppins(color: Colors.blueGrey, fontWeight: FontWeight.w600)
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal.shade400,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: isSaving ? null : () => _handleSave(authState),
+            child: isSaving
+                ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+            )
+                : Text(
+                "Create User",
+                style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)
+            ),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _handleSave(AuthState authState) async {
+    if (_formKey.currentState!.validate()) {
+      final username = usernameController.text.trim();
+      final email = emailController.text.trim();
+      final phone = phoneController.text.trim();
+      final password = passwordController.text;
+
+      if (email.isEmpty && phone.isEmpty) {
+        // Assuming your custom snackbar helper is globally available
+        showCustomSnackBar(context, 'Please enter an email or phone number', false);
+        return;
+      }
+
+      setState(() => isSaving = true);
+      try {
+        final result = await UserController.createUser(
+          authState: authState,
+          username: username,
+          email: email,
+          phone: phone,
+          password: password,
+        );
+
+        if (result['success'] == true) {
+          widget.onSave();
+          Navigator.pop(context);
+          showCustomSnackBar(context, "User $username added successfully!", true);
+        } else {
+          showCustomSnackBar(context, result['message'] ?? 'Failed to create user', false);
+        }
+      } catch (e) {
+        showCustomSnackBar(context, 'Something went wrong. Please try again.', false);
+      } finally {
+        if (mounted) setState(() => isSaving = false);
+      }
+    }
   }
 }

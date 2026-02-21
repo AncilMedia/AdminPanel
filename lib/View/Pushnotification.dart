@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,19 +22,12 @@ class PushNotification extends StatefulWidget {
 }
 
 class _PushNotificationState extends State<PushNotification> {
-  final TextEditingController titleController =
-  TextEditingController(text: 'Title');
-  final TextEditingController bodyController =
-  TextEditingController(text: 'Body');
-  final TextEditingController eventController =
-  TextEditingController(text: 'Event');
-  final TextEditingController typeController =
-  TextEditingController(text: 'Type');
+  final TextEditingController titleController = TextEditingController(text: 'New Update Available');
+  final TextEditingController bodyController = TextEditingController(text: 'Check out the latest features in the app!');
+  final TextEditingController eventController = TextEditingController(text: 'general_update');
+  final TextEditingController typeController = TextEditingController(text: 'info');
 
-  Color? selectedColor;
-  IconData? selectedIcon;
   XFile? selectedImage;
-
   String? selectedOrganization;
   String? selectedIndividual;
 
@@ -54,34 +46,22 @@ class _PushNotificationState extends State<PushNotification> {
 
   Future<void> _loadData() async {
     setState(() => isLoading = true);
-
     await _loadUserRole();
-
-    if (isAdmin) {
-      await _loadOrganizations();
-    }
-
+    if (isAdmin) await _loadOrganizations();
     await _fetchUsers();
-
     setState(() => isLoading = false);
   }
 
   Future<void> _loadUserRole() async {
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('userRole');
-
-    setState(() {
-      isAdmin = role == 'admin';
-    });
-
-    print("🔐 User Role: $role");
+    setState(() => isAdmin = role == 'admin');
   }
 
   Future<void> _fetchUsers() async {
     final authState = Provider.of<AuthState>(context, listen: false);
     try {
-      final fetchedUsers =
-      await UsergetController.fetchUsers(authState: authState);
+      final fetchedUsers = await UsergetController.fetchUsers(authState: authState);
       setState(() => users = fetchedUsers);
     } catch (e) {
       debugPrint("Error fetching users: $e");
@@ -91,11 +71,7 @@ class _PushNotificationState extends State<PushNotification> {
   Future<void> _loadOrganizations() async {
     try {
       final orgs = await OrganizationController.fetchOrganizations();
-      final uniqueOrgs = {
-        for (var org in orgs) org['_id']: org,
-      }.values.toList();
-
-      setState(() => organizations = uniqueOrgs);
+      setState(() => organizations = orgs);
     } catch (e) {
       debugPrint("Error loading organizations: $e");
     }
@@ -109,265 +85,272 @@ class _PushNotificationState extends State<PushNotification> {
 
   String? _getSelectedOrgId() {
     if (!isAdmin || selectedOrganization == null) return null;
-
-    final org = organizations.firstWhere(
-          (e) => e['name'] == selectedOrganization,
-      orElse: () => {},
-    );
-
+    final org = organizations.firstWhere((e) => e['name'] == selectedOrganization, orElse: () => {});
     return org['_id'] as String?;
   }
 
   String? _getSelectedUserId() {
-    if (selectedIndividual == null ||
-        selectedIndividual == "All Users") return null;
-
-    final user = users.firstWhere(
-          (e) => e.username == selectedIndividual,
-      orElse: () => UserModel.empty(),
-    );
-
+    if (selectedIndividual == null || selectedIndividual == "All Users") return null;
+    final user = users.firstWhere((e) => e.username == selectedIndividual, orElse: () => UserModel.empty());
     return user.userId.isNotEmpty ? user.userId : null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    final isFormValid =
-        titleController.text.isNotEmpty && bodyController.text.isNotEmpty;
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FD),
+        body: Center(
+          child: Lottie.network(
+              'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724306/New_Notification_Bell_krzyrx.json',
+              height: 250),
+        ),
+      );
+    }
 
     return Scaffold(
-      body: isLoading
-          ? Center(
-        child: Lottie.network(
-            'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756724306/New_Notification_Bell_krzyrx.json'),
-      )
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: const Color(0xFFF8F9FD),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text("Push Notifications", style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade900)),
+            Text("Create and broadcast messages to your users", style: GoogleFonts.poppins(fontSize: 14, color: Colors.blueGrey.shade400)),
+            const SizedBox(height: 32),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // --- COMPOSER PANEL ---
+                Expanded(
+                  flex: 3,
+                  child: _glassCard(
+                    child: Column(
+                      children: [
+                        _sectionHeader(Iconsax.edit, "Compose Notification"),
+                        const SizedBox(height: 24),
+                        _buildFieldRow("Title", titleController, "Message Body", bodyController, Iconsax.text, Iconsax.textalign_left),
+                        const SizedBox(height: 16),
+                        _buildFieldRow("Event Key", eventController, "Category Type", typeController, Iconsax.key, Iconsax.category),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            if (isAdmin)
+                              Expanded(
+                                child: _modernDropdown("Organization", selectedOrganization, organizations.map((e) => e['name'] as String).toList(), (v) => setState(() => selectedOrganization = v), Iconsax.hierarchy),
+                              ),
+                            if (isAdmin) const SizedBox(width: 16),
+                            Expanded(
+                              child: _modernDropdown("Individual User", selectedIndividual, ["All Users", ...users.where((u) => u.username.isNotEmpty).map((u) => u.username).toList()], (v) => setState(() => selectedIndividual = v), Iconsax.user),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        _buildSendButton(),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 24),
+
+                // --- PREVIEW PANEL ---
                 Expanded(
                   flex: 2,
                   child: Column(
                     children: [
-                      _buildFieldRow("Title", titleController, "Body",
-                          bodyController),
-                      const SizedBox(height: 12),
-                      _buildFieldRow("Event", eventController, "Type",
-                          typeController),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          if (isAdmin)
-                            Expanded(
-                              child: _buildDropdownField(
-                                label: "Organization",
-                                value: selectedOrganization,
-                                items: organizations
-                                    .map((e) => e['name'] as String)
-                                    .toList(),
-                                onChanged: (v) => setState(
-                                        () => selectedOrganization = v),
-                              ),
-                            ),
-                          if (isAdmin) const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildDropdownField(
-                              label: "Individual",
-                              value: selectedIndividual,
-                              items: [
-                                "All Users",
-                                ...users
-                                    .where((u) =>
-                                u.username.isNotEmpty)
-                                    .map((u) => u.username)
-                                    .toList(),
-                              ],
-                              onChanged: (v) => setState(
-                                      () => selectedIndividual = v),
-                            ),
-                          ),
-                        ],
+                      _glassCard(
+                        child: Column(
+                          children: [
+                            _sectionHeader(Iconsax.image, "Banner Image"),
+                            const SizedBox(height: 16),
+                            _buildImageBox(),
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: 24),
+                      _buildLivePreview(),
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(flex: 1, child: _buildImageBox(screenHeight)),
               ],
             ),
-            const SizedBox(height: 24),
-            _buildSendButton(
-                screenWidth, screenHeight, isFormValid),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFieldRow(String label1,
-      TextEditingController controller1, String label2,
-      TextEditingController controller2) {
+  // ================= UI HELPERS =================
+
+  Widget _glassCard({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 10))],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _sectionHeader(IconData icon, String title) {
     return Row(
       children: [
-        Expanded(child: _buildTextField(label1, controller1)),
-        const SizedBox(width: 16),
-        Expanded(child: _buildTextField(label2, controller2)),
+        Icon(icon, size: 20, color: Colors.cyan.shade700),
+        const SizedBox(width: 10),
+        Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blueGrey.shade800)),
       ],
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
+  Widget _buildFieldRow(String l1, TextEditingController c1, String l2, TextEditingController c2, IconData i1, IconData i2) {
+    return Row(
+      children: [
+        Expanded(child: _modernInput(l1, c1, i1)),
+        const SizedBox(width: 16),
+        Expanded(child: _modernInput(l2, c2, i2)),
+      ],
+    );
+  }
+
+  Widget _modernInput(String label, TextEditingController controller, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 4),
+        Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.blueGrey)),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          decoration: const InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12),
-            border: OutlineInputBorder(),
+          onChanged: (v) => setState(() {}),
+          style: GoogleFonts.poppins(fontSize: 14),
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, size: 18, color: Colors.cyan.shade700),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade100)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.cyan.shade700)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDropdownField({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required void Function(String?) onChanged,
-  }) {
+  Widget _modernDropdown(String label, String? value, List<String> items, Function(String?) onChanged, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w500, fontSize: 16)),
+        Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.blueGrey)),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: value,
-          isExpanded: true,
-          items: items
-              .map((item) =>
-              DropdownMenuItem(value: item, child: Text(item)))
-              .toList(),
-          onChanged: onChanged,
-          decoration: const InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12),
-            border: OutlineInputBorder(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImageBox(double screenHeight) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Image",
-            style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w500, fontSize: 16)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _pickImage,
-          child: Container(
-            height: screenHeight * 0.3,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              border: Border.all(color: Colors.black26),
-              borderRadius: BorderRadius.circular(10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade100)),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              icon: const Icon(Iconsax.arrow_down_1, size: 16),
+              items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 14)))).toList(),
+              onChanged: onChanged,
             ),
-            alignment: Alignment.center,
-            child: selectedImage != null
-                ? kIsWeb
-                ? Image.network(selectedImage!.path,
-                fit: BoxFit.cover)
-                : ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.file(File(selectedImage!.path),
-                  fit: BoxFit.cover),
-            )
-                : Text("Tap to pick image",
-                style: GoogleFonts.poppins(color: Colors.grey)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSendButton(
-      double screenWidth, double screenHeight, bool isFormValid) {
+  Widget _buildImageBox() {
     return GestureDetector(
-      onTap: isSending || !isFormValid
-          ? null
-          : () async {
-        setState(() => isSending = true);
-        try {
-          await PushNotificationController.sendNotification(
-            title: titleController.text,
-            body: bodyController.text,
-            event: eventController.text,
-            type: typeController.text,
-            userId: _getSelectedUserId(),
-            organizationId: _getSelectedOrgId(),
-            imageFile: (!kIsWeb && selectedImage != null)
-                ? File(selectedImage!.path)
-                : null,
-          );
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Notification sent successfully')),
-          );
-
-          setState(() {
-            titleController.clear();
-            bodyController.clear();
-            eventController.clear();
-            typeController.clear();
-            selectedImage = null;
-            selectedOrganization = null;
-            selectedIndividual = null;
-          });
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
-        } finally {
-          setState(() => isSending = false);
-        }
-      },
+      onTap: _pickImage,
       child: Container(
-        height: screenHeight * 0.05,
-        width: screenWidth * 0.2,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: isSending || !isFormValid
-              ? Colors.grey
-              : const Color(0xFF00CED1),
-        ),
-        child: Center(
-          child: isSending
-              ? Lottie.asset('assets/signin_button.json')
-              : Text("Send",
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                  color: Colors.white)),
-        ),
+        height: 160,
+        width: double.infinity,
+        decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.cyan.withOpacity(0.2))),
+        child: selectedImage != null
+            ? ClipRRect(borderRadius: BorderRadius.circular(15), child: kIsWeb ? Image.network(selectedImage!.path, fit: BoxFit.cover) : Image.file(File(selectedImage!.path), fit: BoxFit.cover))
+            : Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Iconsax.add_square, color: Colors.cyan, size: 30), const SizedBox(height: 8), Text("Add Image Banner", style: GoogleFonts.poppins(color: Colors.cyan, fontSize: 13))]),
       ),
     );
+  }
+
+  Widget _buildLivePreview() {
+    return _glassCard(
+      child: Column(
+        children: [
+          _sectionHeader(Iconsax.mobile, "Live App Preview"),
+          const SizedBox(height: 20),
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.grey.shade200)),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.cyan.shade700, shape: BoxShape.circle), child: const Icon(Iconsax.notification, color: Colors.white, size: 18)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(titleController.text.isEmpty ? "Notification Title" : titleController.text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 2),
+                      Text(bodyController.text.isEmpty ? "Type a message body to see a preview..." : bodyController.text, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      if (selectedImage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: ClipRRect(borderRadius: BorderRadius.circular(8), child: SizedBox(height: 100, width: double.infinity, child: kIsWeb ? Image.network(selectedImage!.path, fit: BoxFit.cover) : Image.file(File(selectedImage!.path), fit: BoxFit.cover))),
+                        ),
+                    ],
+                  ),
+                ),
+                Text("now", style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSendButton() {
+    bool isValid = titleController.text.isNotEmpty && bodyController.text.isNotEmpty;
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: isValid ? Colors.cyan.shade700 : Colors.grey.shade300, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), elevation: 0),
+        onPressed: isSending || !isValid ? null : _handleSend,
+        child: isSending
+            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            : Row(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Iconsax.send_1, color: Colors.white, size: 20), const SizedBox(width: 10), Text("Dispatch Notification", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white))]),
+      ),
+    );
+  }
+
+  Future<void> _handleSend() async {
+    setState(() => isSending = true);
+    try {
+      await PushNotificationController.sendNotification(
+        title: titleController.text,
+        body: bodyController.text,
+        event: eventController.text,
+        type: typeController.text,
+        userId: _getSelectedUserId(),
+        organizationId: _getSelectedOrgId(),
+        imageFile: (!kIsWeb && selectedImage != null) ? File(selectedImage!.path) : null,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification sent successfully!'), backgroundColor: Colors.green));
+        setState(() {
+          titleController.clear(); bodyController.clear(); eventController.clear(); typeController.clear();
+          selectedImage = null; selectedOrganization = null; selectedIndividual = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red));
+    } finally {
+      if (mounted) setState(() => isSending = false);
+    }
   }
 }

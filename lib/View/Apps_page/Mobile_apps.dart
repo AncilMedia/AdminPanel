@@ -670,6 +670,7 @@
 
 
 // lib/View/MobileApps/MobileApps.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -899,91 +900,132 @@ class _MobileAppsState extends State<MobileApps> {
   /// ---------------------------------------------------------------------
   /// Top cards: Reorderable (horizontal), loaded from API
   /// ---------------------------------------------------------------------
+  /// ---------------------------------------------------------------------
+  /// Top cards: Reorderable (horizontal), loaded from API
+  /// ---------------------------------------------------------------------
   Widget _buildTopCards(BuildContext context) {
-    final double cardHeight = MediaQuery.of(context).size.height * 0.09;
+    final double cardHeight = MediaQuery.of(context).size.height * 0.10;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.01),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
         color: Colors.white,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: SizedBox(
-        height: cardHeight + 30, // Safe drag height
-        child: isLoadingNav
-            ? const Center(child: CircularProgressIndicator())
-            : ReorderableListView.builder(
-          scrollDirection: Axis.horizontal,
-          buildDefaultDragHandles: false,
-          itemCount: cardItems.length,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          proxyDecorator: (child, index, animation) =>
-              Transform.scale(scale: 1.04, child: child),
-          onReorder: (oldIndex, newIndex) async {
-            setState(() {
-              if (newIndex > oldIndex) newIndex -= 1;
-              final moved = cardItems.removeAt(oldIndex);
-              cardItems.insert(newIndex, moved);
-            });
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Navigation Menus",
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueGrey.shade300,
+              letterSpacing: 1.1,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: cardHeight + 10,
+            child: isLoadingNav
+                ? const Center(child: CircularProgressIndicator())
+                : ReorderableListView.builder(
+              scrollDirection: Axis.horizontal,
+              buildDefaultDragHandles: false,
+              itemCount: cardItems.length,
+              proxyDecorator: (child, index, animation) =>
+                  Material(color: Colors.transparent, child: child),
+              onReorder: (oldIndex, newIndex) async {
+                setState(() {
+                  if (newIndex > oldIndex) newIndex -= 1;
+                  final moved = cardItems.removeAt(oldIndex);
+                  cardItems.insert(newIndex, moved);
+                });
+                await _saveNavOrder();
+              },
+              itemBuilder: (context, index) {
+                final item = cardItems[index];
+                final isSelected = selectedLabel == item.label;
+                final iconData = mapIcon(item.icon);
 
-            // save order to API (bulk)
-            await _saveNavOrder();
-          },
-          itemBuilder: (context, index) {
-            final item = cardItems[index];
-            final label = item.label;
-            final iconData = mapIcon(item.icon);
-
-            return ReorderableDragStartListener(
-              key: ValueKey(item.id),
-              index: index,
-              child: GestureDetector(
-                onTap: () => setState(() => selectedLabel = label),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  height: cardHeight,
-                  width: 140, // FIXED WIDTH → FIXES DRAG ERRORS
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: selectedLabel == label
-                        ? Colors.grey.shade400
-                        : Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26.withOpacity(0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(iconData, size: 26, color: Colors.black87),
-                      const SizedBox(height: 6),
-                      Text(
-                        label.length > 11
-                            ? "${label.substring(0, 11)}..."
-                            : label,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                return ReorderableDragStartListener(
+                  key: ValueKey(item.id),
+                  index: index,
+                  child: GestureDetector(
+                    onTap: () => setState(() => selectedLabel = item.label),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.only(right: 12),
+                      width: 130,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        // Gradient for the selected state
+                        gradient: isSelected
+                            ? LinearGradient(
+                          colors: [Colors.blueAccent, Colors.blue.shade700],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                            : null,
+                        color: isSelected ? null : Colors.grey.shade50,
+                        boxShadow: isSelected
+                            ? [
+                          BoxShadow(
+                            color: Colors.blueAccent.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          )
+                        ]
+                            : [],
+                        border: Border.all(
+                          color: isSelected ? Colors.transparent : Colors.grey.shade200,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Icon Container for a "button" look
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.white.withOpacity(0.2) : Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              iconData,
+                              size: 22,
+                              color: isSelected ? Colors.white : Colors.blueGrey,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            item.label,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              color: isSelected ? Colors.white : Colors.blueGrey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
-
   // -----------------------
   // Selected content (by label)
   // -----------------------

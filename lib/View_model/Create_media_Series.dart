@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:file_picker/file_picker.dart';
 import '../Controller/Media_Series_controller.dart';
-
 
 Future<void> showCreateMediaSeriesDialog(
     BuildContext context,
@@ -24,136 +24,147 @@ Future<void> showCreateMediaSeriesDialog(
     builder: (BuildContext context) {
       return StatefulBuilder(builder: (context, setState) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: SizedBox(
-            width: 400,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 450,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                )
+              ],
+            ),
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Create Media Series",
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+                  // --- HEADER ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Create Media Series",
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey.shade900,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Iconsax.close_circle, color: Colors.grey),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: titleController,
-                    decoration: InputDecoration(
-                      labelText: "Title",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: InputDecoration(
-                      labelText: "Description",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                    ),
-                  ),
+                  const Divider(height: 32),
+
+                  // --- INPUT FIELDS ---
+                  _buildLabel("Series Title"),
+                  _modernInput(titleController, "e.g. Sunday Service 2026", Iconsax.folder_2),
+
                   const SizedBox(height: 12),
 
-                  // 🔹 Thumbnail Picker
-                  ElevatedButton(
-                    onPressed: () async {
+                  _buildLabel("Description"),
+                  _modernInput(descriptionController, "Add a brief summary...", Iconsax.document_text, maxLines: 3),
+
+                  const SizedBox(height: 20),
+
+                  // --- MODERN THUMBNAIL PICKER ---
+                  _buildLabel("Series Thumbnail"),
+                  GestureDetector(
+                    onTap: () async {
                       FilePickerResult? result = await FilePicker.platform.pickFiles(
                         type: FileType.image,
-                        withData: true, // for web
+                        withData: true,
                       );
 
                       if (result != null) {
                         if (kIsWeb) {
-                          setState(() {
-                            pickedBytes = result.files.single.bytes;
-                          });
+                          setState(() => pickedBytes = result.files.single.bytes);
                         } else {
-                          setState(() {
-                            pickedFile = File(result.files.single.path!);
-                          });
+                          setState(() => pickedFile = File(result.files.single.path!));
                         }
                       }
                     },
-                    child: Text((pickedFile == null && pickedBytes == null)
-                        ? "Pick Thumbnail"
-                        : "Thumbnail Selected"),
+                    child: Container(
+                      height: 160,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.indigo.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.indigo.withOpacity(0.1), width: 2),
+                      ),
+                      child: (pickedFile != null || pickedBytes != null)
+                          ? ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: kIsWeb
+                            ? Image.memory(pickedBytes!, fit: BoxFit.cover)
+                            : Image.file(pickedFile!, fit: BoxFit.cover),
+                      )
+                          : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Iconsax.image, size: 40, color: Colors.indigo),
+                          const SizedBox(height: 10),
+                          Text("Select Cover Image",
+                              style: GoogleFonts.poppins(color: Colors.indigo, fontWeight: FontWeight.w600, fontSize: 13)),
+                        ],
+                      ),
+                    ),
                   ),
 
-                  // 🔹 Thumbnail Preview
-                  if (pickedFile != null || pickedBytes != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: kIsWeb
-                          ? Image.memory(pickedBytes!, height: 120, width: 120, fit: BoxFit.cover)
-                          : Image.file(pickedFile!, height: 120, width: 120, fit: BoxFit.cover),
-                    ),
+                  const SizedBox(height: 32),
 
-                  const SizedBox(height: 24),
-
-                  // 🔹 Create Button
+                  // --- ACTION BUTTON ---
                   SizedBox(
                     width: double.infinity,
+                    height: 55,
                     child: ElevatedButton(
                       onPressed: isLoading
                           ? null
                           : () async {
-                        if (titleController.text.isEmpty ||
-                            (pickedFile == null && pickedBytes == null)) {
+                        if (titleController.text.isEmpty || (pickedFile == null && pickedBytes == null)) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Title and thumbnail are required")),
+                            const SnackBar(content: Text("Title and thumbnail are required"), backgroundColor: Colors.red),
                           );
                           return;
                         }
 
-                        setState(() {
-                          isLoading = true;
-                        });
+                        setState(() => isLoading = true);
 
                         try {
-                          final response = await seriesService.createSeries(
+                          await seriesService.createSeries(
                             title: titleController.text,
                             description: descriptionController.text,
                             file: pickedFile,
                             bytes: pickedBytes,
                           );
-
-                          debugPrint("Created series: $response");
                           if (onCreated != null) onCreated();
                           Navigator.pop(context);
                         } catch (e) {
-                          debugPrint("Error creating series: $e");
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Failed to create series: $e")),
+                            SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
                           );
                         } finally {
-                          setState(() {
-                            isLoading = false;
-                          });
+                          setState(() => isLoading = false);
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.indigo.shade600,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        elevation: 0,
                       ),
                       child: isLoading
-                          ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : Text(
-                        "Create",
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
+                        "Create Series",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                       ),
                     ),
                   ),
@@ -164,5 +175,35 @@ Future<void> showCreateMediaSeriesDialog(
         );
       });
     },
+  );
+}
+
+// ================= MODERN STYLING HELPERS =================
+
+Widget _buildLabel(String text) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8, left: 4),
+    child: Text(
+      text,
+      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.blueGrey.shade700),
+    ),
+  );
+}
+
+Widget _modernInput(TextEditingController controller, String hint, IconData icon, {int maxLines = 1}) {
+  return TextFormField(
+    controller: controller,
+    maxLines: maxLines,
+    style: GoogleFonts.poppins(fontSize: 14),
+    decoration: InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon, size: 20, color: Colors.indigo),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey.shade100)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.indigo, width: 1.5)),
+      contentPadding: const EdgeInsets.symmetric(vertical: 18),
+    ),
   );
 }
