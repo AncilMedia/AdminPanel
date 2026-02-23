@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:ancilmediaadminpanel/View/Login_page.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../View_model/Authentication_state.dart';
@@ -105,21 +108,46 @@ class AuthService {
     }
   }
 
+  // Future<void> logout(AuthState authState) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final refreshToken = prefs.getString('refreshToken');
+  //
+  //   if (refreshToken != null) {
+  //     await http.post(
+  //       Uri.parse("$baseUrl/api/auth/logout"),
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: jsonEncode({'refreshToken': refreshToken}),
+  //     );
+  //   }
+  //
+  //   await prefs.clear();
+  //   authState.logout();
+  //   print('🚪 Logged out and cleared SharedPreferences');
+  // }
+
   Future<void> logout(AuthState authState) async {
     final prefs = await SharedPreferences.getInstance();
     final refreshToken = prefs.getString('refreshToken');
 
-    if (refreshToken != null) {
-      await http.post(
-        Uri.parse("$baseUrl/api/auth/logout"),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refreshToken': refreshToken}),
-      );
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        print('📡 Notifying server of logout...');
+        // We don't await this for too long to keep the UI snappy
+        await http.post(
+          Uri.parse("$baseUrl/api/auth/logout"),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': refreshToken}),
+        ).timeout(const Duration(seconds: 2));
+      } catch (e) {
+        print('⚠️ Server logout notification failed: $e');
+      }
     }
 
+    // ALWAYS clear local data
     await prefs.clear();
+    // Update the global app state
     authState.logout();
-    print('🚪 Logged out and cleared SharedPreferences');
+    print('🚪 Local session cleared.');
   }
 
   Future<void> testPrefs() async {

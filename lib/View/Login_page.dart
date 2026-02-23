@@ -1,347 +1,10 @@
-// import 'dart:math';
-// import 'package:ancilmediaadminpanel/View/Mainlayout.dart';
-// import 'package:ancilmediaadminpanel/View/Register_page.dart';
-// import 'package:ancilmediaadminpanel/View_model/Authentication_state.dart';
-// import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:iconsax/iconsax.dart';
-// import 'package:lottie/lottie.dart';
-// import 'package:provider/provider.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import '../Controller/Login_controller.dart';
-// import '../View_model/Custom_snackbar.dart';
-// import '../View_model/Splash_Animation.dart';
-//
-// class LoginPage extends StatefulWidget {
-//   const LoginPage({super.key});
-//
-//   @override
-//   State<LoginPage> createState() => _LoginPageState();
-// }
-//
-// class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
-//   final identifierController = TextEditingController();
-//   final passwordController = TextEditingController();
-//   final _formKey = GlobalKey<FormState>();
-//   bool obscureText = true;
-//   List<Offset> _dotPositions = [];
-//   late AnimationController _controller;
-//   bool _isLoading = false;
-//   late AuthState authState; // ✅ Moved authState to class scope
-//
-//   List<Offset> _generateDotPositions(double width, double height, int count) {
-//     final random = Random();
-//     return List.generate(count, (_) {
-//       return Offset(random.nextDouble() * width, random.nextDouble() * height);
-//     });
-//   }
-//
-//   Future<void> _checkIfAlreadyLoggedIn() async {
-//     final prefs = await SharedPreferences.getInstance();
-//     final accessToken = prefs.getString('accessToken');
-//     final refreshToken = prefs.getString('refreshToken');
-//
-//     if (accessToken != null && accessToken.isNotEmpty) {
-//       if (context.mounted) {
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(builder: (_) => const MainLayout()),
-//         );
-//       }
-//     } else if (refreshToken != null && refreshToken.isNotEmpty) {
-//       final newAccessToken = await AuthService().refreshAccessToken(authState);
-//       if (newAccessToken != null) {
-//         if (context.mounted) {
-//           Navigator.pushReplacement(
-//             context,
-//             MaterialPageRoute(builder: (_) => const MainLayout()),
-//           );
-//         }
-//       }
-//     }
-//   }
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//
-//     _controller = AnimationController(
-//       vsync: this,
-//       duration: const Duration(seconds: 5),
-//     )..repeat(reverse: true);
-//
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       final size = MediaQuery.of(context).size;
-//       setState(() {
-//         _dotPositions = _generateDotPositions(size.width, size.height, 250);
-//       });
-//
-//       // ✅ Initialize AuthState here
-//       authState = Provider.of<AuthState>(context, listen: false);
-//       _checkIfAlreadyLoggedIn();
-//     });
-//   }
-//
-//   @override
-//   void dispose() {
-//     identifierController.dispose();
-//     passwordController.dispose();
-//     _controller.dispose();
-//     super.dispose();
-//   }
-//
-//   Future<void> _handleLogin() async {
-//     setState(() {
-//       _isLoading = true;
-//     });
-//
-//     final identifier = identifierController.text.trim();
-//     final password = passwordController.text;
-//
-//     final result = await AuthService().login(identifier, password);
-//
-//     setState(() {
-//       _isLoading = false;
-//     });
-//
-//     final status = result['status'];
-//     final parsed = result['parsed'];
-//
-//     if (status == 200 && parsed['accessToken'] != null) {
-//       if (!context.mounted) return;
-//
-//       Navigator.pushReplacement(
-//         context,
-//         MaterialPageRoute(builder: (_) => const MainLayout()),
-//       );
-//     } else {
-//       if (!context.mounted) return;
-//
-//       final errorMessage = parsed['error'] ?? parsed['message'] ?? "Login failed. Please try again.";
-//       showCustomSnackBar(context, errorMessage, false);
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final screenWidth = MediaQuery.of(context).size.width;
-//     final screenHeight = MediaQuery.of(context).size.height;
-//     final bool isWideScreen = screenWidth > 800;
-//
-//     return Scaffold(
-//       body: Stack(
-//         children: [
-//           CustomPaint(
-//             painter: BackgroundDotsPainter(positions: _dotPositions),
-//             size: Size(screenWidth, screenHeight),
-//           ),
-//           Positioned(
-//             top: -100,
-//             left: -100,
-//             child: Container(
-//               width: 300,
-//               height: 300,
-//               decoration: BoxDecoration(
-//                 shape: BoxShape.circle,
-//                 gradient: LinearGradient(
-//                   colors: [Colors.cyan.shade100, Colors.purple.shade100],
-//                   begin: Alignment.topLeft,
-//                   end: Alignment.bottomRight,
-//                 ),
-//               ),
-//             ),
-//           ),
-//           Positioned(
-//             bottom: -50,
-//             right: -80,
-//             child: Container(
-//               width: 200,
-//               height: 200,
-//               decoration: BoxDecoration(
-//                 shape: BoxShape.circle,
-//                 color: Colors.cyan.withOpacity(0.1),
-//               ),
-//             ),
-//           ),
-//
-//           if (isWideScreen)
-//             AnimatedBuilder(
-//               animation: _controller,
-//               builder: (_, __) {
-//                 final progress = sin(_controller.value * 2 * pi);
-//                 return Positioned(
-//                   top: screenHeight * 0.150,
-//                   left: screenWidth * 0.2,
-//                   child: CustomPaint(
-//                     painter: SplashPainter(progress: progress),
-//                     size: Size(screenWidth * 0.6, screenHeight * 0.750),
-//                   ),
-//                 );
-//               },
-//             ),
-//           Center(
-//             child: Container(
-//               padding: const EdgeInsets.all(20),
-//               decoration: BoxDecoration(
-//                 borderRadius: BorderRadius.circular(25),
-//                 color: Colors.grey.shade100,
-//                 boxShadow: const [
-//                   BoxShadow(
-//                     color: Colors.black12,
-//                     blurRadius: 10,
-//                     offset: Offset(0, 4),
-//                   ),
-//                 ],
-//               ),
-//               height: screenHeight * 0.5,
-//               width: screenWidth < 600
-//                   ? screenWidth * 0.85
-//                   : screenWidth * 0.25,
-//               child: Form(
-//                 key: _formKey,
-//                 child: Column(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: [
-//                     TextFormField(
-//                       controller: identifierController,
-//                       decoration: const InputDecoration(
-//                         border: OutlineInputBorder(),
-//                         labelText: 'Email or Phone',
-//                         filled: true,
-//                         fillColor: Colors.white,
-//                       ),
-//                       validator: (value) {
-//                         if (value == null || value.isEmpty) {
-//                           return 'Please enter your email or phone number';
-//                         }
-//                         return null;
-//                       },
-//                     ),
-//                     const SizedBox(height: 25),
-//                     TextFormField(
-//                       controller: passwordController,
-//                       obscureText: obscureText,
-//                       decoration: InputDecoration(
-//                         border: const OutlineInputBorder(),
-//                         labelText: 'Password',
-//                         filled: true,
-//                         fillColor: Colors.white,
-//                         suffixIcon: IconButton(
-//                           icon: Icon(
-//                             obscureText ? Iconsax.eye_slash : Iconsax.eye,
-//                             color: Colors.grey,
-//                           ),
-//                           tooltip: obscureText ? 'Show password' : 'Hide password',
-//                           onPressed: () {
-//                             setState(() {
-//                               obscureText = !obscureText;
-//                             });
-//                           },
-//                         ),
-//                       ),
-//                       validator: (value) {
-//                         if (value == null || value.isEmpty) {
-//                           return 'Please enter your password';
-//                         }
-//                         return null;
-//                       },
-//                     ),
-//                     const SizedBox(height: 25),
-//
-//                     _isLoading
-//                         ? SizedBox(
-//                       height: 50,
-//                       width: 50,
-//                       child: Lottie.asset('assets/signin_button.json'),
-//                     )
-//                         : MouseRegion(
-//                       cursor: SystemMouseCursors.click,
-//                       child: GestureDetector(
-//                         onTap: () {
-//                           if (_formKey.currentState!.validate()) {
-//                             _handleLogin();
-//                           }
-//                         },
-//                         child: Container(
-//                           padding: const EdgeInsets.symmetric(horizontal: 16),
-//                           constraints: BoxConstraints(
-//                             minWidth: 120,
-//                             maxWidth: screenWidth < 600
-//                                 ? double.infinity
-//                                 : screenWidth * 0.2,
-//                           ),
-//                           height: 45,
-//                           decoration: BoxDecoration(
-//                             borderRadius: BorderRadius.circular(15),
-//                             color: Colors.cyan.shade200,
-//                           ),
-//                           child: Center(
-//                             child: Text(
-//                               'Sign In',
-//                               style: GoogleFonts.poppins(
-//                                 textStyle: const TextStyle(
-//                                   color: Colors.white,
-//                                   fontSize: 18,
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//
-//                     const SizedBox(height: 25),
-//                     Wrap(
-//                       children: [
-//                         Text(
-//                           "Don't Have an Account?",
-//                           style: GoogleFonts.poppins(
-//                             textStyle: const TextStyle(fontSize: 16),
-//                           ),
-//                         ),
-//                         MouseRegion(
-//                           cursor: SystemMouseCursors.click,
-//                           child: GestureDetector(
-//                             onTap: () {
-//                               Navigator.push(
-//                                 context,
-//                                 MaterialPageRoute(builder: (_) => const SignupPage()),
-//                               );
-//                             },
-//                             child: Text(
-//                               "SignUp",
-//                               style: GoogleFonts.poppins(
-//                                 textStyle: const TextStyle(
-//                                   fontSize: 16,
-//                                   color: Colors.purple,
-//                                   fontWeight: FontWeight.w600,
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-
 import 'dart:math';
-import 'package:ancilmediaadminpanel/View/Mainlayout.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../View_model/Authentication_state.dart';
 import '../View_model/Custom_snackbar.dart';
@@ -356,197 +19,286 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final identifierController = TextEditingController();
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
   bool obscureText = true;
-  List<Offset> _dotPositions = [];
-  late AnimationController _controller;
   bool _isLoading = false;
+  List<Offset> _dotPositions = [];
+
+  // Animation Controllers
+  late AnimationController _bgController;
+  late AnimationController _entryController;
+
+  // Animation Definitions
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
   late AuthState authState;
 
-  List<Offset> _generateDotPositions(double width, double height, int count) {
-    final random = Random();
-    return List.generate(count, (_) {
-      return Offset(random.nextDouble() * width, random.nextDouble() * height);
-    });
-  }
-
-  Future<void> _checkIfAlreadyLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('accessToken');
-    final refreshToken = prefs.getString('refreshToken');
-
-    if (accessToken != null && accessToken.isNotEmpty) {
-      if (context.mounted) {
-        context.go('/home'); // ✅ Use GoRouter
-      }
-    } else if (refreshToken != null && refreshToken.isNotEmpty) {
-      final newAccessToken = await AuthService().refreshAccessToken(authState);
-      if (newAccessToken != null && context.mounted) {
-        context.go('/home'); // ✅ Use GoRouter
-      }
-    }
-  }
+  // 🔹 Define a Base Text Style to avoid repetition
+  final TextStyle baseStyle = GoogleFonts.poppins();
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    _bgController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 5),
-    )..repeat(reverse: true);
+      duration: const Duration(seconds: 15),
+    )..repeat();
+
+    _entryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _entryController,
+      curve: Curves.easeIn,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _entryController,
+      curve: Curves.easeOutBack,
+    ));
+
+    _entryController.forward();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final size = MediaQuery.of(context).size;
       setState(() {
-        _dotPositions = _generateDotPositions(size.width, size.height, 250);
+        _dotPositions = _generateDotPositions(size.width, size.height, 120);
       });
       authState = Provider.of<AuthState>(context, listen: false);
-      _checkIfAlreadyLoggedIn();
     });
+  }
+
+  List<Offset> _generateDotPositions(double width, double height, int count) {
+    final random = Random();
+    return List.generate(count, (_) => Offset(random.nextDouble() * width, random.nextDouble() * height));
   }
 
   @override
   void dispose() {
     identifierController.dispose();
     passwordController.dispose();
-    _controller.dispose();
+    _bgController.dispose();
+    _entryController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
-    final identifier = identifierController.text.trim();
-    final password = passwordController.text;
-
-    final result = await AuthService().login(identifier, password);
+    final result = await AuthService().login(identifierController.text.trim(), passwordController.text);
     setState(() => _isLoading = false);
 
-    final status = result['status'];
-    final parsed = result['parsed'];
-
-    if (status == 200 && parsed['accessToken'] != null) {
-      if (!context.mounted) return;
-      context.go('/home'); // ✅ GoRouter navigation
+    if (result['status'] == 200 && result['parsed']['accessToken'] != null) {
+      if (mounted) context.go('/home');
     } else {
-      if (!context.mounted) return;
-      final errorMessage = parsed['error'] ?? parsed['message'] ?? "Login failed. Please try again.";
-      showCustomSnackBar(context, errorMessage, false);
+      if (mounted) {
+        showCustomSnackBar(context, result['parsed']['message'] ?? "Login failed", false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isWideScreen = screenWidth > 800;
+    final size = MediaQuery.of(context).size;
+    final isWeb = size.width > 800;
 
     return Scaffold(
       body: Stack(
         children: [
-          CustomPaint(
-            painter: BackgroundDotsPainter(positions: _dotPositions),
-            size: Size(screenWidth, screenHeight),
-          ),
-          // Animated splash effect
-          if (isWideScreen)
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (_, __) {
-                final progress = sin(_controller.value * 2 * pi);
-                return Positioned(
-                  top: screenHeight * 0.15,
-                  left: screenWidth * 0.2,
-                  child: CustomPaint(
-                    painter: SplashPainter(progress: progress),
-                    size: Size(screenWidth * 0.6, screenHeight * 0.75),
-                  ),
-                );
-              },
-            ),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                color: Colors.grey.shade100,
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+          // BACKGROUND LAYER
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.indigo.shade900, Colors.deepPurple.shade900, Colors.black],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              height: screenHeight * 0.5,
-              width: screenWidth < 600 ? screenWidth * 0.85 : screenWidth * 0.25,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextFormField(
-                      controller: identifierController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Email or Phone',
-                        filled: true,
-                        fillColor: Colors.white,
+            ),
+          ),
+
+          // ANIMATION LAYER: Particles
+          AnimatedBuilder(
+            animation: _bgController,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: BackgroundDotsPainter(positions: _dotPositions),
+                size: size,
+              );
+            },
+          ),
+
+          // UI LAYER: Glassmorphism Card
+          Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      width: isWeb ? 420 : size.width * 0.88,
+                      padding: const EdgeInsets.all(40),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(color: Colors.white.withOpacity(0.12)),
                       ),
-                      validator: (value) => (value == null || value.isEmpty) ? 'Enter your email or phone' : null,
-                    ),
-                    const SizedBox(height: 25),
-                    TextFormField(
-                      controller: passwordController,
-                      obscureText: obscureText,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        labelText: 'Password',
-                        filled: true,
-                        fillColor: Colors.white,
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureText ? Iconsax.eye_slash : Iconsax.eye, color: Colors.grey),
-                          onPressed: () => setState(() => obscureText = !obscureText),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildHeader(),
+                            const SizedBox(height: 48),
+                            _modernInput("Identifier", identifierController, Iconsax.user, false),
+                            const SizedBox(height: 24),
+                            _modernInput("Password", passwordController, Iconsax.key, true),
+                            const SizedBox(height: 12),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                "Forgot Password?",
+                                style: baseStyle.copyWith(color: Colors.white54, fontSize: 12),
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                            _isLoading
+                                ? Lottie.asset('assets/signin_button.json', height: 70)
+                                : _buildSubmitButton(),
+                            const SizedBox(height: 32),
+                            _buildFooter(),
+                          ],
                         ),
                       ),
-                      validator: (value) => (value == null || value.isEmpty) ? 'Enter your password' : null,
                     ),
-                    const SizedBox(height: 25),
-                    _isLoading
-                        ? SizedBox(height: 50, width: 50, child: Lottie.asset('assets/signin_button.json',options: LottieOptions(enableMergePaths: false),))
-                        : MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (_formKey.currentState!.validate()) _handleLogin();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          constraints: BoxConstraints(minWidth: 120, maxWidth: screenWidth < 600 ? double.infinity : screenWidth * 0.2),
-                          height: 45,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.cyan.shade200),
-                          child: Center(
-                            child: Text('Sign In', style: GoogleFonts.poppins(textStyle: const TextStyle(color: Colors.white, fontSize: 18))),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 25),
-                    Wrap(
-                      children: [
-                        Text("Don't Have an Account?", style: GoogleFonts.poppins(textStyle: const TextStyle(fontSize: 16))),
-                        MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: ()=> Navigator.push(context, MaterialPageRoute(builder: (context)=>SignupPage())), // ✅ optional register page route
-                            child: Text("SignUp", style: GoogleFonts.poppins(textStyle: const TextStyle(fontSize: 16, color: Colors.purple, fontWeight: FontWeight.w600))),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Text(
+          "ANCIL MEDIA",
+          style: baseStyle.copyWith(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 4,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 2,
+          width: 40,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Colors.indigoAccent, Colors.purpleAccent]),
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          "ADMIN DASHBOARD",
+          style: baseStyle.copyWith(fontSize: 12, color: Colors.white38, letterSpacing: 1.5),
+        ),
+      ],
+    );
+  }
+
+  Widget _modernInput(String label, TextEditingController controller, IconData icon, bool isPassword) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword ? obscureText : false,
+      style: baseStyle.copyWith(color: Colors.white, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: baseStyle.copyWith(color: Colors.white38),
+        prefixIcon: Icon(icon, color: Colors.indigoAccent.shade100, size: 20),
+        suffixIcon: isPassword
+            ? IconButton(
+            icon: Icon(obscureText ? Iconsax.eye_slash : Iconsax.eye, color: Colors.white24, size: 18),
+            onPressed: () => setState(() => obscureText = !obscureText))
+            : null,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.04),
+        contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.indigoAccent, width: 1.5),
+        ),
+      ),
+      validator: (v) => (v == null || v.isEmpty) ? "Field required" : null,
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () { if (_formKey.currentState!.validate()) _handleLogin(); },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          height: 56,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFFA855F7)]),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.indigo.withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              )
+            ],
+          ),
+          child: Center(
+            child: Text(
+              "SIGN IN",
+              style: baseStyle.copyWith(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "New here? ",
+          style: baseStyle.copyWith(color: Colors.white38, fontSize: 14),
+        ),
+        GestureDetector(
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SignupPage())),
+          child: Text(
+            "Create Account",
+            style: baseStyle.copyWith(color: Colors.indigoAccent, fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+        ),
+      ],
     );
   }
 }

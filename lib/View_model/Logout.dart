@@ -1,144 +1,174 @@
-// import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:lottie/lottie.dart';
-// import 'package:provider/provider.dart';
-//
-// import '../Controller/Login_controller.dart';
-// import '../View/Login_page.dart';
-// import '../View_model/Authentication_state.dart';
-//
-// class LogoutButton extends StatefulWidget {
-//   const LogoutButton({super.key});
-//
-//   @override
-//   State<LogoutButton> createState() => _LogoutButtonState();
-// }
-//
-// class _LogoutButtonState extends State<LogoutButton> {
-//   bool _isLoggingOut = false;
-//
-//   Future<void> _logout(BuildContext context) async {
-//     setState(() {
-//       _isLoggingOut = true;
-//     });
-//
-//     final authState = Provider.of<AuthState>(context, listen: false);
-//     await AuthService().logout(authState);
-//
-//     if (context.mounted) {
-//       Navigator.of(context).pushAndRemoveUntil(
-//         MaterialPageRoute(builder: (_) => const LoginPage()),
-//             (route) => false,
-//       );
-//     }
-//
-//     setState(() {
-//       _isLoggingOut = false;
-//     });
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return ElevatedButton.icon(
-//       icon: _isLoggingOut
-//           ? SizedBox(
-//         width: 24,
-//         height: 24,
-//         child: Lottie.asset(
-//           'assets/Hour_glass_Loading.json',
-//           fit: BoxFit.contain,
-//         ),
-//       )
-//           : const Icon(Icons.logout),
-//       label: Text(_isLoggingOut ? 'Logging out...' : 'Logout',style: GoogleFonts.poppins(
-//         textStyle: TextStyle(
-//           fontWeight: FontWeight.w400,
-//           fontSize: 14
-//         )
-//       ),),
-//       onPressed: _isLoggingOut ? null : () => _logout(context),
-//       style: ElevatedButton.styleFrom(
-//         backgroundColor: Colors.red.shade600,
-//         foregroundColor: Colors.white,
-//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-//       ),
-//     );
-//   }
-// }
-
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 
 import '../Controller/Login_controller.dart';
 import '../View/Login_page.dart';
-import '../View_model/Authentication_state.dart';
-import 'dart:html' as html; // only used for web
+import 'Authentication_state.dart';
 
-class LogoutButton extends StatefulWidget {
+class LogoutButton extends StatelessWidget {
   const LogoutButton({super.key});
 
   @override
-  State<LogoutButton> createState() => _LogoutButtonState();
-}
-
-class _LogoutButtonState extends State<LogoutButton> {
-  bool _isLoggingOut = false;
-
-  Future<void> _logout(BuildContext context) async {
-    setState(() {
-      _isLoggingOut = true;
-    });
-
-    final authState = Provider.of<AuthState>(context, listen: false);
-    await AuthService().logout(authState);
-
-    if (kIsWeb) {
-      // Clear URL in browser
-      html.window.history.pushState(null, '', '/');
-    }
-
-    if (context.mounted) {
-      // Use GoRouter to navigate to login and remove all previous routes
-      GoRouter.of(context).go('/');
-    }
-
-    setState(() {
-      _isLoggingOut = false;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      icon: _isLoggingOut
-          ? SizedBox(
-        width: 24,
-        height: 24,
-        child: Lottie.asset(
-          'assets/Hour_glass_Loading.json',
-          options: LottieOptions(enableMergePaths: false),
-          fit: BoxFit.contain,
-        ),
-      )
-          : const Icon(Icons.logout),
-      label: Text(
-        _isLoggingOut ? 'Logging out...' : 'Logout',
-        style: GoogleFonts.poppins(
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w400,
-            fontSize: 14,
-          ),
+    return InkWell(
+      onTap: () => _confirmLogout(context),
+      borderRadius: BorderRadius.circular(15),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        child: Row(
+          children: [
+            const Icon(Iconsax.logout, color: Colors.redAccent, size: 20),
+            const SizedBox(width: 14),
+            Text(
+              "Logout",
+              style: GoogleFonts.poppins(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       ),
-      onPressed: _isLoggingOut ? null : () => _logout(context),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red.shade600,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    final authService = AuthService();
+    final authState = Provider.of<AuthState>(context, listen: false);
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (ctx, anim1, anim2) => Container(),
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        // Curve for a slight bounce effect
+        final curve = Curves.easeInOutBack.transform(anim1.value);
+        return Transform.scale(
+          scale: curve,
+          child: Opacity(
+            opacity: anim1.value,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+              child: _buildDialogContent(ctx, context, authService, authState),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogContent(BuildContext dialogCtx, BuildContext mainCtx,
+      AuthService authService, AuthState authState) {
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: ConstrainedBox(
+          // 🛡️ Limit the width here
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 30),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 🎨 The Custom Lottie Animation
+                Lottie.network(
+                  'https://res.cloudinary.com/dggylwwqk/raw/upload/v1771848380/blue_clear_or_delete_animation_sdr2yd.json',
+                  height: 120,
+                  repeat: true,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Sign Out?",
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1A1D1E),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Are you sure you want to log out? You will need to re-authenticate to manage your organization.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.blueGrey.shade400,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(dialogCtx),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Text(
+                          "Cancel",
+                          style: GoogleFonts.poppins(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(dialogCtx);
+                          await authService.logout(authState);
+                          if (mainCtx.mounted) {
+                            Navigator.pushAndRemoveUntil(
+                              mainCtx,
+                              MaterialPageRoute(builder: (context) => const LoginPage()),
+                                  (route) => false,
+                            );
+                          }
+                        },
+                        child: Text(
+                          "Log Out",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

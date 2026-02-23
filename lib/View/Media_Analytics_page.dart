@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
@@ -12,11 +13,12 @@ class AnalyticsPage extends StatefulWidget {
   State<AnalyticsPage> createState() => _AnalyticsPageState();
 }
 
-class _AnalyticsPageState extends State<AnalyticsPage> {
+class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateMixin {
   Map<String, dynamic>? analyticsData;
   bool isLoading = true;
   String? error;
   late TooltipBehavior _tooltipBehavior;
+  late AnimationController _contentController;
 
   // Pagination & Sorting
   int limit = 50;
@@ -27,19 +29,29 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   DateTime? startDate;
   DateTime? endDate;
   Map<String, dynamic>? selectedMediaItem;
+  List<Map<String, dynamic>> allMediaList = [];
 
-  List<Map<String, dynamic>> allMediaList = []; // Full list for dropdown
   final AnalyticsService analyticsService = AnalyticsService();
-
-  // Dropdown controller
   late SingleSelectController<String?> mediaController;
+  final TextStyle baseStyle = GoogleFonts.poppins();
 
   @override
   void initState() {
     super.initState();
     _tooltipBehavior = TooltipBehavior(enable: true);
     mediaController = SingleSelectController<String?>(null);
+    _contentController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
     fetchAnalytics();
+  }
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    mediaController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchAnalytics({bool filtered = false}) async {
@@ -50,9 +62,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
     try {
       String? mediaItemIdValue;
-      if (filtered &&
-          selectedMediaItem != null &&
-          mediaController.value != "All Media") {
+      if (filtered && selectedMediaItem != null && mediaController.value != "All Media") {
         mediaItemIdValue = selectedMediaItem!['id'] as String?;
       }
 
@@ -65,26 +75,17 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         endDate: endDate,
       );
 
-      final chartDataRaw = List<Map<String, dynamic>>.from(
-        data['chartData'] ?? [],
-      );
-
-      // ✅ Parse backend months only (no extras)
+      final chartDataRaw = List<Map<String, dynamic>>.from(data['chartData'] ?? []);
       final df = DateFormat("MMM yyyy");
-      final chartData = chartDataRaw.map((d) {
-        return {...d, 'dateObj': df.parse(d['month'])};
-      }).toList();
 
-      // ✅ Sort by actual date so they’re sequential
-      chartData.sort(
-        (a, b) =>
-            (a['dateObj'] as DateTime).compareTo(b['dateObj'] as DateTime),
-      );
+      final chartData = chartDataRaw.map((d) => {...d, 'dateObj': df.parse(d['month'])}).toList();
+      chartData.sort((a, b) => (a['dateObj'] as DateTime).compareTo(b['dateObj'] as DateTime));
 
       setState(() {
         analyticsData = {...data, 'chartData': chartData};
         allMediaList = List<Map<String, dynamic>>.from(data['mediaList'] ?? []);
         isLoading = false;
+        _contentController.forward(from: 0);
       });
     } catch (e) {
       setState(() {
@@ -104,369 +105,251 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     fetchAnalytics(filtered: false);
   }
 
-  Future<void> _selectStartDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: startDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) setState(() => startDate = picked);
-  }
-
-  Future<void> _selectEndDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: endDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) setState(() => endDate = picked);
-  }
+  // --- UI BUILDER ---
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
-        title: const Text("📊 Media Analytics"),
+        title: Text("Media Analytics", style: baseStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
+        elevation: 0.5,
+        foregroundColor: Colors.blueGrey.shade900,
+        actions: [
+          IconButton(onPressed: fetchAnalytics, icon: const Icon(Iconsax.refresh, size: 20)),
+          const SizedBox(width: 16),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : error != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(error!, style: const TextStyle(color: Colors.red)),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: fetchAnalytics,
-                    child: const Text("Retry"),
-                  ),
-                ],
-              ),
-            )
-          : buildDashboard(),
+          ? _buildErrorState()
+          : _buildDashboardBody(),
     );
   }
 
-  Widget buildDashboard() {
-    final chartData = List<Map<String, dynamic>>.from(
-      analyticsData?['chartData'] ?? [],
-    );
-    final mediaItems = List<Map<String, dynamic>>.from(
-      analyticsData?['mediaList'] ?? [],
-    );
+  Widget _buildDashboardBody() {
+    final chartData = List<Map<String, dynamic>>.from(analyticsData?['chartData'] ?? []);
+    final mediaItems = List<Map<String, dynamic>>.from(analyticsData?['mediaList'] ?? []);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filters
-          Row(
-            children: [
-              const Text("Start Date:"),
-              const SizedBox(width: 8),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: _selectStartDate,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.purpleAccent.withOpacity(0.1)
-                    ),
-                    height: MediaQuery.of(context).size.height * .0400,
-                    width: MediaQuery.of(context).size.width * .0500,
-                    child: Center(
-                      child: Text(
-                        startDate != null
-                            ? DateFormat("dd MMM yyyy").format(startDate!)
-                            : "Select",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w400,color: Colors.purple),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Text("End Date:"),
-              const SizedBox(width: 8),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: _selectEndDate,
-                  child: Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.purpleAccent.withOpacity(0.1)
-                    ),
-                    height: MediaQuery.of(context).size.height * .0400,
-                    width: MediaQuery.of(context).size.width * .0500,
-                    child: Center(
-                      child: Text(
-                        endDate != null
-                            ? DateFormat("dd MMM yyyy").format(endDate!)
-                            : "Select",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w400,color: Colors.purple),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // ElevatedButton(
-              //   onPressed: () => fetchAnalytics(filtered: true),
-              //   child: const Text("Apply Filters"),
-              // ),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: ()=>fetchAnalytics(filtered: true),
-                  child: Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.purpleAccent.withOpacity(0.1)
-                    ),
-                    height: MediaQuery.of(context).size.height * .0400,
-                    width: MediaQuery.of(context).size.width * .0700,
-                    child:  Center(
-                      child: Text("Apply Filters",style: GoogleFonts.poppins(
-                        color: Colors.purple
-                      ),),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: clearFilters,
-                  child: Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.purpleAccent.withOpacity(0.1)
-                    ),
-                    height: MediaQuery.of(context).size.height * .0400,
-                    width: MediaQuery.of(context).size.width * .0700,
-                    child: Center(
-                      child: Text("Clear Filters",style: GoogleFonts.poppins(
-                        color: Colors.purple
-                      ),),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 20),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Chart
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 3,
-            shadowColor: Colors.grey.shade100,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Text(
-                    "📅 Monthly Device Usage Overview",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 350,
-                    child: SfCartesianChart(
-                      primaryXAxis: const CategoryAxis(
-                        title: AxisTitle(text: 'Month'),
-                        labelRotation: -45,
-                        majorGridLines: MajorGridLines(width: 0),
-                      ),
-                      primaryYAxis: const NumericAxis(
-                        title: AxisTitle(text: 'Plays'),
-                      ),
-                      legend: const Legend(
-                        isVisible: true,
-                        position: LegendPosition.bottom,
-                        overflowMode: LegendItemOverflowMode.wrap,
-                      ),
-                      tooltipBehavior: _tooltipBehavior,
-                      series: <CartesianSeries>[
-                        _buildStackedSeries(
-                          chartData,
-                          'ios',
-                          'iOS',
-                          Colors.amber,
-                        ),
-                        _buildStackedSeries(
-                          chartData,
-                          'android',
-                          'Android',
-                          Colors.blue,
-                        ),
-                        _buildStackedSeries(
-                          chartData,
-                          'webApp',
-                          'Web App',
-                          Colors.green,
-                        ),
-                        _buildStackedSeries(
-                          chartData,
-                          'appleTv',
-                          'Apple TV',
-                          Colors.purple,
-                        ),
-                        _buildStackedSeries(
-                          chartData,
-                          'roku',
-                          'Roku',
-                          Colors.orange,
-                        ),
-                        _buildStackedSeries(
-                          chartData,
-                          'webEmbed',
-                          'Web Embed',
-                          Colors.teal,
-                        ),
-                        _buildStackedSeries(
-                          chartData,
-                          'other',
-                          'Other',
-                          Colors.grey,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Media Table
-          Text(
-            "🎬 Media Performance",
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Row(
-              children: [
-                SizedBox(width: 60, child: Text("Thumbnail")),
-                SizedBox(width: 12),
-                Expanded(flex: 4, child: Text("Title")),
-                Expanded(flex: 2, child: Text("Plays")),
-                Expanded(flex: 2, child: Text("Viewers")),
-                Expanded(flex: 3, child: Text("Avg Duration")),
-                Expanded(flex: 3, child: Text("Total Time")),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
-          ...mediaItems.map((item) {
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Image.network(
-                      item['thumbnailUrl'] ?? "",
-                      width: 60,
-                      height: 40,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 60,
-                        height: 40,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.image_not_supported, size: 20),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['title'] ?? "",
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        if (item['date'] != null)
-                          Text(
-                            DateFormat("dd MMM yyyy").format(
-                              DateTime.tryParse(item['date']) ?? DateTime.now(),
-                            ),
-                            style: const TextStyle(
-                              color: Colors.black54,
-                              fontSize: 12,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Expanded(flex: 2, child: Text(item['plays'].toString())),
-                  Expanded(
-                    flex: 2,
-                    child: Text(item['uniqueViewers'].toString()),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(item['avgDuration'].toString()),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(item['totalPlayTime'].toString()),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+          _staggeredEntry(0.0, 0.4, child: _buildFilterBar()),
+          const SizedBox(height: 32),
+          _staggeredEntry(0.1, 0.5, child: _buildQuickStats(mediaItems)),
+          const SizedBox(height: 32),
+          _staggeredEntry(0.2, 0.6, child: _buildChartSection(chartData)),
+          const SizedBox(height: 32),
+          _staggeredEntry(0.3, 0.7, child: _buildMediaTable(mediaItems)),
         ],
       ),
     );
   }
 
-  /// 🔹 Build aligned stacked columns (CategoryAxis)
-  StackedColumnSeries<Map<String, dynamic>, String> _buildStackedSeries(
-    List<Map<String, dynamic>> data,
-    String key,
-    String name,
-    Color color,
-  ) {
+  // --- DASHBOARD COMPONENTS ---
+
+  Widget _buildFilterBar() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+      ),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 16,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          _buildDateButton("Start Date", startDate, _selectStartDate),
+          _buildDateButton("End Date", endDate, _selectEndDate),
+          _buildActionButton("Apply Filters", Iconsax.filter_edit, Colors.indigo, () => fetchAnalytics(filtered: true)),
+          _buildActionButton("Clear", Iconsax.refresh, Colors.blueGrey, clearFilters),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats(List mediaItems) {
+    int totalPlays = mediaItems.fold(0, (sum, item) => sum + (item['plays'] as int));
+    int totalViewers = mediaItems.fold(0, (sum, item) => sum + (item['uniqueViewers'] as int));
+
+    return Row(
+      children: [
+        _statCard("Total Plays", _fmt(totalPlays), Iconsax.play_circle, Colors.blue),
+        const SizedBox(width: 20),
+        _statCard("Reach", _fmt(totalViewers), Iconsax.personalcard, Colors.purple),
+        const SizedBox(width: 20),
+        _statCard("Media Items", mediaItems.length.toString(), Iconsax.video_octagon, Colors.orange),
+      ],
+    );
+  }
+
+  Widget _buildChartSection(List<Map<String, dynamic>> chartData) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Platform Distribution", style: baseStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 24),
+
+          SizedBox(
+            height: 350,
+            child: SfCartesianChart(
+              plotAreaBorderWidth: 0,
+              primaryXAxis: CategoryAxis(
+                majorGridLines: const MajorGridLines(width: 0),
+                labelStyle: baseStyle.copyWith(fontSize: 11),
+              ),
+              primaryYAxis: NumericAxis(
+                axisLine: const AxisLine(width: 0),
+                majorTickLines: const MajorTickLines(size: 0),
+                labelStyle: baseStyle.copyWith(fontSize: 11),
+              ),
+              legend: Legend(isVisible: true, position: LegendPosition.bottom, textStyle: baseStyle.copyWith(fontSize: 12)),
+              tooltipBehavior: _tooltipBehavior,
+              series: <CartesianSeries>[
+                _buildStackedSeries(chartData, 'ios', 'iOS', Colors.amber),
+                _buildStackedSeries(chartData, 'android', 'Android', Colors.blue),
+                _buildStackedSeries(chartData, 'webApp', 'Web App', Colors.green),
+                _buildStackedSeries(chartData, 'appleTv', 'Apple TV', Colors.purple),
+                _buildStackedSeries(chartData, 'roku', 'Roku', Colors.orange),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaTable(List mediaItems) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Content Performance", style: baseStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: mediaItems.length,
+            separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade50),
+            itemBuilder: (context, index) {
+              final item = mediaItems[index];
+              return ListTile(
+                contentPadding: const EdgeInsets.all(20),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(item['thumbnailUrl'] ?? "", width: 90, height: 50, fit: BoxFit.cover,
+                      errorBuilder: (_,__,___) => Container(width: 90, height: 50, color: Colors.grey.shade100, child: const Icon(Iconsax.image))),
+                ),
+                title: Text(item['title'] ?? "Untitled Content", style: baseStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: Text("Views: ${item['plays']}  •  Unique: ${item['uniqueViewers']}",
+                    style: baseStyle.copyWith(fontSize: 12, color: Colors.blueGrey.shade400)),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(item['totalPlayTime'].toString(), style: baseStyle.copyWith(fontWeight: FontWeight.bold, color: Colors.indigo)),
+                    Text("Total Time", style: baseStyle.copyWith(fontSize: 10, color: Colors.grey.shade400)),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- HELPERS ---
+
+  Widget _staggeredEntry(double start, double end, {required Widget child}) {
+    final animation = CurvedAnimation(parent: _contentController, curve: Interval(start, end, curve: Curves.easeOutQuart));
+    return FadeTransition(opacity: animation, child: SlideTransition(position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation), child: child));
+  }
+
+  Widget _statCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)]),
+        child: Row(
+          children: [
+            Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 24)),
+            const SizedBox(width: 16),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(label, style: baseStyle.copyWith(fontSize: 12, color: Colors.blueGrey.shade300)),
+              Text(value, style: baseStyle.copyWith(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade900)),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  StackedColumnSeries<Map<String, dynamic>, String> _buildStackedSeries(List<Map<String, dynamic>> data, String key, String name, Color color) {
     return StackedColumnSeries<Map<String, dynamic>, String>(
       dataSource: data,
       xValueMapper: (d, _) => d['month'],
       yValueMapper: (d, _) => d[key] ?? 0,
       name: name,
       color: color,
-      width: 0.1,
-      dataLabelSettings: const DataLabelSettings(isVisible: false),
+      width: 0.3,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
     );
   }
+
+  String _fmt(int value) => NumberFormat.compact().format(value);
+
+  Widget _buildDateButton(String label, DateTime? date, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.shade100)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Iconsax.calendar, size: 16, color: Colors.indigo),
+          const SizedBox(width: 10),
+          Text(date != null ? DateFormat("dd MMM yyyy").format(date) : label, style: baseStyle.copyWith(fontSize: 13, color: Colors.blueGrey)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 16, color: Colors.white),
+      label: Text(label, style: baseStyle.copyWith(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+      style: ElevatedButton.styleFrom(backgroundColor: color, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), elevation: 0),
+    );
+  }
+
+  Future<void> _selectStartDate() async {
+    final picked = await showDatePicker(context: context, initialDate: startDate ?? DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime.now());
+    if (picked != null) setState(() => startDate = picked);
+  }
+
+  Future<void> _selectEndDate() async {
+    final picked = await showDatePicker(context: context, initialDate: endDate ?? DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime.now());
+    if (picked != null) setState(() => endDate = picked);
+  }
+
+  Widget _buildErrorState() => Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(error!), const SizedBox(height: 16), ElevatedButton(onPressed: fetchAnalytics, child: const Text("Retry"))]));
 }

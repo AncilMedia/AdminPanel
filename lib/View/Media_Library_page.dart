@@ -279,8 +279,8 @@ class _LibraryPageState extends State<LibraryPage> {
                 children: [
                   // --- FIXED SQUARE THUMBNAIL: 150 x 150 ---
                   Container(
-                    width: 150,
-                    height: 150, // Height will now be respected
+                    width: 100,
+                    height: 80, // Height will now be respected
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20), // Modern curved edges
                       border: Border.all(color: Colors.grey.shade200, width: 1),
@@ -301,7 +301,7 @@ class _LibraryPageState extends State<LibraryPage> {
                     ),
                   ),
 
-                  const SizedBox(width: 24), // Space between image and text
+                  const SizedBox(width: 22), // Space between image and text
 
                   // --- TEXT CONTENT ---
                   Expanded(
@@ -312,18 +312,18 @@ class _LibraryPageState extends State<LibraryPage> {
                           item["title"] ?? "Untitled",
                           style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
-                              fontSize: 20, // Slightly larger to match big image
+                              fontSize: 15, // Slightly larger to match big image
                               color: Colors.blueGrey.shade900
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             const Icon(Iconsax.folder_open, size: 18, color: Colors.indigo),
                             const SizedBox(width: 8),
                             Text(
                                 item["seriesId"]?["title"] ?? "No Series",
-                                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.blueGrey.shade600)
+                                style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.blueGrey.shade600)
                             ),
                           ],
                         ),
@@ -334,7 +334,7 @@ class _LibraryPageState extends State<LibraryPage> {
                             const SizedBox(width: 8),
                             Text(
                                 "Created: ${item["createdAt"]?.toString().split('T').first ?? 'N/A'}",
-                                style: GoogleFonts.poppins(fontSize: 14, color: Colors.blueGrey.shade400)
+                                style: GoogleFonts.poppins(fontSize: 13, color: Colors.blueGrey.shade400)
                             ),
                           ],
                         ),
@@ -359,8 +359,8 @@ class _LibraryPageState extends State<LibraryPage> {
       // DECREASED SIZE: Increased crossAxisCount from 5 to 7 to make items smaller
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisSpacing: 18,
+        mainAxisSpacing: 18,
         childAspectRatio: 0.85, // Adjusted to keep the cards from looking too tall
       ),
       itemCount: _mediaSeries.length,

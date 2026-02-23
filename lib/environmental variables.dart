@@ -2,7 +2,7 @@
 
 String baseUrl = 'https://backendnew-beige.vercel.app';
 
-String NgrokUrl ="https://4223-116-68-72-131.ngrok-free.app";
+String NgrokUrl ="https://d87b-116-68-72-131.ngrok-free.app";
 
 String AgoraId = "e7f6e9aeecf14b2ba10e3f40be9f56e7";
 

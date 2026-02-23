@@ -189,6 +189,56 @@ class MediaItemService {
     }
   }
 
+  Future<void> addSpeakerComplex({
+    required String name,
+    required String designation,
+    String? bio,
+    dynamic image, // For Mobile (File)
+    Uint8List? webImageBytes, // For Web
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final orgId = prefs.getString("organizationId");
+    final userId = prefs.getString("userId");
+
+    final uri = Uri.parse("$baseUrl/api/mediaspeaker");
+    final request = http.MultipartRequest("POST", uri);
+
+    // Standard Fields
+    request.fields['name'] = name;
+    request.fields['designation'] = designation;
+    request.fields['bio'] = bio ?? "";
+    request.fields['organization'] = orgId ?? "";
+    request.fields['createdBy'] = userId ?? "";
+
+    // Handle Image Attachment based on Platform
+    if (kIsWeb && webImageBytes != null) {
+      // ✅ Web Logic: Use bytes
+      request.files.add(http.MultipartFile.fromBytes(
+        'image',
+        webImageBytes,
+        filename: 'speaker_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      ));
+    } else if (!kIsWeb && image != null) {
+      // ✅ Mobile Logic: Use file path
+      final mimeType = lookupMimeType(image.path) ?? 'image/jpeg';
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        image.path,
+        contentType: MediaType.parse(mimeType),
+      ));
+    }
+
+    final response = await request.send();
+    final respBody = await response.stream.bytesToString();
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      print("✅ Speaker Created: $respBody");
+    } else {
+      print("❌ Server Error: $respBody");
+      throw Exception("Failed to create speaker profile: $respBody");
+    }
+  }
   // ✅ Fetch all topics
   Future<List<Map<String, dynamic>>> fetchTopics() async {
     final url = '$baseUrl/api/mediatopic';
@@ -199,6 +249,36 @@ class MediaItemService {
       return (decoded is List) ? decoded.cast<Map<String, dynamic>>() : [];
     } else {
       throw Exception('Failed to load topics: ${response.statusCode}');
+    }
+  }
+
+  Future<void> addTopicComplex({
+    required String name,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final orgId = prefs.getString("organizationId");
+    final userId = prefs.getString("userId");
+    final roleId = prefs.getString("roleId");
+
+    final uri = Uri.parse("$baseUrl/api/mediatopic"); // Check your app.js mount point
+
+    // Since Topic doesn't have files, a standard JSON POST is fine
+    final response = await http.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "name": name,
+        "organization": orgId,
+        "createdBy": userId,
+        "role": roleId,
+      }),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      print("✅ Topic Created: ${response.body}");
+    } else {
+      print("❌ Topic Creation Error: ${response.body}");
+      throw Exception("Failed to create topic: ${response.body}");
     }
   }
 

@@ -1,12 +1,16 @@
+import 'dart:math';
+import 'dart:ui';
 import 'package:ancilmediaadminpanel/View/Login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
 
 import '../Controller/Signup_controller.dart';
 import '../View_model/Custom_snackbar.dart';
+import '../View_model/Splash_Animation.dart'; // Using your existing particle painter
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -15,7 +19,7 @@ class SignupPage extends StatefulWidget {
   State<SignupPage> createState() => _SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
   final usernameController = TextEditingController();
   final orgnameController = TextEditingController();
   final emailController = TextEditingController();
@@ -28,6 +32,48 @@ class _SignupPageState extends State<SignupPage> {
   bool obscureText = true;
   bool obscureConfirmText = true;
 
+  // Animation Controllers
+  late AnimationController _bgController;
+  late AnimationController _contentController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  List<Offset> _dotPositions = [];
+  final TextStyle baseStyle = GoogleFonts.poppins();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _bgController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 15),
+    )..repeat();
+
+    _contentController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fadeAnimation = CurvedAnimation(parent: _contentController, curve: Curves.easeIn);
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _contentController, curve: Curves.easeOutBack));
+
+    _contentController.forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final size = MediaQuery.of(context).size;
+      setState(() {
+        _dotPositions = _generateDotPositions(size.width, size.height, 100);
+      });
+    });
+  }
+
+  List<Offset> _generateDotPositions(double width, double height, int count) {
+    final random = Random();
+    return List.generate(count, (_) => Offset(random.nextDouble() * width, random.nextDouble() * height));
+  }
+
   @override
   void dispose() {
     usernameController.dispose();
@@ -36,331 +82,107 @@ class _SignupPageState extends State<SignupPage> {
     passwordController.dispose();
     confirmPasswordController.dispose();
     phoneController.dispose();
+    _bgController.dispose();
+    _contentController.dispose();
     super.dispose();
+  }
+
+  // --- Animation Helper ---
+  Widget _staggeredEntry(double start, double end, {required Widget child}) {
+    final animation = CurvedAnimation(
+      parent: _contentController,
+      curve: Interval(start, end, curve: Curves.easeOutQuart),
+    );
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation),
+        child: child,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final size = MediaQuery.of(context).size;
+    final isWeb = size.width > 800;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Decorative background
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Colors.cyan.shade100, Colors.purple.shade100],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            right: -80,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.cyan.withOpacity(0.1),
+          // 1. Dynamic Background
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.indigo.shade900, Colors.deepPurple.shade900, Colors.black],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
           ),
 
-          // Sign up form
+          // 2. Particles
+          AnimatedBuilder(
+            animation: _bgController,
+            builder: (context, child) => CustomPaint(
+              painter: BackgroundDotsPainter(positions: _dotPositions),
+              size: size,
+            ),
+          ),
+
+          // 3. Signup Card
           Center(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              constraints: BoxConstraints(
-                minHeight: 400,
-                maxHeight: screenHeight * 0.85,
-                maxWidth: screenWidth < 600
-                    ? screenWidth * 0.85
-                    : screenWidth * 0.25,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                color: Colors.grey.shade100,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // Username
-                      TextFormField(
-                        controller: usernameController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Username',
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter your username'
-                            : null,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      width: isWeb ? 450 : size.width * 0.9,
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(color: Colors.white.withOpacity(0.12)),
                       ),
-                      const SizedBox(height: 20),
+                      child: SingleChildScrollView(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              _staggeredEntry(0.0, 0.4, child: _buildHeader()),
+                              const SizedBox(height: 32),
 
-                      // Organization
-                      TextFormField(
-                        controller: orgnameController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Organization',
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter your organization name'
-                            : null,
-                      ),
-                      const SizedBox(height: 20),
+                              _staggeredEntry(0.1, 0.5, child: _modernInput("Username", usernameController, Iconsax.user)),
+                              const SizedBox(height: 16),
 
-                      // Email
-                      TextFormField(
-                        controller: emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Email',
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          final emailRegex = RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          );
-                          if (!emailRegex.hasMatch(value)) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
+                              _staggeredEntry(0.2, 0.6, child: _modernInput("Organization", orgnameController, Iconsax.hierarchy)),
+                              const SizedBox(height: 16),
 
-                      // Phone
-                      TextFormField(
-                        controller: phoneController,
-                        keyboardType: TextInputType.phone,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\+?[0-9]*$'),
-                          ),
-                        ],
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Phone Number',
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter your phone number'
-                            : !RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)
-                            ? 'Enter a valid phone number'
-                            : null,
-                      ),
-                      const SizedBox(height: 20),
+                              _staggeredEntry(0.3, 0.7, child: _modernInput("Email", emailController, Iconsax.sms, type: TextInputType.emailAddress)),
+                              const SizedBox(height: 16),
 
-                      // Password
-                      TextFormField(
-                        controller: passwordController,
-                        obscureText: obscureText,
-                        decoration: InputDecoration(
-                          border: const OutlineInputBorder(),
-                          labelText: 'Password',
-                          filled: true,
-                          fillColor: Colors.white,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              obscureText ? Iconsax.eye_slash : Iconsax.eye,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () =>
-                                setState(() => obscureText = !obscureText),
-                          ),
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter your password'
-                            : null,
-                      ),
-                      const SizedBox(height: 20),
+                              _staggeredEntry(0.4, 0.8, child: _modernInput("Phone", phoneController, Iconsax.call, type: TextInputType.phone)),
+                              const SizedBox(height: 16),
 
-                      // Confirm Password
-                      TextFormField(
-                        controller: confirmPasswordController,
-                        obscureText: obscureConfirmText,
-                        decoration: InputDecoration(
-                          border: const OutlineInputBorder(),
-                          labelText: 'Confirm Password',
-                          filled: true,
-                          fillColor: Colors.white,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              obscureConfirmText
-                                  ? Iconsax.eye_slash
-                                  : Iconsax.eye,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () => setState(
-                              () => obscureConfirmText = !obscureConfirmText,
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please confirm your password';
-                          }
-                          if (value != passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 25),
+                              _staggeredEntry(0.5, 0.9, child: _modernInput("Password", passwordController, Iconsax.key, isPassword: true, obscure: obscureText, onToggle: () => setState(() => obscureText = !obscureText))),
+                              const SizedBox(height: 16),
 
-                      // Submit Button
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () async {
-                            if (_isLoading) return;
+                              _staggeredEntry(0.6, 1.0, child: _modernInput("Confirm Password", confirmPasswordController, Iconsax.key, isPassword: true, obscure: obscureConfirmText, onToggle: () => setState(() => obscureConfirmText = !obscureConfirmText))),
+                              const SizedBox(height: 32),
 
-                            if (_formKey.currentState!.validate()) {
-                              setState(() => _isLoading = true);
+                              _staggeredEntry(0.7, 1.0, child: _buildSubmitButton(size)),
+                              const SizedBox(height: 24),
 
-                              final result = await SignupController.signup(
-                                username: usernameController.text.trim(),
-                                organization: orgnameController.text.trim(),
-                                email: emailController.text.trim(),
-                                phone: phoneController.text.trim(),
-                                password: passwordController.text,
-                              );
-
-                              setState(() => _isLoading = false);
-
-                              if (result['success']) {
-                                final user = result['user'];
-                                final org = user['organization'];
-                                print(
-                                  "Signup Success: Org ID: ${org['orgId']}, Created At: ${org['createdAt']}",
-                                );
-
-                                showCustomSnackBar(
-                                  context,
-                                  "Signup successful!",
-                                  true,
-                                );
-
-                                await Future.delayed(
-                                  const Duration(seconds: 2),
-                                );
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const LoginPage(),
-                                  ),
-                                );
-                              } else {
-                                print(
-                                  "Signup error response: ${result['message']}",
-                                );
-                                showCustomSnackBar(
-                                  context,
-                                  result['message'] ??
-                                      "Signup failed. Please try again.",
-                                  false,
-                                );
-                              }
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            constraints: BoxConstraints(
-                              minWidth: 120,
-                              maxWidth: screenWidth < 600
-                                  ? double.infinity
-                                  : screenWidth * 0.2,
-                            ),
-                            height: 45,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Colors.cyan.shade200,
-                            ),
-                            child: Center(
-                              child: _isLoading
-                                  ? Lottie.asset(
-                                      'assets/Circular_moving_dot.json',
-                                      width: 40,
-                                      height: 40,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Text(
-                                      'Sign Up',
-                                      style: GoogleFonts.poppins(
-                                        textStyle: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                    ),
-                            ),
+                              _staggeredEntry(0.8, 1.0, child: _buildFooter()),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      // Sign in prompt
-                      Wrap(
-                        children: [
-                          Text(
-                            "Already have an account? ",
-                            style: GoogleFonts.poppins(fontSize: 16),
-                          ),
-                          MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const LoginPage(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                "Sign In",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Colors.purple,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -370,5 +192,94 @@ class _SignupPageState extends State<SignupPage> {
       ),
     );
   }
-}
 
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Text("JOIN US", style: baseStyle.copyWith(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 4)),
+        const SizedBox(height: 8),
+        Container(height: 2, width: 40, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Colors.cyanAccent, Colors.purpleAccent]), borderRadius: BorderRadius.circular(10))),
+        const SizedBox(height: 12),
+        Text("CREATE YOUR ADMIN ACCOUNT", style: baseStyle.copyWith(fontSize: 10, color: Colors.white38, letterSpacing: 1.5)),
+      ],
+    );
+  }
+
+  Widget _modernInput(String label, TextEditingController controller, IconData icon, {bool isPassword = false, bool obscure = false, VoidCallback? onToggle, TextInputType type = TextInputType.text}) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: type,
+      style: baseStyle.copyWith(color: Colors.white, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: baseStyle.copyWith(color: Colors.white38),
+        prefixIcon: Icon(icon, color: Colors.indigoAccent.shade100, size: 20),
+        suffixIcon: isPassword ? IconButton(icon: Icon(obscure ? Iconsax.eye_slash : Iconsax.eye, color: Colors.white24, size: 18), onPressed: onToggle) : null,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.04),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withOpacity(0.08))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.indigoAccent, width: 1.5)),
+      ),
+      validator: (v) => (v == null || v.isEmpty) ? "Field required" : null,
+    );
+  }
+
+  Widget _buildSubmitButton(Size size) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: _isLoading ? null : _handleSignup,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          height: 56,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFF22D3EE), Color(0xFFA855F7)]),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.cyan.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
+          ),
+          child: Center(
+            child: _isLoading
+                ? Lottie.asset('assets/Circular_moving_dot.json', width: 40)
+                : Text("SIGN UP", style: baseStyle.copyWith(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSignup() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      final result = await SignupController.signup(
+        username: usernameController.text.trim(),
+        organization: orgnameController.text.trim(),
+        email: emailController.text.trim(),
+        phone: phoneController.text.trim(),
+        password: passwordController.text,
+      );
+      setState(() => _isLoading = false);
+
+      if (result['success']) {
+        showCustomSnackBar(context, "Welcome aboard!", true);
+        context.pushReplacement('/login'); // Or your login route
+      } else {
+        showCustomSnackBar(context, result['message'] ?? "Signup failed", false);
+      }
+    }
+  }
+
+  Widget _buildFooter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text("Already have an account? ", style: baseStyle.copyWith(color: Colors.white38, fontSize: 14)),
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Text("Sign In", style: baseStyle.copyWith(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+        ),
+      ],
+    );
+  }
+}
