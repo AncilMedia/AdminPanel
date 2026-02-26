@@ -1,3 +1,4 @@
+
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 🔹 Added for SharedPreferences
 import '../View_model/Authentication_state.dart';
 import '../View_model/Custom_snackbar.dart';
 import '../View_model/Splash_Animation.dart';
@@ -28,21 +30,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   bool _isLoading = false;
   List<Offset> _dotPositions = [];
 
-  // Animation Controllers
   late AnimationController _bgController;
   late AnimationController _entryController;
-
-  // Animation Definitions
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late AuthState authState;
 
-  // 🔹 Define a Base Text Style to avoid repetition
   final TextStyle baseStyle = GoogleFonts.poppins();
 
   @override
   void initState() {
     super.initState();
+
+    // 🔹 1. AUTH GUARD: Check if user is already logged in
+    _checkExistingAuth();
 
     _bgController = AnimationController(
       vsync: this,
@@ -78,6 +79,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     });
   }
 
+  // 🔹 Logic to redirect users who are already logged in
+  Future<void> _checkExistingAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('accessToken');
+    if (token != null && token.isNotEmpty) {
+      if (mounted) {
+        // Use go_router or Navigator to move to home
+        context.go('/home');
+      }
+    }
+  }
+
   List<Offset> _generateDotPositions(double width, double height, int count) {
     final random = Random();
     return List.generate(count, (_) => Offset(random.nextDouble() * width, random.nextDouble() * height));
@@ -98,7 +111,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     setState(() => _isLoading = false);
 
     if (result['status'] == 200 && result['parsed']['accessToken'] != null) {
-      if (mounted) context.go('/home');
+      if (mounted) {
+        // 🔹 2. Navigate and clear history so they can't "Back" into Login
+        context.go('/home');
+      }
     } else {
       if (mounted) {
         showCustomSnackBar(context, result['parsed']['message'] ?? "Login failed", false);
@@ -111,74 +127,78 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     final size = MediaQuery.of(context).size;
     final isWeb = size.width > 800;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // BACKGROUND LAYER
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.indigo.shade900, Colors.deepPurple.shade900, Colors.black],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    // 🔹 3. PopScope to handle/disable the back button
+    return PopScope(
+      canPop: false, // Prevents backing out of the login screen into a void
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // BACKGROUND LAYER
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.indigo.shade900, Colors.deepPurple.shade900, Colors.black],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
             ),
-          ),
 
-          // ANIMATION LAYER: Particles
-          AnimatedBuilder(
-            animation: _bgController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: BackgroundDotsPainter(positions: _dotPositions),
-                size: size,
-              );
-            },
-          ),
+            // ANIMATION LAYER: Particles
+            AnimatedBuilder(
+              animation: _bgController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: BackgroundDotsPainter(positions: _dotPositions),
+                  size: size,
+                );
+              },
+            ),
 
-          // UI LAYER: Glassmorphism Card
-          Center(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(32),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                    child: Container(
-                      width: isWeb ? 420 : size.width * 0.88,
-                      padding: const EdgeInsets.all(40),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(color: Colors.white.withOpacity(0.12)),
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildHeader(),
-                            const SizedBox(height: 48),
-                            _modernInput("Identifier", identifierController, Iconsax.user, false),
-                            const SizedBox(height: 24),
-                            _modernInput("Password", passwordController, Iconsax.key, true),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                "Forgot Password?",
-                                style: baseStyle.copyWith(color: Colors.white54, fontSize: 12),
+            // UI LAYER: Glassmorphism Card
+            Center(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                      child: Container(
+                        width: isWeb ? 420 : size.width * 0.88,
+                        padding: const EdgeInsets.all(40),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: Colors.white.withOpacity(0.12)),
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildHeader(),
+                              const SizedBox(height: 48),
+                              _modernInput("Identifier", identifierController, Iconsax.user, false),
+                              const SizedBox(height: 24),
+                              _modernInput("Password", passwordController, Iconsax.key, true),
+                              const SizedBox(height: 12),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  "Forgot Password?",
+                                  style: baseStyle.copyWith(color: Colors.white54, fontSize: 12),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 40),
-                            _isLoading
-                                ? Lottie.asset('assets/signin_button.json', height: 70)
-                                : _buildSubmitButton(),
-                            const SizedBox(height: 32),
-                            _buildFooter(),
-                          ],
+                              const SizedBox(height: 40),
+                              _isLoading
+                                  ? Lottie.asset('assets/signin_button.json', height: 70)
+                                  : _buildSubmitButton(),
+                              const SizedBox(height: 32),
+                              _buildFooter(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -186,11 +206,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
 
   Widget _buildHeader() {
     return Column(

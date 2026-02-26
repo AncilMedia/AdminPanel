@@ -4,14 +4,31 @@ import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../View_model/Sidebar_provider.dart';
 import '../../View_model/side_navbar_drawer.dart';
+import '../Mainlayout.dart';
 
 class AppSubDrawer extends StatelessWidget {
   const AppSubDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SubDrawerProvider>(context);
-    final selectedItem = provider.selectedItem;
+    // Listen to SubDrawerProvider for internal App tab selections
+    final subDrawerProvider = Provider.of<SubDrawerProvider>(context);
+    final selectedItem = subDrawerProvider.selectedItem;
+
+    void _handleBackNavigation() {
+      if (Navigator.of(context).canPop()) {
+        // If we pushed this page, pop returns to the exact previous state
+        Navigator.of(context).pop();
+      } else {
+        // Safety: If stack is lost (direct URL access/refresh), go to Home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainLayout(initialPage: 'home'),
+          ),
+        );
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -20,12 +37,11 @@ class AppSubDrawer extends StatelessWidget {
         children: [
           const SizedBox(height: 24),
 
-          // --- MODERN BACK BUTTON ---
-          _buildBackButton(context),
+          // --- FIXED BACK BUTTON ---
+          _buildBackButton(context, _handleBackNavigation),
 
           const SizedBox(height: 32),
 
-          // Section Label
           Padding(
             padding: const EdgeInsets.only(left: 12, bottom: 16),
             child: Text(
@@ -49,13 +65,9 @@ class AppSubDrawer extends StatelessWidget {
     );
   }
 
-  // ================= BACK NAVIGATION BUTTON =================
-  Widget _buildBackButton(BuildContext context) {
+  Widget _buildBackButton(BuildContext context, VoidCallback onBack) {
     return InkWell(
-      onTap: () {
-        // Switch the main sidebar back to home
-        Provider.of<SidebarProvider>(context, listen: false).selectItem('home');
-      },
+      onTap: onBack,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -83,7 +95,6 @@ class AppSubDrawer extends StatelessWidget {
     );
   }
 
-  // ================= MODERN DRAWER TILE =================
   Widget _buildModernTile(BuildContext context, IconData icon, String label, SubDrawerItem item, SubDrawerItem selectedItem) {
     final isSelected = selectedItem == item;
 
@@ -91,15 +102,13 @@ class AppSubDrawer extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          final provider = Provider.of<SubDrawerProvider>(context, listen: false);
-          provider.selectItem(item);
+          Provider.of<SubDrawerProvider>(context, listen: false).selectItem(item);
         },
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            // Soft background fade
             color: isSelected ? Colors.cyan.withOpacity(0.05) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -108,11 +117,7 @@ class AppSubDrawer extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    icon,
-                    color: isSelected ? Colors.cyan : Colors.blueGrey.shade600,
-                    size: 20,
-                  ),
+                  Icon(icon, color: isSelected ? Colors.cyan : Colors.blueGrey.shade600, size: 20),
                   const SizedBox(width: 16),
                   Text(
                     label,
@@ -124,31 +129,19 @@ class AppSubDrawer extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-
-              // --- HORIZONTAL INDICATOR LINE ---
-              Align(
-                alignment: Alignment.centerLeft,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  height: 3,
-                  // The line expands horizontally when selected
-                  width: isSelected ? 40 : 0,
-                  decoration: BoxDecoration(
-                    color: Colors.cyan,
-                    borderRadius: BorderRadius.circular(2),
-                    boxShadow: [
-                      if (isSelected)
-                        BoxShadow(
-                          color: Colors.cyan.withOpacity(0.4),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                    ],
+              if (isSelected) const SizedBox(height: 8),
+              if (isSelected)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    height: 3,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.cyan,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

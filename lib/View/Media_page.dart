@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
+// Ensure the path to your MainLayout is correct
+import 'Mainlayout.dart';
 import 'Media_Analytics_page.dart';
 import 'Media_Library_page.dart';
 import 'Media_Music_page.dart';
@@ -29,6 +31,22 @@ class _MediaPageState extends State<MediaPage> {
     AnalyticsPage(),
   ];
 
+  /// --- THE IMPROVED BACK LOGIC ---
+  void _goBack() {
+    if (Navigator.of(context).canPop()) {
+      // If we pushed this page, pop returns to the exact previous state
+      Navigator.of(context).pop();
+    } else {
+      // Safety: If stack is lost (direct URL access/refresh), go to Home
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MainLayout(initialPage: 'home'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -40,6 +58,10 @@ class _MediaPageState extends State<MediaPage> {
       appBar: isLargeScreen
           ? null
           : AppBar(
+        leading: IconButton(
+          icon: const Icon(Iconsax.arrow_left_2, color: Colors.black),
+          onPressed: _goBack,
+        ),
         title: Text(titles[selectedIndex],
             style: baseStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
@@ -49,7 +71,6 @@ class _MediaPageState extends State<MediaPage> {
       body: Row(
         children: [
           if (isLargeScreen) _buildModernSidebar(),
-
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),
@@ -59,10 +80,7 @@ class _MediaPageState extends State<MediaPage> {
                 return FadeTransition(
                   opacity: animation,
                   child: SlideTransition(
-                    position: Tween<Offset>(
-                        begin: const Offset(0.02, 0),
-                        end: Offset.zero
-                    ).animate(animation),
+                    position: Tween<Offset>(begin: const Offset(0.02, 0), end: Offset.zero).animate(animation),
                     child: child,
                   ),
                 );
@@ -72,7 +90,6 @@ class _MediaPageState extends State<MediaPage> {
           ),
         ],
       ),
-      // Mobile Bottom Nav
       bottomNavigationBar: isLargeScreen ? null : _buildBottomNav(),
     );
   }
@@ -80,7 +97,7 @@ class _MediaPageState extends State<MediaPage> {
   // --- 1. MODERN VERTICAL SIDEBAR (Desktop) ---
   Widget _buildModernSidebar() {
     return Container(
-      width: 100, // Compact but elegant
+      width: 110,
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -91,7 +108,38 @@ class _MediaPageState extends State<MediaPage> {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          // --- THE UPDATED BACK BUTTON ---
+          InkWell(
+            onTap: _goBack,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Iconsax.arrow_left_2, size: 14, color: Colors.blueGrey),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Back",
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blueGrey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
           // Logo Area
           Container(
             padding: const EdgeInsets.all(12),
@@ -101,7 +149,7 @@ class _MediaPageState extends State<MediaPage> {
             ),
             child: const Icon(Iconsax.video_play, color: Colors.white, size: 28),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 40),
 
           // Navigation Items
           _sidebarItem(0, Iconsax.message_edit, "Library"),
@@ -111,8 +159,6 @@ class _MediaPageState extends State<MediaPage> {
           _sidebarItem(4, Iconsax.chart, "Stats"),
 
           const Spacer(),
-          // Bottom Action (Settings/Logout)
-          // _sidebarItem(99, Iconsax.setting_2, "Settings"),
           const SizedBox(height: 24),
         ],
       ),
@@ -125,6 +171,7 @@ class _MediaPageState extends State<MediaPage> {
       onTap: () => setState(() => selectedIndex = index),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
+        color: Colors.transparent,
         child: Column(
           children: [
             AnimatedContainer(
@@ -134,11 +181,7 @@ class _MediaPageState extends State<MediaPage> {
                 color: isSelected ? Colors.indigo.withOpacity(0.1) : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(
-                icon,
-                color: isSelected ? Colors.indigo : Colors.blueGrey.shade300,
-                size: 24,
-              ),
+              child: Icon(icon, color: isSelected ? Colors.indigo : Colors.blueGrey.shade300, size: 24),
             ),
             const SizedBox(height: 4),
             Text(label,
@@ -146,15 +189,13 @@ class _MediaPageState extends State<MediaPage> {
                   fontSize: 10,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   color: isSelected ? Colors.indigo : Colors.blueGrey.shade300,
-                )
-            ),
+                )),
           ],
         ),
       ),
     );
   }
 
-  // --- 2. MODERN BOTTOM NAV (Mobile) ---
   Widget _buildBottomNav() {
     return Container(
       height: 80,
@@ -185,7 +226,10 @@ class _MediaPageState extends State<MediaPage> {
           Icon(icon, color: isSelected ? Colors.indigo : Colors.blueGrey.shade200),
           const SizedBox(height: 4),
           if (isSelected)
-            Container(height: 4, width: 4, decoration: const BoxDecoration(color: Colors.indigo, shape: BoxShape.circle)),
+            Container(
+                height: 4,
+                width: 4,
+                decoration: const BoxDecoration(color: Colors.indigo, shape: BoxShape.circle)),
         ],
       ),
     );

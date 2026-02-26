@@ -1,1104 +1,3 @@
-// // // // // // import 'package:flutter/material.dart';
-// // // // // // import 'package:google_fonts/google_fonts.dart';
-// // // // // // import 'package:iconsax/iconsax.dart';
-// // // // // //
-// // // // // // class ManageRoles extends StatefulWidget {
-// // // // // //   const ManageRoles({super.key});
-// // // // // //
-// // // // // //   @override
-// // // // // //   State<ManageRoles> createState() => _ManageRolesState();
-// // // // // // }
-// // // // // //
-// // // // // // class _ManageRolesState extends State<ManageRoles> {
-// // // // // //   // Sample role data
-// // // // // //   final List<Map<String, String>> roles = [
-// // // // // //     {
-// // // // // //       'name': 'Admin',
-// // // // // //       'description': 'Admin Description',
-// // // // // //       'createdAt': '10-02-25',
-// // // // // //     },
-// // // // // //     {
-// // // // // //       'name': 'Editor',
-// // // // // //       'description': 'Editor Description',
-// // // // // //       'createdAt': '12-05-25',
-// // // // // //     },
-// // // // // //     {
-// // // // // //       'name': 'Viewer',
-// // // // // //       'description': 'Viewer Description',
-// // // // // //       'createdAt': '01-08-25',
-// // // // // //     },
-// // // // // //   ];
-// // // // // //
-// // // // // //   @override
-// // // // // //   Widget build(BuildContext context) {
-// // // // // //     // Define fixed widths for columns
-// // // // // //     final double nameWidth = 120;
-// // // // // //     final double descWidth = 180;
-// // // // // //     final double dateWidth = 100;
-// // // // // //     final double actionsWidth = 100;
-// // // // // //
-// // // // // //     return Scaffold(
-// // // // // //       body: Column(
-// // // // // //         children: [
-// // // // // //           // Header
-// // // // // //           Container(
-// // // // // //             height: 60,
-// // // // // //             width: double.infinity,
-// // // // // //             padding: const EdgeInsets.symmetric(horizontal: 16),
-// // // // // //             decoration: BoxDecoration(
-// // // // // //               color: Colors.cyan.shade300,
-// // // // // //               borderRadius: const BorderRadius.only(
-// // // // // //                 bottomLeft: Radius.circular(30),
-// // // // // //                 bottomRight: Radius.circular(25),
-// // // // // //               ),
-// // // // // //             ),
-// // // // // //             child: Row(
-// // // // // //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-// // // // // //               crossAxisAlignment: CrossAxisAlignment.center,
-// // // // // //               children: [
-// // // // // //                 SizedBox(width: nameWidth, child: Text("Name", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16,color: Colors.white))),
-// // // // // //                 SizedBox(width: descWidth, child: Text("Description", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16,color: Colors.white))),
-// // // // // //                 SizedBox(width: dateWidth, child: Text("Created-at", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16,color: Colors.white))),
-// // // // // //                 SizedBox(width: actionsWidth, child: Text("Actions", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16,color: Colors.white))),
-// // // // // //               ],
-// // // // // //             ),
-// // // // // //           ),
-// // // // // //
-// // // // // //           // Data rows
-// // // // // //           Expanded(
-// // // // // //             child: ListView.builder(
-// // // // // //               itemCount: roles.length,
-// // // // // //               itemBuilder: (context, index) {
-// // // // // //                 final role = roles[index];
-// // // // // //                 return Container(
-// // // // // //                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-// // // // // //                   decoration: BoxDecoration(
-// // // // // //                     border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-// // // // // //                   ),
-// // // // // //                   child: Row(
-// // // // // //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-// // // // // //                     crossAxisAlignment: CrossAxisAlignment.start,
-// // // // // //                     children: [
-// // // // // //                       SizedBox(width: nameWidth, child: Text(role['name']!, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // // //                       SizedBox(width: descWidth, child: Text(role['description']!, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // // //                       SizedBox(width: dateWidth, child: Text(role['createdAt']!, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // // //                       SizedBox(
-// // // // // //                         width: actionsWidth,
-// // // // // //                         child: Row(
-// // // // // //                           mainAxisAlignment: MainAxisAlignment.start,
-// // // // // //                           children: [
-// // // // // //                             Container(
-// // // // // //                               height: 40,
-// // // // // //                               width: 40,
-// // // // // //                               margin: const EdgeInsets.only(right: 8),
-// // // // // //                               decoration: BoxDecoration(
-// // // // // //                                 borderRadius: BorderRadius.circular(10),
-// // // // // //                                 color: Colors.amber,
-// // // // // //                               ),
-// // // // // //                               child: const Icon(Iconsax.edit, color: Colors.white),
-// // // // // //                             ),
-// // // // // //                             Container(
-// // // // // //                               height: 40,
-// // // // // //                               width: 40,
-// // // // // //                               decoration: BoxDecoration(
-// // // // // //                                 borderRadius: BorderRadius.circular(10),
-// // // // // //                                 color: Colors.redAccent,
-// // // // // //                               ),
-// // // // // //                               child: const Icon(Iconsax.trash, color: Colors.white),
-// // // // // //                             ),
-// // // // // //                           ],
-// // // // // //                         ),
-// // // // // //                       ),
-// // // // // //                     ],
-// // // // // //                   ),
-// // // // // //                 );
-// // // // // //               },
-// // // // // //             ),
-// // // // // //           )
-// // // // // //         ],
-// // // // // //       ),
-// // // // // //     );
-// // // // // //   }
-// // // // // // }
-// // // // //
-// // // // // import 'package:flutter/material.dart';
-// // // // // import 'package:google_fonts/google_fonts.dart';
-// // // // // import 'package:iconsax/iconsax.dart';
-// // // // //
-// // // // // class ManageRolesSheet extends StatelessWidget {
-// // // // //   const ManageRolesSheet({super.key});
-// // // // //
-// // // // //   @override
-// // // // //   Widget build(BuildContext context) {
-// // // // //     final List<Map<String, String>> roles = [
-// // // // //       {'name': 'Admin', 'description': 'Admin Description', 'createdAt': '10-02-25'},
-// // // // //       {'name': 'Editor', 'description': 'Editor Description', 'createdAt': '12-05-25'},
-// // // // //       {'name': 'Viewer', 'description': 'Viewer Description', 'createdAt': '01-08-25'},
-// // // // //     ];
-// // // // //
-// // // // //     final double nameWidth = 120;
-// // // // //     final double descWidth = 180;
-// // // // //     final double dateWidth = 100;
-// // // // //     final double actionsWidth = 100;
-// // // // //
-// // // // //     return Align(
-// // // // //       alignment: Alignment.centerLeft,
-// // // // //       child: Material(
-// // // // //         color: Colors.white,
-// // // // //         elevation: 10,
-// // // // //         borderRadius: const BorderRadius.only(
-// // // // //           topRight: Radius.circular(20),
-// // // // //           bottomRight: Radius.circular(20),
-// // // // //         ),
-// // // // //         child: SizedBox(
-// // // // //           width: MediaQuery.of(context).size.width * 0.6, // Sheet width
-// // // // //           child: Column(
-// // // // //             children: [
-// // // // //               // Header
-// // // // //               Container(
-// // // // //                 height: 60,
-// // // // //                 padding: const EdgeInsets.symmetric(horizontal: 16),
-// // // // //                 decoration: BoxDecoration(
-// // // // //                   color: Colors.cyan.shade300,
-// // // // //                   borderRadius: const BorderRadius.only(
-// // // // //                     topRight: Radius.circular(20),
-// // // // //                   ),
-// // // // //                 ),
-// // // // //                 child: Row(
-// // // // //                   children: [
-// // // // //                     SizedBox(width: nameWidth, child: Text("Name", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // //                     SizedBox(width: descWidth, child: Text("Description", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // //                     SizedBox(width: dateWidth, child: Text("Created-at", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // //                     SizedBox(width: actionsWidth, child: Text("Actions", style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // //                   ],
-// // // // //                 ),
-// // // // //               ),
-// // // // //
-// // // // //               // Rows
-// // // // //               Expanded(
-// // // // //                 child: ListView.builder(
-// // // // //                   itemCount: roles.length,
-// // // // //                   itemBuilder: (context, index) {
-// // // // //                     final role = roles[index];
-// // // // //                     return Container(
-// // // // //                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-// // // // //                       decoration: BoxDecoration(
-// // // // //                         border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-// // // // //                       ),
-// // // // //                       child: Row(
-// // // // //                         children: [
-// // // // //                           SizedBox(width: nameWidth, child: Text(role['name']!, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // //                           SizedBox(width: descWidth, child: Text(role['description']!, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // //                           SizedBox(width: dateWidth, child: Text(role['createdAt']!, style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 16))),
-// // // // //                           SizedBox(
-// // // // //                             width: actionsWidth,
-// // // // //                             child: Row(
-// // // // //                               children: [
-// // // // //                                 Container(
-// // // // //                                   height: 40,
-// // // // //                                   width: 40,
-// // // // //                                   margin: const EdgeInsets.only(right: 8),
-// // // // //                                   decoration: BoxDecoration(
-// // // // //                                     borderRadius: BorderRadius.circular(10),
-// // // // //                                     color: Colors.yellow,
-// // // // //                                   ),
-// // // // //                                   child: const Icon(Iconsax.edit, color: Colors.white),
-// // // // //                                 ),
-// // // // //                                 Container(
-// // // // //                                   height: 40,
-// // // // //                                   width: 40,
-// // // // //                                   decoration: BoxDecoration(
-// // // // //                                     borderRadius: BorderRadius.circular(10),
-// // // // //                                     color: Colors.redAccent,
-// // // // //                                   ),
-// // // // //                                   child: const Icon(Iconsax.trash, color: Colors.white),
-// // // // //                                 ),
-// // // // //                               ],
-// // // // //                             ),
-// // // // //                           ),
-// // // // //                         ],
-// // // // //                       ),
-// // // // //                     );
-// // // // //                   },
-// // // // //                 ),
-// // // // //               ),
-// // // // //             ],
-// // // // //           ),
-// // // // //         ),
-// // // // //       ),
-// // // // //     );
-// // // // //   }
-// // // // // }
-// // // // //
-// // // // // /// Function to open sheet
-// // // // // void openManageRolesSheet(BuildContext context) {
-// // // // //   showGeneralDialog(
-// // // // //     context: context,
-// // // // //     barrierDismissible: true,
-// // // // //     barrierLabel: '',
-// // // // //     transitionDuration: const Duration(milliseconds: 300),
-// // // // //     pageBuilder: (_, __, ___) => const SizedBox.shrink(),
-// // // // //     transitionBuilder: (_, anim, __, child) {
-// // // // //       return SlideTransition(
-// // // // //         position: Tween<Offset>(
-// // // // //           begin: const Offset(-1, 0), // Start off-screen left
-// // // // //           end: Offset.zero,
-// // // // //         ).animate(anim),
-// // // // //         child: const ManageRolesSheet(),
-// // // // //       );
-// // // // //     },
-// // // // //   );
-// // // // // }
-// // // // //
-// // // // // /// Example usage
-// // // // // class HomePage extends StatelessWidget {
-// // // // //   const HomePage({super.key});
-// // // // //
-// // // // //   @override
-// // // // //   Widget build(BuildContext context) {
-// // // // //     return Scaffold(
-// // // // //       appBar: AppBar(title: const Text("Dashboard")),
-// // // // //       body: Center(
-// // // // //         child: ElevatedButton(
-// // // // //           onPressed: () => openManageRolesSheet(context),
-// // // // //           child: const Text("Manage Roles"),
-// // // // //         ),
-// // // // //       ),
-// // // // //     );
-// // // // //   }
-// // // // // }
-// // // //
-// // // // import 'package:flutter/material.dart';
-// // // // import 'package:google_fonts/google_fonts.dart';
-// // // // import 'package:iconsax/iconsax.dart';
-// // // //
-// // // // class ManageRoles extends StatefulWidget {
-// // // //   const ManageRoles({super.key});
-// // // //
-// // // //   @override
-// // // //   State<ManageRoles> createState() => _ManageRolesState();
-// // // // }
-// // // //
-// // // // class _ManageRolesState extends State<ManageRoles> {
-// // // //   @override
-// // // //   Widget build(BuildContext context) {
-// // // //     return Scaffold(
-// // // //       body: Column(
-// // // //         children: [
-// // // //           // 🔹 Header with close button
-// // // //           Container(
-// // // //             height: 60,
-// // // //             padding: const EdgeInsets.symmetric(horizontal: 16),
-// // // //             decoration: BoxDecoration(
-// // // //               color: Colors.cyan.shade300,
-// // // //               borderRadius: const BorderRadius.only(
-// // // //                 topLeft: Radius.circular(16),
-// // // //                 topRight: Radius.circular(16),
-// // // //               ),
-// // // //             ),
-// // // //             child: Row(
-// // // //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-// // // //               children: [
-// // // //                 Text("Manage Roles",
-// // // //                     style: GoogleFonts.poppins(
-// // // //                         fontSize: 18, fontWeight: FontWeight.w600)),
-// // // //                 IconButton(
-// // // //                   icon: const Icon(Icons.close, color: Colors.white),
-// // // //                   onPressed: () => Navigator.of(context).pop(),
-// // // //                 ),
-// // // //               ],
-// // // //             ),
-// // // //           ),
-// // // //
-// // // //           // 🔹 Table header
-// // // //           Container(
-// // // //             height: 50,
-// // // //             width: double.infinity,
-// // // //             padding: const EdgeInsets.symmetric(horizontal: 16),
-// // // //             decoration: BoxDecoration(
-// // // //               color: Colors.cyan.shade100,
-// // // //             ),
-// // // //             child: Row(
-// // // //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-// // // //               children: [
-// // // //                 Expanded(
-// // // //                     flex: 2,
-// // // //                     child: Text("Name",
-// // // //                         style: GoogleFonts.poppins(
-// // // //                             fontWeight: FontWeight.w500, fontSize: 14))),
-// // // //                 Expanded(
-// // // //                     flex: 3,
-// // // //                     child: Text("Description",
-// // // //                         style: GoogleFonts.poppins(
-// // // //                             fontWeight: FontWeight.w500, fontSize: 14))),
-// // // //                 Expanded(
-// // // //                     flex: 2,
-// // // //                     child: Text("Created-at",
-// // // //                         style: GoogleFonts.poppins(
-// // // //                             fontWeight: FontWeight.w500, fontSize: 14))),
-// // // //                 Expanded(
-// // // //                     flex: 2,
-// // // //                     child: Text("Actions",
-// // // //                         style: GoogleFonts.poppins(
-// // // //                             fontWeight: FontWeight.w500, fontSize: 14))),
-// // // //               ],
-// // // //             ),
-// // // //           ),
-// // // //
-// // // //           // 🔹 Example row
-// // // //           Expanded(
-// // // //             child: ListView(
-// // // //               children: [
-// // // //                 Container(
-// // // //                   padding:
-// // // //                   const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-// // // //                   child: Row(
-// // // //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-// // // //                     children: [
-// // // //                       Expanded(
-// // // //                           flex: 2,
-// // // //                           child: Text("Admin",
-// // // //                               style: GoogleFonts.poppins(fontSize: 14))),
-// // // //                       Expanded(
-// // // //                           flex: 3,
-// // // //                           child: Text("Admin Description",
-// // // //                               style: GoogleFonts.poppins(fontSize: 14))),
-// // // //                       Expanded(
-// // // //                           flex: 2,
-// // // //                           child: Text("10-02-25",
-// // // //                               style: GoogleFonts.poppins(fontSize: 14))),
-// // // //                       Expanded(
-// // // //                         flex: 2,
-// // // //                         child: Row(
-// // // //                           mainAxisAlignment: MainAxisAlignment.start,
-// // // //                           children: [
-// // // //                             Container(
-// // // //                               height: 36,
-// // // //                               width: 36,
-// // // //                               decoration: BoxDecoration(
-// // // //                                   borderRadius: BorderRadius.circular(8),
-// // // //                                   color: Colors.yellow),
-// // // //                               child: const Icon(Iconsax.edit, color: Colors.white),
-// // // //                             ),
-// // // //                             const SizedBox(width: 8),
-// // // //                             Container(
-// // // //                               height: 36,
-// // // //                               width: 36,
-// // // //                               decoration: BoxDecoration(
-// // // //                                   borderRadius: BorderRadius.circular(8),
-// // // //                                   color: Colors.redAccent),
-// // // //                               child:
-// // // //                               const Icon(Iconsax.trash, color: Colors.white),
-// // // //                             ),
-// // // //                           ],
-// // // //                         ),
-// // // //                       )
-// // // //                     ],
-// // // //                   ),
-// // // //                 ),
-// // // //               ],
-// // // //             ),
-// // // //           ),
-// // // //         ],
-// // // //       ),
-// // // //     );
-// // // //   }
-// // // // }
-// // // //
-// // // // // 🔹 Floating right sheet
-// // // // void openManageRolesSheet(BuildContext context) {
-// // // //   showGeneralDialog(
-// // // //     context: context,
-// // // //     barrierDismissible: true,
-// // // //     barrierLabel: "ManageRoles",
-// // // //     transitionDuration: const Duration(milliseconds: 400),
-// // // //     pageBuilder: (_, __, ___) {
-// // // //       return Align(
-// // // //         alignment: Alignment.centerRight,
-// // // //         child: Container(
-// // // //           margin: const EdgeInsets.only(
-// // // //               top: 40, bottom: 40, right: 20), // floating box
-// // // //           width: MediaQuery.of(context).size.width * 0.6, // 60% width
-// // // //           decoration: BoxDecoration(
-// // // //             color: Colors.white,
-// // // //             borderRadius: BorderRadius.circular(16),
-// // // //             boxShadow: [
-// // // //               BoxShadow(
-// // // //                 color: Colors.black26,
-// // // //                 blurRadius: 20,
-// // // //                 offset: const Offset(-5, 0),
-// // // //               ),
-// // // //             ],
-// // // //           ),
-// // // //           child: const ManageRoles(),
-// // // //         ),
-// // // //       );
-// // // //     },
-// // // //     transitionBuilder: (_, anim, __, child) {
-// // // //       return SlideTransition(
-// // // //         position: Tween(
-// // // //           begin: const Offset(1, 0), // slide from right
-// // // //           end: Offset.zero,
-// // // //         ).animate(CurvedAnimation(
-// // // //           parent: anim,
-// // // //           curve: Curves.easeOutCubic,
-// // // //         )),
-// // // //         child: child,
-// // // //       );
-// // // //     },
-// // // //   );
-// // // // }
-// // //
-// // // import 'package:flutter/material.dart';
-// // // import 'package:google_fonts/google_fonts.dart';
-// // // import 'package:iconsax/iconsax.dart';
-// // //
-// // // class ManageRoles extends StatefulWidget {
-// // //   const ManageRoles({super.key});
-// // //
-// // //   @override
-// // //   State<ManageRoles> createState() => _ManageRolesState();
-// // // }
-// // //
-// // // class _ManageRolesState extends State<ManageRoles> {
-// // //   @override
-// // //   Widget build(BuildContext context) {
-// // //     return ClipRRect(
-// // //       borderRadius: BorderRadius.circular(30), // 👈 clip entire sheet
-// // //       child: Scaffold(
-// // //         backgroundColor: Colors.white,
-// // //         body: Column(
-// // //           children: [
-// // //             // 🔹 Header with close button
-// // //             Container(
-// // //               height: 60,
-// // //               padding: const EdgeInsets.symmetric(horizontal: 16),
-// // //               decoration: BoxDecoration(
-// // //                 color: Colors.cyan.shade300,
-// // //                 borderRadius: const BorderRadius.only(
-// // //                   topLeft: Radius.circular(30), // match sheet curve
-// // //                   topRight: Radius.circular(30),
-// // //                 ),
-// // //               ),
-// // //               child: Row(
-// // //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-// // //                 children: [
-// // //                   Text("Manage Roles",
-// // //                       style: GoogleFonts.poppins(
-// // //                           fontSize: 18, fontWeight: FontWeight.w600)),
-// // //                   IconButton(
-// // //                     icon: const Icon(Icons.close, color: Colors.white),
-// // //                     onPressed: () => Navigator.of(context).pop(),
-// // //                   ),
-// // //                 ],
-// // //               ),
-// // //             ),
-// // //
-// // //             // 🔹 Table header
-// // //             Container(
-// // //               height: 50,
-// // //               width: double.infinity,
-// // //               padding: const EdgeInsets.symmetric(horizontal: 16),
-// // //               color: Colors.cyan.shade100,
-// // //               child: Row(
-// // //                 children: [
-// // //                   Expanded(
-// // //                       flex: 2,
-// // //                       child: Text("Name",
-// // //                           style: GoogleFonts.poppins(
-// // //                               fontWeight: FontWeight.w500, fontSize: 14))),
-// // //                   Expanded(
-// // //                       flex: 3,
-// // //                       child: Text("Description",
-// // //                           style: GoogleFonts.poppins(
-// // //                               fontWeight: FontWeight.w500, fontSize: 14))),
-// // //                   Expanded(
-// // //                       flex: 2,
-// // //                       child: Text("Created-at",
-// // //                           style: GoogleFonts.poppins(
-// // //                               fontWeight: FontWeight.w500, fontSize: 14))),
-// // //                   Expanded(
-// // //                       flex: 2,
-// // //                       child: Text("Actions",
-// // //                           style: GoogleFonts.poppins(
-// // //                               fontWeight: FontWeight.w500, fontSize: 14))),
-// // //                 ],
-// // //               ),
-// // //             ),
-// // //
-// // //             // 🔹 Example row
-// // //             Expanded(
-// // //               child: ListView(
-// // //                 children: [
-// // //                   Container(
-// // //                     padding: const EdgeInsets.symmetric(
-// // //                         horizontal: 16, vertical: 12),
-// // //                     child: Row(
-// // //                       children: [
-// // //                         Expanded(
-// // //                             flex: 2,
-// // //                             child: Text("Admin",
-// // //                                 style: GoogleFonts.poppins(fontSize: 14))),
-// // //                         Expanded(
-// // //                             flex: 3,
-// // //                             child: Text("Admin Description",
-// // //                                 style: GoogleFonts.poppins(fontSize: 14))),
-// // //                         Expanded(
-// // //                             flex: 2,
-// // //                             child: Text("10-02-25",
-// // //                                 style: GoogleFonts.poppins(fontSize: 14))),
-// // //                         Expanded(
-// // //                           flex: 2,
-// // //                           child: Row(
-// // //                             children: [
-// // //                               Container(
-// // //                                 height: 36,
-// // //                                 width: 36,
-// // //                                 decoration: BoxDecoration(
-// // //                                     borderRadius: BorderRadius.circular(8),
-// // //                                     color: Colors.yellow),
-// // //                                 child: const Icon(Iconsax.edit,
-// // //                                     color: Colors.white),
-// // //                               ),
-// // //                               const SizedBox(width: 8),
-// // //                               Container(
-// // //                                 height: 36,
-// // //                                 width: 36,
-// // //                                 decoration: BoxDecoration(
-// // //                                     borderRadius: BorderRadius.circular(8),
-// // //                                     color: Colors.redAccent),
-// // //                                 child: const Icon(Iconsax.trash,
-// // //                                     color: Colors.white),
-// // //                               ),
-// // //                             ],
-// // //                           ),
-// // //                         )
-// // //                       ],
-// // //                     ),
-// // //                   ),
-// // //                 ],
-// // //               ),
-// // //             ),
-// // //           ],
-// // //         ),
-// // //       ),
-// // //     );
-// // //   }
-// // // }
-// // //
-// // // // 🔹 Floating right sheet
-// // // void openManageRolesSheet(BuildContext context) {
-// // //   showGeneralDialog(
-// // //     context: context,
-// // //     barrierDismissible: true,
-// // //     barrierLabel: "ManageRoles",
-// // //     transitionDuration: const Duration(milliseconds: 400),
-// // //     pageBuilder: (_, __, ___) {
-// // //       return Align(
-// // //         alignment: Alignment.centerRight,
-// // //         child: Container(
-// // //           margin:
-// // //           const EdgeInsets.only(top: 40, bottom: 40, right: 20), // floating
-// // //           width: MediaQuery.of(context).size.width * 0.4, // 👈 smaller width
-// // //           decoration: BoxDecoration(
-// // //             borderRadius: BorderRadius.circular(30), // 👈 round sheet
-// // //             boxShadow: [
-// // //               BoxShadow(
-// // //                 color: Colors.black26,
-// // //                 blurRadius: 20,
-// // //                 offset: const Offset(-5, 0),
-// // //               ),
-// // //             ],
-// // //           ),
-// // //           child: const ManageRoles(),
-// // //         ),
-// // //       );
-// // //     },
-// // //     transitionBuilder: (_, anim, __, child) {
-// // //       return SlideTransition(
-// // //         position: Tween(
-// // //           begin: const Offset(1, 0), // slide from right
-// // //           end: Offset.zero,
-// // //         ).animate(CurvedAnimation(
-// // //           parent: anim,
-// // //           curve: Curves.easeOutCubic,
-// // //         )),
-// // //         child: child,
-// // //       );
-// // //     },
-// // //   );
-// // // }
-// // //
-// //
-// // import 'package:flutter/material.dart';
-// // import 'package:google_fonts/google_fonts.dart';
-// // import 'package:iconsax/iconsax.dart';
-// // import 'package:provider/provider.dart';
-// // import '../Controller/Roles_controller.dart'; // adjust path
-// //
-// // class ManageRoles extends StatefulWidget {
-// //   const ManageRoles({super.key});
-// //
-// //   @override
-// //   State<ManageRoles> createState() => _ManageRolesState();
-// // }
-// //
-// // class _ManageRolesState extends State<ManageRoles> {
-// //   @override
-// //   void initState() {
-// //     super.initState();
-// //     // fetch roles when sheet opens
-// //     Future.microtask(() =>
-// //         Provider.of<RolesController>(context, listen: false).fetchRoles());
-// //   }
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return ClipRRect(
-// //       borderRadius: BorderRadius.circular(30), // clip sheet edges
-// //       child: Scaffold(
-// //         backgroundColor: Colors.white,
-// //         body: Consumer<RolesController>(
-// //           builder: (context, rolesController, child) {
-// //             if (rolesController.isLoading) {
-// //               return const Center(child: CircularProgressIndicator());
-// //             }
-// //
-// //             return Column(
-// //               children: [
-// //                 // 🔹 Header with close button
-// //                 Container(
-// //                   height: 60,
-// //                   padding: const EdgeInsets.symmetric(horizontal: 16),
-// //                   decoration: BoxDecoration(
-// //                     color: Colors.cyan.shade300,
-// //                     borderRadius: const BorderRadius.only(
-// //                       topLeft: Radius.circular(30),
-// //                       topRight: Radius.circular(30),
-// //                     ),
-// //                   ),
-// //                   child: Row(
-// //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-// //                     children: [
-// //                       Text("Manage Roles",
-// //                           style: GoogleFonts.poppins(
-// //                               fontSize: 18, fontWeight: FontWeight.w600)),
-// //                       IconButton(
-// //                         icon: const Icon(Icons.close, color: Colors.white),
-// //                         onPressed: () => Navigator.of(context).pop(),
-// //                       ),
-// //                     ],
-// //                   ),
-// //                 ),
-// //
-// //                 // 🔹 Table header
-// //                 Container(
-// //                   height: 50,
-// //                   width: double.infinity,
-// //                   padding: const EdgeInsets.symmetric(horizontal: 16),
-// //                   color: Colors.cyan.shade100,
-// //                   child: Row(
-// //                     children: [
-// //                       Expanded(
-// //                           flex: 2,
-// //                           child: Text("Name",
-// //                               style: GoogleFonts.poppins(
-// //                                   fontWeight: FontWeight.w500, fontSize: 14))),
-// //                       Expanded(
-// //                           flex: 3,
-// //                           child: Text("Description",
-// //                               style: GoogleFonts.poppins(
-// //                                   fontWeight: FontWeight.w500, fontSize: 14))),
-// //                       Expanded(
-// //                           flex: 2,
-// //                           child: Text("Created-at",
-// //                               style: GoogleFonts.poppins(
-// //                                   fontWeight: FontWeight.w500, fontSize: 14))),
-// //                       Expanded(
-// //                           flex: 2,
-// //                           child: Text("Actions",
-// //                               style: GoogleFonts.poppins(
-// //                                   fontWeight: FontWeight.w500, fontSize: 14))),
-// //                     ],
-// //                   ),
-// //                 ),
-// //
-// //                 // 🔹 Roles list
-// //                 Expanded(
-// //                   child: rolesController.roles.isEmpty
-// //                       ? Center(
-// //                       child: Text("No roles found",
-// //                           style: GoogleFonts.poppins(fontSize: 14)))
-// //                       : ListView.builder(
-// //                     itemCount: rolesController.roles.length,
-// //                     itemBuilder: (context, index) {
-// //                       final role = rolesController.roles[index];
-// //                       return Container(
-// //                         padding: const EdgeInsets.symmetric(
-// //                             horizontal: 16, vertical: 12),
-// //                         child: Row(
-// //                           children: [
-// //                             Expanded(
-// //                                 flex: 2,
-// //                                 child: Text(role['name'] ?? "",
-// //                                     style: GoogleFonts.poppins(
-// //                                         fontSize: 14))),
-// //                             Expanded(
-// //                                 flex: 3,
-// //                                 child: Text(role['description'] ?? "",
-// //                                     style: GoogleFonts.poppins(
-// //                                         fontSize: 14))),
-// //                             Expanded(
-// //                                 flex: 2,
-// //                                 child: Text(role['createdAt'] ?? "",
-// //                                     style: GoogleFonts.poppins(
-// //                                         fontSize: 14))),
-// //                             Expanded(
-// //                               flex: 2,
-// //                               child: Row(
-// //                                 children: [
-// //                                   Container(
-// //                                     height: 36,
-// //                                     width: 36,
-// //                                     decoration: BoxDecoration(
-// //                                         borderRadius:
-// //                                         BorderRadius.circular(8),
-// //                                         color: Colors.yellow),
-// //                                     child: const Icon(Iconsax.edit,
-// //                                         color: Colors.white, size: 18),
-// //                                   ),
-// //                                   const SizedBox(width: 8),
-// //                                   Container(
-// //                                     height: 36,
-// //                                     width: 36,
-// //                                     decoration: BoxDecoration(
-// //                                         borderRadius:
-// //                                         BorderRadius.circular(8),
-// //                                         color: Colors.redAccent),
-// //                                     child: const Icon(Iconsax.trash,
-// //                                         color: Colors.white, size: 18),
-// //                                   ),
-// //                                 ],
-// //                               ),
-// //                             )
-// //                           ],
-// //                         ),
-// //                       );
-// //                     },
-// //                   ),
-// //                 ),
-// //               ],
-// //             );
-// //           },
-// //         ),
-// //       ),
-// //     );
-// //   }
-// // }
-// //
-// // // 🔹 Floating right sheet
-// // void openManageRolesSheet(BuildContext context) {
-// //   showGeneralDialog(
-// //     context: context,
-// //     barrierDismissible: true,
-// //     barrierLabel: "ManageRoles",
-// //     transitionDuration: const Duration(milliseconds: 400),
-// //     pageBuilder: (_, __, ___) {
-// //       return Align(
-// //         alignment: Alignment.centerRight,
-// //         child: Container(
-// //           margin:
-// //           const EdgeInsets.only(top: 40, bottom: 40, right: 20), // floating
-// //           width: MediaQuery.of(context).size.width * 0.4, // smaller width
-// //           decoration: BoxDecoration(
-// //             borderRadius: BorderRadius.circular(30),
-// //             boxShadow: [
-// //               BoxShadow(
-// //                 color: Colors.black26,
-// //                 blurRadius: 20,
-// //                 offset: const Offset(-5, 0),
-// //               ),
-// //             ],
-// //           ),
-// //           child: const ManageRoles(),
-// //         ),
-// //       );
-// //     },
-// //     transitionBuilder: (_, anim, __, child) {
-// //       return SlideTransition(
-// //         position: Tween(
-// //           begin: const Offset(1, 0), // slide from right
-// //           end: Offset.zero,
-// //         ).animate(CurvedAnimation(
-// //           parent: anim,
-// //           curve: Curves.easeOutCubic,
-// //         )),
-// //         child: child,
-// //       );
-// //     },
-// //   );
-// // }
-//
-// import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:iconsax/iconsax.dart';
-// import 'package:provider/provider.dart';
-// import 'package:intl/intl.dart'; // ✅ for date formatting
-// import '../Controller/Roles_controller.dart'; // adjust path
-//
-// class ManageRoles extends StatefulWidget {
-//   const ManageRoles({super.key});
-//
-//   @override
-//   State<ManageRoles> createState() => _ManageRolesState();
-// }
-//
-// class _ManageRolesState extends State<ManageRoles> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     Future.microtask(() =>
-//         Provider.of<RolesController>(context, listen: false).fetchRoles());
-//   }
-//
-//   String formatDate(String? dateStr) {
-//     if (dateStr == null || dateStr.isEmpty) return "";
-//     try {
-//       final date = DateTime.parse(dateStr);
-//       return DateFormat("yyyy-MM-dd").format(date);
-//     } catch (e) {
-//       return dateStr; // fallback
-//     }
-//   }
-//
-//   Future<void> _confirmDelete(BuildContext context, String roleId) async {
-//     final rolesController =
-//     Provider.of<RolesController>(context, listen: false);
-//
-//     final confirm = await showDialog<bool>(
-//       context: context,
-//       builder: (ctx) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//         title: Text("Confirm Delete",
-//             style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-//         content: Text("Are you sure you want to delete this role?",
-//             style: GoogleFonts.poppins()),
-//         actions: [
-//           TextButton(
-//             child: Text("Cancel",
-//                 style: GoogleFonts.poppins(color: Colors.grey)),
-//             onPressed: () => Navigator.of(ctx).pop(false),
-//           ),
-//           ElevatedButton(
-//             style: ElevatedButton.styleFrom(
-//                 backgroundColor: Colors.redAccent,
-//                 shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(8))),
-//             child: Text("Delete",
-//                 style: GoogleFonts.poppins(color: Colors.white)),
-//             onPressed: () => Navigator.of(ctx).pop(true),
-//           ),
-//         ],
-//       ),
-//     );
-//
-//     if (confirm == true) {
-//       await rolesController.deleteRole(roleId);
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return ClipRRect(
-//       borderRadius: BorderRadius.circular(30),
-//       child: Scaffold(
-//         backgroundColor: Colors.white,
-//         body: Consumer<RolesController>(
-//           builder: (context, rolesController, child) {
-//             if (rolesController.isLoading) {
-//               return const Center(child: CircularProgressIndicator());
-//             }
-//
-//             return Column(
-//               children: [
-//                 // Header
-//                 Container(
-//                   height: 60,
-//                   padding: const EdgeInsets.symmetric(horizontal: 16),
-//                   decoration: BoxDecoration(
-//                     color: Colors.cyan.shade300,
-//                     borderRadius: const BorderRadius.only(
-//                       topLeft: Radius.circular(30),
-//                       topRight: Radius.circular(30),
-//                     ),
-//                   ),
-//                   child: Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       Text("Manage Roles",
-//                           style: GoogleFonts.poppins(
-//                               fontSize: 18, fontWeight: FontWeight.w600)),
-//                       IconButton(
-//                         icon: const Icon(Icons.close, color: Colors.white),
-//                         onPressed: () => Navigator.of(context).pop(),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//
-//                 // Table header
-//                 Container(
-//                   height: 50,
-//                   width: double.infinity,
-//                   padding: const EdgeInsets.symmetric(horizontal: 16),
-//                   color: Colors.cyan.shade100,
-//                   child: Row(
-//                     children: [
-//                       Expanded(
-//                           flex: 2,
-//                           child: Text("Name",
-//                               style: GoogleFonts.poppins(
-//                                   fontWeight: FontWeight.w500, fontSize: 14))),
-//                       Expanded(
-//                           flex: 3,
-//                           child: Text("Description",
-//                               style: GoogleFonts.poppins(
-//                                   fontWeight: FontWeight.w500, fontSize: 14))),
-//                       Expanded(
-//                           flex: 2,
-//                           child: Text("Created-at",
-//                               style: GoogleFonts.poppins(
-//                                   fontWeight: FontWeight.w500, fontSize: 14))),
-//                       Expanded(
-//                           flex: 2,
-//                           child: Text("Actions",
-//                               style: GoogleFonts.poppins(
-//                                   fontWeight: FontWeight.w500, fontSize: 14))),
-//                     ],
-//                   ),
-//                 ),
-//
-//                 // Roles list
-//                 Expanded(
-//                   child: rolesController.roles.isEmpty
-//                       ? Center(
-//                       child: Text("No roles found",
-//                           style: GoogleFonts.poppins(fontSize: 14)))
-//                       : ListView.builder(
-//                     itemCount: rolesController.roles.length,
-//                     itemBuilder: (context, index) {
-//                       final role = rolesController.roles[index];
-//                       return Container(
-//                         padding: const EdgeInsets.symmetric(
-//                             horizontal: 16, vertical: 12),
-//                         child: Row(
-//                           children: [
-//                             Expanded(
-//                                 flex: 2,
-//                                 child: Text(role['name'] ?? "",
-//                                     style: GoogleFonts.poppins(
-//                                         fontSize: 14))),
-//                             Expanded(
-//                                 flex: 3,
-//                                 child: Text(role['description'] ?? "",
-//                                     style: GoogleFonts.poppins(
-//                                         fontSize: 14))),
-//                             Expanded(
-//                                 flex: 2,
-//                                 child: Text(
-//                                     formatDate(role['createdAt']),
-//                                     style: GoogleFonts.poppins(
-//                                         fontSize: 14))),
-//                             Expanded(
-//                               flex: 2,
-//                               child: Row(
-//                                 children: [
-//                                   Container(
-//                                     height: 36,
-//                                     width: 36,
-//                                     decoration: BoxDecoration(
-//                                         borderRadius:
-//                                         BorderRadius.circular(8),
-//                                         color: Colors.yellow),
-//                                     child: const Icon(Iconsax.edit,
-//                                         color: Colors.white, size: 18),
-//                                   ),
-//                                   const SizedBox(width: 8),
-//                                   InkWell(
-//                                     onTap: () => _confirmDelete(
-//                                         context, role['id'].toString()),
-//                                     child: Container(
-//                                       height: 36,
-//                                       width: 36,
-//                                       decoration: BoxDecoration(
-//                                           borderRadius:
-//                                           BorderRadius.circular(8),
-//                                           color: Colors.redAccent),
-//                                       child: const Icon(Iconsax.trash,
-//                                           color: Colors.white, size: 18),
-//                                     ),
-//                                   ),
-//                                 ],
-//                               ),
-//                             )
-//                           ],
-//                         ),
-//                       );
-//                     },
-//                   ),
-//                 ),
-//               ],
-//             );
-//           },
-//         ),
-//       ),
-//     );
-//   }
-// }
-//
-// // Floating right sheet
-// void openManageRolesSheet(BuildContext context) {
-//   showGeneralDialog(
-//     context: context,
-//     barrierDismissible: true,
-//     barrierLabel: "ManageRoles",
-//     transitionDuration: const Duration(milliseconds: 400),
-//     pageBuilder: (_, __, ___) {
-//       return Align(
-//         alignment: Alignment.centerRight,
-//         child: Container(
-//           margin: const EdgeInsets.only(top: 40, bottom: 40, right: 20),
-//           width: MediaQuery.of(context).size.width * 0.4,
-//           decoration: BoxDecoration(
-//             borderRadius: BorderRadius.circular(30),
-//             boxShadow: [
-//               BoxShadow(
-//                 color: Colors.black26,
-//                 blurRadius: 20,
-//                 offset: const Offset(-5, 0),
-//               ),
-//             ],
-//           ),
-//           child: const ManageRoles(),
-//         ),
-//       );
-//     },
-//     transitionBuilder: (_, anim, __, child) {
-//       return SlideTransition(
-//         position: Tween(
-//           begin: const Offset(1, 0),
-//           end: Offset.zero,
-//         ).animate(CurvedAnimation(
-//           parent: anim,
-//           curve: Curves.easeOutCubic,
-//         )),
-//         child: child,
-//       );
-//     },
-//   );
-// }
-
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -1114,6 +13,14 @@ class ManageRoles extends StatefulWidget {
 }
 
 class _ManageRolesState extends State<ManageRoles> {
+  // Matching the high-end palette from RolesPage
+  final Color primaryBrand = const Color(0xFF0F172A); // Slate 900
+  final Color accentAction = const Color(0xFF6366F1); // Indigo 500
+  final Color background = const Color(0xFFF8FAFC); // Slate 50
+  final Color slate200 = const Color(0xFFE2E8F0);
+  final Color slate400 = const Color(0xFF94A3B8);
+  final Color slate500 = const Color(0xFF64748B);
+
   @override
   void initState() {
     super.initState();
@@ -1122,41 +29,228 @@ class _ManageRolesState extends State<ManageRoles> {
   }
 
   String formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return "";
+    if (dateStr == null || dateStr.isEmpty) return "N/A";
     try {
       final date = DateTime.parse(dateStr);
-      return DateFormat("yyyy-MM-dd").format(date);
+      return DateFormat("MMM dd, yyyy").format(date);
     } catch (e) {
       return dateStr;
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Consumer<RolesController>(
+        builder: (context, rolesController, child) {
+          return Column(
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: rolesController.isLoading
+                    ? Center(child: CircularProgressIndicator(color: accentAction))
+                    : _buildRolesList(rolesController),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 32, 16, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border(bottom: BorderSide(color: slate200)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: accentAction.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Iconsax.security_user, color: accentAction, size: 22),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Role Identities",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: primaryBrand,
+                ),
+              ),
+              Text(
+                "Manage system access levels",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: slate500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(Icons.close, color: slate400),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRolesList(RolesController controller) {
+    if (controller.roles.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Iconsax.ghost, size: 64, color: slate200),
+            const SizedBox(height: 16),
+            Text("No roles found", style: GoogleFonts.plusJakartaSans(color: slate400)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: controller.roles.length,
+      itemBuilder: (context, index) {
+        final role = controller.roles[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: slate200.withOpacity(0.5)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: primaryBrand.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      role['name']?.toString().toUpperCase() ?? "ROLE",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: primaryBrand,
+                      ),
+                    ),
+                  ),
+                  _buildActionButtons(role['_id'].toString()),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                role['description'] ?? "No description provided.",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  color: slate500,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Iconsax.calendar_1, size: 14, color: slate400),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Created: ${formatDate(role['createdAt'])}",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: slate400,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionButtons(String roleId) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildIconBtn(Iconsax.edit, Colors.amber, () {}),
+        const SizedBox(width: 8),
+        _buildIconBtn(Iconsax.trash, Colors.redAccent, () => _confirmDelete(context, roleId)),
+      ],
+    );
+  }
+
+  Widget _buildIconBtn(IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
+    );
+  }
+
   Future<void> _confirmDelete(BuildContext context, String roleId) async {
-    final rolesController =
-    Provider.of<RolesController>(context, listen: false);
+    final rolesController = Provider.of<RolesController>(context, listen: false);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text("Confirm Delete",
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-        content: Text("Are you sure you want to delete this role?",
-            style: GoogleFonts.poppins()),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text("Delete Role?", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
+        content: Text("This action cannot be undone. Are you sure?", style: GoogleFonts.plusJakartaSans(color: slate500)),
         actions: [
           TextButton(
-            child: Text("Cancel",
-                style: GoogleFonts.poppins(color: Colors.grey)),
+            child: Text("Cancel", style: GoogleFonts.plusJakartaSans(color: slate400, fontWeight: FontWeight.w700)),
             onPressed: () => Navigator.of(ctx).pop(false),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text("Delete",
-                style: GoogleFonts.poppins(color: Colors.white)),
+            child: Text("Confirm Delete", style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w700)),
             onPressed: () => Navigator.of(ctx).pop(true),
           ),
         ],
@@ -1167,193 +261,45 @@ class _ManageRolesState extends State<ManageRoles> {
       await rolesController.deleteRole(roleId);
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Consumer<RolesController>(
-          builder: (context, rolesController, child) {
-            if (rolesController.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            return Column(
-              children: [
-                // Header
-                Container(
-                  height: 60,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.cyan.shade300,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Manage Roles",
-                          style: GoogleFonts.poppins(
-                              fontSize: 18, fontWeight: FontWeight.w600)),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Table header
-                Container(
-                  height: 50,
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  color: Colors.cyan.shade100,
-                  child: Row(
-                    children: [
-                      Expanded(
-                          flex: 2,
-                          child: Text("Name",
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500, fontSize: 14))),
-                      Expanded(
-                          flex: 3,
-                          child: Text("Description",
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500, fontSize: 14))),
-                      Expanded(
-                          flex: 2,
-                          child: Text("Created-at",
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500, fontSize: 14))),
-                      Expanded(
-                          flex: 2,
-                          child: Text("Actions",
-                              style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w500, fontSize: 14))),
-                    ],
-                  ),
-                ),
-
-                // Roles list
-                Expanded(
-                  child: rolesController.roles.isEmpty
-                      ? Center(
-                      child: Text("No roles found",
-                          style: GoogleFonts.poppins(fontSize: 14)))
-                      : ListView.builder(
-                    itemCount: rolesController.roles.length,
-                    itemBuilder: (context, index) {
-                      final role = rolesController.roles[index];
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                                flex: 2,
-                                child: Text(role['name'] ?? "",
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 14))),
-                            Expanded(
-                                flex: 3,
-                                child: Text(role['description'] ?? "",
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 14))),
-                            Expanded(
-                                flex: 2,
-                                child: Text(
-                                    formatDate(role['createdAt']),
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 14))),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Container(
-                                    height: 36,
-                                    width: 36,
-                                    decoration: BoxDecoration(
-                                        borderRadius:
-                                        BorderRadius.circular(8),
-                                        color: Colors.yellow),
-                                    child: const Icon(Iconsax.edit,
-                                        color: Colors.white, size: 18),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  InkWell(
-                                    onTap: () => _confirmDelete(
-                                        context,
-                                        role['_id'].toString()),
-                                    child: Container(
-                                      height: 36,
-                                      width: 36,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                          BorderRadius.circular(8),
-                                          color: Colors.redAccent),
-                                      child: const Icon(Iconsax.trash,
-                                          color: Colors.white, size: 18),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
 }
 
-// Floating right sheet
+// Updated openManageRolesSheet to look cleaner on large screens
 void openManageRolesSheet(BuildContext context) {
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
     barrierLabel: "ManageRoles",
+    barrierColor: Colors.black.withOpacity(0.4), // Darker overlay for focus
     transitionDuration: const Duration(milliseconds: 400),
     pageBuilder: (_, __, ___) {
       return Align(
         alignment: Alignment.centerRight,
-        child: Container(
-          margin: const EdgeInsets.only(top: 40, bottom: 40, right: 20),
-          width: MediaQuery.of(context).size.width * 0.4,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 20,
-                offset: const Offset(-5, 0),
-              ),
-            ],
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(0, 20, 20, 20),
+            width: MediaQuery.of(context).size.width > 1200
+                ? MediaQuery.of(context).size.width * 0.3
+                : MediaQuery.of(context).size.width * 0.45,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 30,
+                  offset: const Offset(-10, 10),
+                ),
+              ],
+            ),
+            child: const ManageRoles(),
           ),
-          child: const ManageRoles(),
         ),
       );
     },
     transitionBuilder: (_, anim, __, child) {
       return SlideTransition(
-        position: Tween(
-          begin: const Offset(1, 0),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: anim,
-          curve: Curves.easeOutCubic,
-        )),
+        position: Tween(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(CurvedAnimation(parent: anim, curve: Curves.easeOutQuart)),
         child: child,
       );
     },

@@ -191,6 +191,7 @@ import 'View/Navigation.dart';
 import 'View/Navigation_screen.dart';
 import 'View/Scripture_Selector.dart';
 import 'View/Speakerpage.dart';
+import 'View/live/host_page.dart';
 import 'View/router.dart';
 import 'demo.dart';
 import 'firebase_options.dart';
@@ -218,7 +219,7 @@ Future<void> main() async {
       // child: const MaterialApp(
       //   debugShowCheckedModeBanner: false,
       //   // home: LiveDashboard(orgId: '0rg1',),
-      //   home: LiveStreamPanel(),
+      //   home: HostLivePage(),
       // ),
     ),
   );

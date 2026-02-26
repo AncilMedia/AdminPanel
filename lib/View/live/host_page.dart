@@ -3,132 +3,92 @@ import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:http/http.dart' as http;
 
-import '../../environmental variables.dart';
-
 class HostLivePage extends StatefulWidget {
-  final String roomId;
-  final String userId;
-
-  const HostLivePage({
-    super.key,
-    required this.roomId,
-    required this.userId,
-  });
+  const HostLivePage({super.key});
 
   @override
   State<HostLivePage> createState() => _HostLivePageState();
 }
 
 class _HostLivePageState extends State<HostLivePage> {
-  late Room room;
-  bool connecting = true;
+  Room? _room;
+  VideoTrack? _localVideoTrack;
 
-  static  String serverUrl = "$baseUrl";
+  bool connecting = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _connect();
-  }
+  /// 🔹 Your LiveKit Cloud URL
+  final String wsUrl = "wss://newproject-cglk7fdw.livekit.cloud";
 
-  Future<Map<String, dynamic>> _getToken() async {
+  /// 🔹 Your backend API (use LAN IP, not localhost, if on device)
+  final String tokenApi = "https://5208-116-68-72-131.ngrok-free.app/token";
+
+  Future<String> getToken() async {
     final res = await http.post(
-      Uri.parse('$NgrokUrl/api/live/token'),
+      Uri.parse(tokenApi),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "roomName": widget.roomId,
-        "userId": widget.userId,
-        "isHost": true,
+        "room": "live-room",
+        "identity": "host",
       }),
     );
-    return jsonDecode(res.body);
+
+    if (res.statusCode != 200) {
+      throw Exception("Token API failed: ${res.body}");
+    }
+
+    final data = jsonDecode(res.body);
+    return data['token'];
   }
 
-  Future<void> _connect() async {
-    final tokenData = await _getToken();
+  Future<void> startLive() async {
+    setState(() => connecting = true);
 
-    room = Room();
+    final token = await getToken();
 
-    await room.connect(
-      tokenData['url'],
-      tokenData['token'],
-      roomOptions: const RoomOptions(adaptiveStream: true),
-    );
+    _room = Room();
 
-    await room.localParticipant?.setCameraEnabled(true);
-    await room.localParticipant?.setMicrophoneEnabled(true);
+    await _room!.connect(wsUrl, token);
+
+    await _room!.localParticipant!.setCameraEnabled(true);
+    await _room!.localParticipant!.setMicrophoneEnabled(true);
+
+    final videoPub =
+        _room!.localParticipant!.videoTrackPublications.first;
+
+    _localVideoTrack = videoPub.track as VideoTrack;
 
     setState(() => connecting = false);
   }
 
   @override
   void dispose() {
-    room.disconnect();
+    _room?.disconnect();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (connecting) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final videoTrack = room.localParticipant
-        ?.videoTrackPublications
-        .firstOrNull
-        ?.track;
-
     return Scaffold(
-      appBar: AppBar(title: const Text("You're Live 🔴")),
-      body: Stack(
+      appBar: AppBar(title: const Text("🎥 Host Live")),
+      body: Column(
         children: [
-          if (videoTrack != null)
-            VideoTrackRenderer(videoTrack),
-          _controls(),
-        ],
-      ),
-    );
-  }
-
-  Widget _controls() {
-    final local = room.localParticipant!;
-
-    return Positioned(
-      bottom: 30,
-      left: 0,
-      right: 0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: Icon(local.isMicrophoneEnabled()
-                ? Icons.mic
-                : Icons.mic_off),
-            color: Colors.white,
-            onPressed: () async {
-              await local.setMicrophoneEnabled(!local.isMicrophoneEnabled());
-              setState(() {});
-            },
+          Expanded(
+            child: _localVideoTrack != null
+                ? VideoTrackRenderer(_localVideoTrack!)
+                : const Center(child: Text("Camera Preview")),
           ),
-          const SizedBox(width: 20),
-          IconButton(
-            icon: Icon(local.isCameraEnabled()
-                ? Icons.videocam
-                : Icons.videocam_off),
-            color: Colors.white,
-            onPressed: () async {
-              await local.setCameraEnabled(!local.isCameraEnabled());
-              setState(() {});
-            },
-          ),
-          const SizedBox(width: 20),
-          IconButton(
-            icon: const Icon(Icons.call_end),
-            color: Colors.red,
-            onPressed: () => Navigator.pop(context),
-          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: ElevatedButton(
+              onPressed: connecting ? null : startLive,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              child: connecting
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("START LIVE"),
+            ),
+          )
         ],
       ),
     );

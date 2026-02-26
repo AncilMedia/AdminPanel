@@ -16,6 +16,10 @@
 	<string>ancilmediaadminpanel</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>NSCameraUsageDescription</key>
+    <string>Camera needed for live streaming</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Microphone needed for live streaming</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>

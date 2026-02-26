@@ -29,8 +29,8 @@ class StartLivePage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(
                   builder: (_) => HostLivePage(
-                    roomId: roomCtrl.text,
-                    userId: userCtrl.text,
+                    // roomId: roomCtrl.text,
+                    // userId: userCtrl.text,
                   ),
                 ));
               },
@@ -40,8 +40,8 @@ class StartLivePage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(
                   builder: (_) => ViewerLivePage(
-                    roomId: roomCtrl.text,
-                    userId: userCtrl.text,
+                    // roomId: roomCtrl.text,
+                    // userId: userCtrl.text,
                   ),
                 ));
               },

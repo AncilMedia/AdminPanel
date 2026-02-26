@@ -16,14 +16,14 @@ class RoleSelectPage extends StatelessWidget {
             ElevatedButton(
               child: const Text("Go Live (Host)"),
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const HostLivePage(roomId: '', userId: '',)));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const HostLivePage()));
               },
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               child: const Text("Join Live (Viewer)"),
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const ViewerLivePage(roomId: '', userId: '',)));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ViewerLivePage()));
               },
             ),
           ],

@@ -367,12 +367,38 @@ class _UserPageState extends State<UserPage> {
     );
   }
 
+  // void _updateApproval(String id, bool approve) async {
+  //   final success = await UserController.updateApprovalStatus(
+  //     authState: Provider.of<AuthState>(context, listen: false),
+  //     userId: id,
+  //     approve: approve,
+  //   );
+  //   if (success) _fetchUsers();
+  // }
   void _updateApproval(String id, bool approve) async {
+    // Find the index of the user in the currently displayed list
+    final usersSnapshot = await userListFuture;
+    final index = usersSnapshot.indexWhere((u) => u.id == id);
+    if (index == -1) return;
+
+    final oldValue = usersSnapshot[index].approved;
+
+    // 🔥 instant UI update
+    setState(() {
+      usersSnapshot[index].approved = approve;
+    });
+
     final success = await UserController.updateApprovalStatus(
       authState: Provider.of<AuthState>(context, listen: false),
       userId: id,
       approve: approve,
     );
-    if (success) _fetchUsers();
+
+    // ❌ rollback if API fails
+    if (!success) {
+      setState(() {
+        usersSnapshot[index].approved = oldValue;
+      });
+    }
   }
 }

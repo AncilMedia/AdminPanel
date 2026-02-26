@@ -1,4 +1,6 @@
+import 'package:ancilmediaadminpanel/View/Login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iconsax/iconsax.dart';
@@ -68,6 +70,17 @@ class _MainLayoutState extends State<MainLayout> {
 
   Future<void> _loadOrgData() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // 1. Check for the token
+    final token = prefs.getString('accessToken'); // Replace 'token' with your actual key name
+
+    if (token == null || token.isEmpty) {
+      // 2. If token is missing, redirect to login
+      _handleLogoutRedirect();
+      return;
+    }
+
+    // Existing logic for loading data
     orgName = prefs.getString('organizationName') ?? 'Organization';
     role = prefs.getString('userRole') ?? 'user';
     orgImage = prefs.getString('orgImage');
@@ -78,6 +91,27 @@ class _MainLayoutState extends State<MainLayout> {
     }
     if (mounted) setState(() {});
   }
+
+// Helper method to handle the transition
+  void _handleLogoutRedirect() {
+    // Clear any existing session data if necessary
+    // SharedPreferences.getInstance().then((prefs) => prefs.clear());
+
+    // Use Navigator to push the Login route and remove all previous routes
+    Navigator.of(context).push(MaterialPageRoute(builder: (context)=>LoginPage()));
+  }
+  // Future<void> _loadOrgData() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   orgName = prefs.getString('organizationName') ?? 'Organization';
+  //   role = prefs.getString('userRole') ?? 'user';
+  //   orgImage = prefs.getString('orgImage');
+  //
+  //   final sidebarController = Provider.of<SidebarController>(context, listen: false);
+  //   if (role != null) {
+  //     await sidebarController.fetchSidebarForRole(role!);
+  //   }
+  //   if (mounted) setState(() {});
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +180,7 @@ class _MainLayoutState extends State<MainLayout> {
           const SizedBox(height: 24),
           Expanded(
             child: controller.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ?  Center(child: Lottie.network("https://res.cloudinary.com/dggylwwqk/raw/upload/v1772002591/Weather_Wind_zdbufx.json"))
                 : _buildSidebarList(controller),
           ),
           _buildLogoutSection(),

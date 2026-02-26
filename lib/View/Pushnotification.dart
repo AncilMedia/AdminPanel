@@ -108,6 +108,10 @@ class _PushNotificationState extends State<PushNotification> {
       );
     }
 
+    // Prepare dropdown lists
+    List<String> orgNames = organizations.map((e) => e['name'] as String).where((n) => n.isNotEmpty).toSet().toList();
+    List<String> userNames = ["All Users", ...users.map((u) => u.username).where((n) => n.isNotEmpty).toSet().toList()];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
       body: SingleChildScrollView(
@@ -121,7 +125,6 @@ class _PushNotificationState extends State<PushNotification> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- COMPOSER PANEL ---
                 Expanded(
                   flex: 3,
                   child: _glassCard(
@@ -137,11 +140,23 @@ class _PushNotificationState extends State<PushNotification> {
                           children: [
                             if (isAdmin)
                               Expanded(
-                                child: _modernDropdown("Organization", selectedOrganization, organizations.map((e) => e['name'] as String).toList(), (v) => setState(() => selectedOrganization = v), Iconsax.hierarchy),
+                                child: _modernDropdown(
+                                    "Organization",
+                                    selectedOrganization,
+                                    orgNames,
+                                        (v) => setState(() => selectedOrganization = v),
+                                    Iconsax.hierarchy
+                                ),
                               ),
                             if (isAdmin) const SizedBox(width: 16),
                             Expanded(
-                              child: _modernDropdown("Individual User", selectedIndividual, ["All Users", ...users.where((u) => u.username.isNotEmpty).map((u) => u.username).toList()], (v) => setState(() => selectedIndividual = v), Iconsax.user),
+                              child: _modernDropdown(
+                                  "Individual User",
+                                  selectedIndividual,
+                                  userNames,
+                                      (v) => setState(() => selectedIndividual = v),
+                                  Iconsax.user
+                              ),
                             ),
                           ],
                         ),
@@ -152,8 +167,6 @@ class _PushNotificationState extends State<PushNotification> {
                   ),
                 ),
                 const SizedBox(width: 24),
-
-                // --- PREVIEW PANEL ---
                 Expanded(
                   flex: 2,
                   child: Column(
@@ -238,6 +251,9 @@ class _PushNotificationState extends State<PushNotification> {
   }
 
   Widget _modernDropdown(String label, String? value, List<String> items, Function(String?) onChanged, IconData icon) {
+    // FIX: Safety check to ensure 'value' exists in 'items' list
+    final bool valueExists = items.contains(value);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -248,8 +264,10 @@ class _PushNotificationState extends State<PushNotification> {
           decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade100)),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value,
+              // Use value only if it exists in the list, otherwise null
+              value: valueExists ? value : null,
               isExpanded: true,
+              hint: Text("Select $label", style: const TextStyle(fontSize: 14, color: Colors.grey)),
               icon: const Icon(Iconsax.arrow_down_1, size: 16),
               items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 14)))).toList(),
               onChanged: onChanged,
@@ -280,7 +298,6 @@ class _PushNotificationState extends State<PushNotification> {
         children: [
           _sectionHeader(Iconsax.mobile, "Live App Preview"),
           const SizedBox(height: 20),
-
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.grey.shade200)),
@@ -304,7 +321,7 @@ class _PushNotificationState extends State<PushNotification> {
                     ],
                   ),
                 ),
-                Text("now", style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+                const Text("now", style: TextStyle(fontSize: 10, color: Colors.grey)),
               ],
             ),
           ),
