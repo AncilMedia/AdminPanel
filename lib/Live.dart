@@ -1,149 +1,145 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'environmental variables.dart';
 
-class LiveStreamPanel extends StatefulWidget {
-  const LiveStreamPanel({super.key});
+class LiveHostingPanel extends StatefulWidget {
+  const LiveHostingPanel({super.key});
 
   @override
-  State<LiveStreamPanel> createState() => _LiveStreamPanelState();
+  State<LiveHostingPanel> createState() => _LiveHostingPanelState();
 }
 
-class _LiveStreamPanelState extends State<LiveStreamPanel> {
-  VideoPlayerController? _videoController;
-  ChewieController? _chewieController;
-
-  bool isLive = false;
-  bool loading = false;
-  Timer? _statusTimer;
-
-  final headers = const {
-    "Accept": "application/json",
-  };
+class _LiveHostingPanelState extends State<LiveHostingPanel> {
+  RtcEngine? _engine;
+  bool _isJoined = false;
+  bool _isBroadcasting = false;
+  bool _isEngineReady = false;
 
   @override
   void initState() {
     super.initState();
-    _checkStatus();
-    _statusTimer =
-        Timer.periodic(const Duration(seconds: 5), (_) => _checkStatus());
+    initAgora();
   }
 
-  @override
-  void dispose() {
-    _statusTimer?.cancel();
-    _disposePlayer();
-    super.dispose();
-  }
+  Future<void> initAgora() async {
+    // 1. WEB DELAY: Give the browser 1 second to register the 'Iris' JS object
+    if (kIsWeb) {
+      await Future.delayed(const Duration(milliseconds: 1000));
+    } else {
+      await [Permission.microphone, Permission.camera].request();
+    }
 
-  Future<void> _startStream() async {
-    setState(() => loading = true);
-    await http.post(Uri.parse("$NgrokUrl/api/stream/start"), headers: headers);
-    await Future.delayed(const Duration(seconds: 2));
-    await _checkStatus();
-    setState(() => loading = false);
-  }
-
-  Future<void> _stopStream() async {
-    setState(() => loading = true);
-    await http.post(Uri.parse("$NgrokUrl/api/stream/stop"), headers: headers);
-    await Future.delayed(const Duration(seconds: 2));
-    await _checkStatus();
-    setState(() => loading = false);
-  }
-
-  Future<void> _checkStatus() async {
     try {
-      final res = await http.get(
-        Uri.parse("$NgrokUrl/api/stream/status"),
-        headers: headers,
+      // 2. Initialize Engine
+      _engine = createAgoraRtcEngine();
+      await _engine!.initialize(RtcEngineContext(appId: AgoraId));
+
+      _engine!.registerEventHandler(
+        RtcEngineEventHandler(
+          onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+            debugPrint("Live channel joined: ${connection.channelId}");
+            if (mounted) setState(() => _isJoined = true);
+          },
+          onLeaveChannel: (connection, stats) {
+            if (mounted) setState(() => _isJoined = false);
+          },
+          onError: (err, msg) {
+            debugPrint("Agora Error: $err - $msg");
+          },
+        ),
       );
 
-      final data = json.decode(res.body);
-      final bool live = data["running"] ?? false;
+      // 3. System Configuration for Live Hosting
+      await _engine!.enableVideo();
+      await _engine!.setChannelProfile(ChannelProfileType.channelProfileLiveBroadcasting);
+      await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
 
-      if (live != isLive) {
-        isLive = live;
-        if (live) {
-          await _startPlayer();
-        } else {
-          _disposePlayer();
-        }
-        if (mounted) setState(() {});
-      }
-    } catch (_) {
-      if (isLive) {
-        isLive = false;
-        _disposePlayer();
-        if (mounted) setState(() {});
-      }
+      if (mounted) setState(() => _isEngineReady = true);
+
+    } catch (e) {
+      debugPrint("Agora Setup Failed: $e");
     }
   }
 
-  Future<void> _startPlayer() async {
-    _disposePlayer();
+  Future<void> toggleBroadcast() async {
+    if (_isBroadcasting) {
+      await _engine?.leaveChannel();
+      setState(() => _isBroadcasting = false);
+    } else {
+      // 1. WAKE UP THE CAMERA FIRST
+      await _engine?.enableLocalVideo(true);
+      await _engine?.startPreview();
 
-    _videoController = VideoPlayerController.network(
-      "$NgrokUrl/hls/stream.m3u8",
-      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-    );
-
-    await _videoController!.initialize();
-
-    _chewieController = ChewieController(
-      videoPlayerController: _videoController!,
-      autoPlay: true,
-      looping: true,
-      allowFullScreen: true,
-      allowPlaybackSpeedChanging: false,
-      showControls: true,
-    );
+      // 2. JOIN THE CHANNEL
+      await _engine?.joinChannel(
+        token: TempAgoraId,
+        channelId: "new",
+        uid: 0,
+        options: const ChannelMediaOptions(
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+        ),
+      );
+      setState(() => _isBroadcasting = true);
+    }
   }
-
-  void _disposePlayer() {
-    try {
-      _chewieController?.pause();
-      _videoController?.pause();
-    } catch (_) {}
-
-    _chewieController?.dispose();
-    _videoController?.dispose();
-
-    _chewieController = null;
-    _videoController = null;
+  @override
+  void dispose() {
+    _engine?.leaveChannel();
+    _engine?.release();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Prevent UI from building before engine is ready to avoid "Null Value" errors
+    if (!_isEngineReady) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text("🎥 Live Stream")),
+      backgroundColor: const Color(0xFF1A1A1A),
+      appBar: AppBar(title: const Text('Ancil Media - Live Panel'), backgroundColor: Colors.blueGrey[900]),
       body: Column(
         children: [
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: isLive || loading ? null : _startStream,
-                child: const Text("Start"),
-              ),
-              ElevatedButton(
-                onPressed: !isLive || loading ? null : _stopStream,
-                child: const Text("Stop"),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
           Expanded(
-            child: isLive && _chewieController != null
-                ? Chewie(controller: _chewieController!)
-                : const Center(child: Text("📡 Stream Offline")),
-          )
+            child: Container(
+              margin: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _isBroadcasting ? Colors.redAccent : Colors.white12, width: 3),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: _isJoined
+                    ? AgoraVideoView(
+                  controller: VideoViewController(
+                    rtcEngine: _engine!,
+                    canvas: const VideoCanvas(uid: 0),
+                  ),
+                )
+                    : const Center(child: Text("Camera Ready - Press Start", style: TextStyle(color: Colors.white38))),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 40),
+            child: FloatingActionButton.extended(
+              onPressed: toggleBroadcast,
+              backgroundColor: _isBroadcasting ? Colors.red : Colors.greenAccent[700],
+              icon: Icon(_isBroadcasting ? Icons.stop : Icons.sensors),
+              label: Text(_isBroadcasting ? "STOP STREAM" : "START LIVE STREAM"),
+            ),
+          ),
         ],
       ),
     );

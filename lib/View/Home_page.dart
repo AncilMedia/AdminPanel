@@ -41,12 +41,12 @@ class _HomePageState extends State<HomePage> {
     try {
       Map<String, dynamic> data;
       try {
-        data = await analyticsService.getAllMediaAnalyticsByOrganization(useDashboard: true);
+        data = await analyticsService.getAllMediaAnalyticsByOrganization();
       } catch (e) {
         final msg = e.toString();
         if (msg.contains('404') || msg.toLowerCase().contains('not found')) {
           _usedGlobalFallback = true;
-          data = await analyticsService.getAllMediaAnalytics(useDashboard: true);
+          data = await analyticsService.getAllMediaAnalytics();
         } else {
           rethrow;
         }
@@ -101,17 +101,70 @@ class _HomePageState extends State<HomePage> {
     return _safeInt(dashboardData!['mediaCount'] ?? (dashboardData!['mediaList'] as List?)?.length);
   }
 
+  // List<Map<String, dynamic>> get monthlySeries {
+  //   final chart = List<Map<String, dynamic>>.from(dashboardData?['chartData'] ?? []);
+  //   return chart.map((m) {
+  //     int t = m['total'] != null ? _safeInt(m['total']) : 0;
+  //     if (t == 0) {
+  //       m.forEach((k, v) {
+  //         if (k != 'month' && k != 'monthLabel' && k != 'dateObj') t += _safeInt(v);
+  //       });
+  //     }
+  //     return {'month': m['monthLabel'] ?? '', 'value': t};
+  //   }).toList();
+  // }
+
   List<Map<String, dynamic>> get monthlySeries {
-    final chart = List<Map<String, dynamic>>.from(dashboardData?['chartData'] ?? []);
-    return chart.map((m) {
-      int t = m['total'] != null ? _safeInt(m['total']) : 0;
-      if (t == 0) {
-        m.forEach((k, v) {
-          if (k != 'month' && k != 'monthLabel' && k != 'dateObj') t += _safeInt(v);
-        });
+    final raw = List<Map<String, dynamic>>.from(dashboardData?['chartData'] ?? []);
+
+    if (raw.isEmpty) return [];
+
+    final df = DateFormat('MMM yyyy');
+
+    // Convert backend list → map keyed by yyyy-MM
+    final Map<String, int> dataMap = {};
+
+    for (var m in raw) {
+      final monthStr = (m['monthLabel'] ?? m['month'] ?? '').toString();
+      DateTime dt;
+      try {
+        dt = df.parse(monthStr);
+      } catch (_) {
+        continue;
       }
-      return {'month': m['monthLabel'] ?? '', 'value': t};
-    }).toList();
+
+      int total = 0;
+      m.forEach((k, v) {
+        if (!['month', 'monthLabel', 'dateObj', 'total'].contains(k)) {
+          total += _safeInt(v);
+        }
+      });
+
+      final key = DateFormat('yyyy-MM').format(dt);
+      dataMap[key] = total;
+    }
+
+    // Determine start month
+    final sortedKeys = dataMap.keys.toList()..sort();
+    // DateTime start = DateTime.parse("${sortedKeys.first}-01");
+    DateTime now = DateTime.now();
+
+    final List<Map<String, dynamic>> output = [];
+
+    DateTime cursor = DateTime(2026, 01);
+
+    while (cursor.isBefore(DateTime(now.year, now.month + 1))) {
+      final key = DateFormat('yyyy-MM').format(cursor);
+
+      output.add({
+        'month': df.format(cursor),
+        'value': dataMap[key] ?? 0, // fill missing months with 0
+      });
+
+      cursor = DateTime(cursor.year, cursor.month + 1);
+    }
+
+    return output;
   }
 
   int get peakPlays {
@@ -255,8 +308,8 @@ class _HomePageState extends State<HomePage> {
           dataSource: monthlySeries,
           xValueMapper: (d, _) => d['month'],
           yValueMapper: (d, _) => d['value'],
-          gradient: LinearGradient(colors: [Colors.indigo.withOpacity(0.3), Colors.indigo.withOpacity(0.0)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
-          borderColor: Colors.indigo,
+          gradient: LinearGradient(colors: [Colors.cyan.withOpacity(0.3), Colors.indigo.withOpacity(0.0)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+          borderColor: Colors.cyan,
           borderWidth: 2,
         ),
       ],

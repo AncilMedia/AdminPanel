@@ -216,10 +216,10 @@ Future<void> main() async {
         Provider(create: (context) => ApiClient(context.read<AuthState>())),
       ],
       child: const MyApp(),
-      // child: const MaterialApp(
+      // child: MaterialApp(
       //   debugShowCheckedModeBanner: false,
       //   // home: LiveDashboard(orgId: '0rg1',),
-      //   home: HostLivePage(),
+      //   home: LiveHostingPanel(),
       // ),
     ),
   );

@@ -70,7 +70,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         limit: limit,
         sortField: sortField,
         sortOrder: sortOrder,
-        mediaItemId: mediaItemIdValue,
+        // mediaItemId: mediaItemIdValue,
         startDate: startDate,
         endDate: endDate,
       );
