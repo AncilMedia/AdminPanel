@@ -46,7 +46,7 @@ class _MainLayoutState extends State<MainLayout> {
   final Map<String, IconData> iconMap = {
     'home': Iconsax.home,
     'events': Iconsax.book,
-    'sermons': Iconsax.safe_home,
+    // 'sermons': Iconsax.safe_home,
     'giving': Iconsax.wallet_money,
     'apps': Iconsax.element_3,
     'user': Iconsax.profile_2user,
@@ -336,7 +336,7 @@ class _MainLayoutState extends State<MainLayout> {
     switch (key) {
       case 'home': return const HomePage();
       case 'events': return const Events();
-      case 'sermons': return const Sermons();
+      // case 'sermons': return const Sermons();
       case 'giving': return const Giving();
       case 'apps': return const Apps();
       case 'user': return const UserPage();

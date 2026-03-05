@@ -1,8 +1,364 @@
+// // import 'package:flutter/material.dart';
+// // import 'package:google_fonts/google_fonts.dart';
+// // import 'package:iconsax/iconsax.dart';
+// // import 'package:lottie/lottie.dart';
+// // import '../View_model/organization_popup.dart';
+// // import '../controller/organization_controller.dart';
+// //
+// // class Organization extends StatefulWidget {
+// //   const Organization({super.key});
+// //
+// //   @override
+// //   State<Organization> createState() => _OrganizationState();
+// // }
+// //
+// // class _OrganizationState extends State<Organization> {
+// //   List<Map<String, dynamic>> allOrganizations = [];
+// //   List<Map<String, dynamic>> filteredOrganizations = [];
+// //   final TextEditingController _searchController = TextEditingController();
+// //   final columnFlex = [3, 2, 2, 2, 3];
+// //   bool isLoading = true;
+// //
+// //   @override
+// //   void initState() {
+// //     super.initState();
+// //     _loadOrganizations();
+// //   }
+// //
+// //   Future<void> _loadOrganizations() async {
+// //     setState(() => isLoading = true);
+// //     try {
+// //       final orgs = await OrganizationController.fetchOrganizations();
+// //       final uniqueOrgs = {
+// //         for (var org in orgs) org['_id']: org,
+// //       }.values.toList();
+// //
+// //       setState(() {
+// //         allOrganizations = uniqueOrgs;
+// //         filteredOrganizations = [...uniqueOrgs];
+// //         _searchController.clear();
+// //         isLoading = false;
+// //       });
+// //     } catch (e) {
+// //       print("Error loading organizations: $e");
+// //       setState(() => isLoading = false);
+// //     }
+// //   }
+// //
+// //   void _filterOrganizations(String query) {
+// //     setState(() {
+// //       filteredOrganizations = allOrganizations
+// //           .where(
+// //             (org) =>
+// //                 org['name'].toLowerCase().contains(query.trim().toLowerCase()),
+// //           )
+// //           .toList();
+// //     });
+// //   }
+// //
+// //   Future<void> _addNewOrganization({
+// //     required String name,
+// //     required String username,
+// //     required String email,
+// //     required String password,
+// //     required String phone,
+// //   }) async {
+// //     final error = await OrganizationController.createOrganizationWithAdmin(
+// //       name: name,
+// //       username: username,
+// //       email: email,
+// //       password: password,
+// //       phone: phone,
+// //     );
+// //
+// //     if (error == null) {
+// //       await _loadOrganizations();
+// //     }
+// //     // else {
+// //     //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+// //     // }
+// //   }
+// //
+// //   Future<void> _updateOrganization({
+// //     required String id,
+// //     required String name,
+// //     required String username,
+// //     required String email,
+// //     required String phone,
+// //   }) async {
+// //     final success = await OrganizationController.updateOrganizationDetails(
+// //       id: id,
+// //       name: name,
+// //       username: username,
+// //       email: email,
+// //       phone: phone,
+// //     );
+// //
+// //     if (success) {
+// //       await _loadOrganizations();
+// //     } else {
+// //       ScaffoldMessenger.of(context).showSnackBar(
+// //         const SnackBar(content: Text('Failed to update organization')),
+// //       );
+// //     }
+// //   }
+// //
+// //   void _showOrganizationDialog({Map<String, dynamic>? org}) {
+// //     final _orgNameController = TextEditingController(text: org?['name'] ?? '');
+// //     final _usernameController = TextEditingController(
+// //       text: org?['username'] ?? '',
+// //     );
+// //     final _emailController = TextEditingController(text: org?['email'] ?? '');
+// //     final _passwordController = TextEditingController();
+// //     final _phoneController = TextEditingController(text: org?['phone'] ?? '');
+// //     final _formKey = GlobalKey<FormState>();
+// //
+// //     InputDecoration _inputDecoration(String label) => InputDecoration(
+// //       labelText: label,
+// //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+// //     );
+// //
+// //     showDialog(
+// //       context: context,
+// //       builder: (ctx) => AlertDialog(
+// //         title: Text(org == null ? "Add New Organization" : "Edit Organization"),
+// //         content: SingleChildScrollView(
+// //           child: Form(
+// //             key: _formKey,
+// //             child: Column(
+// //               mainAxisSize: MainAxisSize.min,
+// //               children: [
+// //                 TextFormField(
+// //                   controller: _orgNameController,
+// //                   decoration: _inputDecoration('Organization'),
+// //                   validator: (value) =>
+// //                       value == null || value.trim().isEmpty ? 'Required' : null,
+// //                 ),
+// //                 const SizedBox(height: 10),
+// //                 TextFormField(
+// //                   controller: _usernameController,
+// //                   decoration: _inputDecoration('Username'),
+// //                   validator: (value) =>
+// //                       value == null || value.trim().isEmpty ? 'Required' : null,
+// //                 ),
+// //                 const SizedBox(height: 10),
+// //                 TextFormField(
+// //                   controller: _emailController,
+// //                   decoration: _inputDecoration('Email'),
+// //                   keyboardType: TextInputType.emailAddress,
+// //                   validator: (value) {
+// //                     final email = value?.trim();
+// //                     if (email == null || email.isEmpty) return 'Required';
+// //                     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+// //                     if (!emailRegex.hasMatch(email)) return 'Invalid email';
+// //                     return null;
+// //                   },
+// //                 ),
+// //                 if (org == null) ...[
+// //                   const SizedBox(height: 10),
+// //                   TextFormField(
+// //                     controller: _passwordController,
+// //                     obscureText: true,
+// //                     decoration: _inputDecoration('Password'),
+// //                     validator: (value) => value == null || value.trim().isEmpty
+// //                         ? 'Required'
+// //                         : null,
+// //                   ),
+// //                 ],
+// //                 const SizedBox(height: 10),
+// //                 TextFormField(
+// //                   controller: _phoneController,
+// //                   keyboardType: TextInputType.phone,
+// //                   decoration: _inputDecoration('Phone'),
+// //                   validator: (value) {
+// //                     final phone = value?.trim();
+// //                     if (phone == null || phone.isEmpty) return 'Required';
+// //                     final phoneRegex = RegExp(r'^[0-9]{10,15}$');
+// //                     if (!phoneRegex.hasMatch(phone))
+// //                       return 'Invalid phone number';
+// //                     return null;
+// //                   },
+// //                 ),
+// //               ],
+// //             ),
+// //           ),
+// //         ),
+// //         actions: [
+// //           TextButton(
+// //             onPressed: () => Navigator.pop(ctx),
+// //             child: const Text("Cancel"),
+// //           ),
+// //           ElevatedButton(
+// //             style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+// //             onPressed: () async {
+// //               if (_formKey.currentState?.validate() ?? false) {
+// //                 final name = _orgNameController.text.trim();
+// //                 final username = _usernameController.text.trim();
+// //                 final email = _emailController.text.trim();
+// //                 final password = _passwordController.text.trim();
+// //                 final phone = _phoneController.text.trim();
+// //
+// //                 Navigator.pop(ctx);
+// //                 if (org == null) {
+// //                   await _addNewOrganization(
+// //                     name: name,
+// //                     username: username,
+// //                     email: email,
+// //                     password: password,
+// //                     phone: phone,
+// //                   );
+// //                 } else {
+// //                   await _updateOrganization(
+// //                     id: org['_id'],
+// //                     name: name,
+// //                     username: username,
+// //                     email: email,
+// //                     phone: phone,
+// //                   );
+// //                 }
+// //               }
+// //             },
+// //             child: Text(org == null ? "Add" : "Update"),
+// //           ),
+// //         ],
+// //       ),
+// //     );
+// //   }
+// //
+// //   Widget _headerItem(String title) => Center(
+// //     child: Text(
+// //       title,
+// //       style: GoogleFonts.poppins(
+// //         fontSize: 15,
+// //         color: Colors.white,
+// //         fontWeight: FontWeight.w500,
+// //       ),
+// //     ),
+// //   );
+// //
+// //   @override
+// //   Widget build(BuildContext context) {
+// //     return Scaffold(
+// //       body: Column(
+// //         children: [
+// //           SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+// //           Padding(
+// //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+// //             child: Row(
+// //               children: [
+// //                 GestureDetector(
+// //                   onTap: () => _showOrganizationDialog(),
+// //                   child: Container(
+// //                     padding: const EdgeInsets.symmetric(horizontal: 16),
+// //                     height: 40,
+// //                     decoration: BoxDecoration(
+// //                       color: Colors.teal.shade300,
+// //                       borderRadius: BorderRadius.circular(10),
+// //                     ),
+// //                     child: Row(
+// //                       children: [
+// //                         const Icon(Iconsax.add, color: Colors.white),
+// //                         const SizedBox(width: 8),
+// //                         Text(
+// //                           "Add New",
+// //                           style: GoogleFonts.poppins(
+// //                             color: Colors.white,
+// //                             fontWeight: FontWeight.w500,
+// //                           ),
+// //                         ),
+// //                       ],
+// //                     ),
+// //                   ),
+// //                 ),
+// //                 const SizedBox(width: 16),
+// //                 Expanded(
+// //                   child: TextField(
+// //                     controller: _searchController,
+// //                     onChanged: _filterOrganizations,
+// //                     decoration: InputDecoration(
+// //                       prefixIcon: const Icon(Icons.search),
+// //                       hintText: "Search by name",
+// //                       border: OutlineInputBorder(
+// //                         borderRadius: BorderRadius.circular(10),
+// //                       ),
+// //                     ),
+// //                   ),
+// //                 ),
+// //               ],
+// //             ),
+// //           ),
+// //           Container(
+// //             height: MediaQuery.of(context).size.height * 0.07,
+// //             width: double.infinity,
+// //             padding: const EdgeInsets.symmetric(horizontal: 16),
+// //             decoration: BoxDecoration(
+// //               color: Colors.teal.shade400,
+// //               borderRadius: const BorderRadius.only(
+// //                 bottomLeft: Radius.circular(20),
+// //                 bottomRight: Radius.circular(20),
+// //               ),
+// //             ),
+// //             child: Row(
+// //               children: [
+// //                 Expanded(flex: columnFlex[0], child: _headerItem("Name")),
+// //                 // Expanded(flex: columnFlex[1], child: _headerItem("Block Status")),
+// //                 Expanded(
+// //                   flex: columnFlex[1],
+// //                   child: _headerItem("Approval Status"),
+// //                 ),
+// //                 Expanded(flex: columnFlex[2], child: _headerItem("Actions")),
+// //                 Expanded(flex: columnFlex[2], child: _headerItem("Apps")),
+// //                 Expanded(flex: columnFlex[4], child: _headerItem("Created At")),
+// //               ],
+// //             ),
+// //           ),
+// //           Expanded(
+// //             child: isLoading
+// //                 ? Center(
+// //                     child: Lottie.network(
+// //                       'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722683/Organization_yqbizz.json',
+// //                       height: 500,
+// //                       width: 500,
+// //                       options: LottieOptions(enableMergePaths: false),
+// //                     ),
+// //                   )
+// //                 : filteredOrganizations.isEmpty
+// //                 ? Center(
+// //                     child: Text(
+// //                       "No organizations found",
+// //                       style: GoogleFonts.poppins(fontSize: 16),
+// //                     ),
+// //                   )
+// //                 : ListView.builder(
+// //                     itemCount: filteredOrganizations.length,
+// //                     itemBuilder: (context, index) {
+// //                       final org = filteredOrganizations[index];
+// //                       return OrganizationRow(
+// //                         organization: org,
+// //                         onDelete: () async {
+// //                           final success =
+// //                               await OrganizationController.deleteOrganization(
+// //                                 org['_id'],
+// //                               );
+// //                           if (success) await _loadOrganizations();
+// //                         },
+// //                         onEdit: (org) =>
+// //                             _showOrganizationDialog(org: org), // ✅ FIXED
+// //                       );
+// //                     },
+// //                   ),
+// //           ),
+// //         ],
+// //       ),
+// //     );
+// //   }
+// // }
+//
+//
 // import 'package:flutter/material.dart';
 // import 'package:google_fonts/google_fonts.dart';
 // import 'package:iconsax/iconsax.dart';
 // import 'package:lottie/lottie.dart';
-// import '../View_model/organization_popup.dart';
 // import '../controller/organization_controller.dart';
 //
 // class Organization extends StatefulWidget {
@@ -13,10 +369,10 @@
 // }
 //
 // class _OrganizationState extends State<Organization> {
+//   // --- STATE VARIABLES (Retained) ---
 //   List<Map<String, dynamic>> allOrganizations = [];
 //   List<Map<String, dynamic>> filteredOrganizations = [];
 //   final TextEditingController _searchController = TextEditingController();
-//   final columnFlex = [3, 2, 2, 2, 3];
 //   bool isLoading = true;
 //
 //   @override
@@ -25,6 +381,7 @@
 //     _loadOrganizations();
 //   }
 //
+//   // --- LOGIC FUNCTIONS (Retained) ---
 //   Future<void> _loadOrganizations() async {
 //     setState(() => isLoading = true);
 //     try {
@@ -40,7 +397,7 @@
 //         isLoading = false;
 //       });
 //     } catch (e) {
-//       print("Error loading organizations: $e");
+//       debugPrint("Error loading organizations: $e");
 //       setState(() => isLoading = false);
 //     }
 //   }
@@ -48,10 +405,7 @@
 //   void _filterOrganizations(String query) {
 //     setState(() {
 //       filteredOrganizations = allOrganizations
-//           .where(
-//             (org) =>
-//                 org['name'].toLowerCase().contains(query.trim().toLowerCase()),
-//           )
+//           .where((org) => org['name'].toLowerCase().contains(query.trim().toLowerCase()))
 //           .toList();
 //     });
 //   }
@@ -70,13 +424,7 @@
 //       password: password,
 //       phone: phone,
 //     );
-//
-//     if (error == null) {
-//       await _loadOrganizations();
-//     }
-//     // else {
-//     //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-//     // }
+//     if (error == null) await _loadOrganizations();
 //   }
 //
 //   Future<void> _updateOrganization({
@@ -93,264 +441,303 @@
 //       email: email,
 //       phone: phone,
 //     );
-//
-//     if (success) {
-//       await _loadOrganizations();
-//     } else {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Failed to update organization')),
-//       );
-//     }
+//     if (success) await _loadOrganizations();
 //   }
 //
+//   // --- MODERN UI DIALOG ---
 //   void _showOrganizationDialog({Map<String, dynamic>? org}) {
 //     final _orgNameController = TextEditingController(text: org?['name'] ?? '');
-//     final _usernameController = TextEditingController(
-//       text: org?['username'] ?? '',
-//     );
+//     final _usernameController = TextEditingController(text: org?['username'] ?? '');
 //     final _emailController = TextEditingController(text: org?['email'] ?? '');
 //     final _passwordController = TextEditingController();
 //     final _phoneController = TextEditingController(text: org?['phone'] ?? '');
 //     final _formKey = GlobalKey<FormState>();
 //
-//     InputDecoration _inputDecoration(String label) => InputDecoration(
-//       labelText: label,
-//       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-//     );
-//
 //     showDialog(
 //       context: context,
 //       builder: (ctx) => AlertDialog(
-//         title: Text(org == null ? "Add New Organization" : "Edit Organization"),
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//         title: Text(
+//           org == null ? "Register Organization" : "Edit Details",
+//           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+//         ),
 //         content: SingleChildScrollView(
 //           child: Form(
 //             key: _formKey,
 //             child: Column(
 //               mainAxisSize: MainAxisSize.min,
 //               children: [
-//                 TextFormField(
-//                   controller: _orgNameController,
-//                   decoration: _inputDecoration('Organization'),
-//                   validator: (value) =>
-//                       value == null || value.trim().isEmpty ? 'Required' : null,
-//                 ),
-//                 const SizedBox(height: 10),
-//                 TextFormField(
-//                   controller: _usernameController,
-//                   decoration: _inputDecoration('Username'),
-//                   validator: (value) =>
-//                       value == null || value.trim().isEmpty ? 'Required' : null,
-//                 ),
-//                 const SizedBox(height: 10),
-//                 TextFormField(
-//                   controller: _emailController,
-//                   decoration: _inputDecoration('Email'),
-//                   keyboardType: TextInputType.emailAddress,
-//                   validator: (value) {
-//                     final email = value?.trim();
-//                     if (email == null || email.isEmpty) return 'Required';
-//                     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-//                     if (!emailRegex.hasMatch(email)) return 'Invalid email';
-//                     return null;
-//                   },
-//                 ),
-//                 if (org == null) ...[
-//                   const SizedBox(height: 10),
-//                   TextFormField(
-//                     controller: _passwordController,
-//                     obscureText: true,
-//                     decoration: _inputDecoration('Password'),
-//                     validator: (value) => value == null || value.trim().isEmpty
-//                         ? 'Required'
-//                         : null,
-//                   ),
-//                 ],
-//                 const SizedBox(height: 10),
-//                 TextFormField(
-//                   controller: _phoneController,
-//                   keyboardType: TextInputType.phone,
-//                   decoration: _inputDecoration('Phone'),
-//                   validator: (value) {
-//                     final phone = value?.trim();
-//                     if (phone == null || phone.isEmpty) return 'Required';
-//                     final phoneRegex = RegExp(r'^[0-9]{10,15}$');
-//                     if (!phoneRegex.hasMatch(phone))
-//                       return 'Invalid phone number';
-//                     return null;
-//                   },
-//                 ),
+//                 _buildField(_orgNameController, "Organization Name", Iconsax.building),
+//                 _buildField(_usernameController, "Admin Username", Iconsax.user),
+//                 _buildField(_emailController, "Email Address", Iconsax.sms, TextInputType.emailAddress),
+//                 if (org == null) _buildField(_passwordController, "Password", Iconsax.lock, TextInputType.text, true),
+//                 _buildField(_phoneController, "Phone Number", Iconsax.call, TextInputType.phone),
 //               ],
 //             ),
 //           ),
 //         ),
 //         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(ctx),
-//             child: const Text("Cancel"),
-//           ),
+//           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
 //           ElevatedButton(
-//             style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+//             style: ElevatedButton.styleFrom(
+//               backgroundColor: Colors.teal,
+//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+//             ),
 //             onPressed: () async {
 //               if (_formKey.currentState?.validate() ?? false) {
-//                 final name = _orgNameController.text.trim();
-//                 final username = _usernameController.text.trim();
-//                 final email = _emailController.text.trim();
-//                 final password = _passwordController.text.trim();
-//                 final phone = _phoneController.text.trim();
-//
 //                 Navigator.pop(ctx);
 //                 if (org == null) {
 //                   await _addNewOrganization(
-//                     name: name,
-//                     username: username,
-//                     email: email,
-//                     password: password,
-//                     phone: phone,
+//                     name: _orgNameController.text.trim(),
+//                     username: _usernameController.text.trim(),
+//                     email: _emailController.text.trim(),
+//                     password: _passwordController.text.trim(),
+//                     phone: _phoneController.text.trim(),
 //                   );
 //                 } else {
 //                   await _updateOrganization(
 //                     id: org['_id'],
-//                     name: name,
-//                     username: username,
-//                     email: email,
-//                     phone: phone,
+//                     name: _orgNameController.text.trim(),
+//                     username: _usernameController.text.trim(),
+//                     email: _emailController.text.trim(),
+//                     phone: _phoneController.text.trim(),
 //                   );
 //                 }
 //               }
 //             },
-//             child: Text(org == null ? "Add" : "Update"),
+//             child: Text(org == null ? "Create" : "Save Changes", style: const TextStyle(color: Colors.white)),
 //           ),
 //         ],
 //       ),
 //     );
 //   }
 //
-//   Widget _headerItem(String title) => Center(
-//     child: Text(
-//       title,
-//       style: GoogleFonts.poppins(
-//         fontSize: 15,
-//         color: Colors.white,
-//         fontWeight: FontWeight.w500,
+//   Widget _buildField(TextEditingController controller, String label, IconData icon, [TextInputType type = TextInputType.text, bool obscure = false]) {
+//     return Padding(
+//       padding: const EdgeInsets.only(bottom: 12),
+//       child: TextFormField(
+//         controller: controller,
+//         keyboardType: type,
+//         obscureText: obscure,
+//         decoration: InputDecoration(
+//           labelText: label,
+//           prefixIcon: Icon(icon, size: 20),
+//           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//         ),
+//         validator: (value) => value == null || value.isEmpty ? 'Required' : null,
 //       ),
-//     ),
-//   );
+//     );
+//   }
 //
+//   // --- MAIN BUILD METHOD ---
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
+//       backgroundColor: const Color(0xFFF5F7FA),
+//       appBar: AppBar(
+//         elevation: 0,
+//         backgroundColor: Colors.white,
+//         centerTitle: false,
+//         title: Text(
+//           "Organization Hub",
+//           style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 22),
+//         ),
+//         actions: [
+//           IconButton(
+//             onPressed: _loadOrganizations,
+//             icon: const Icon(Iconsax.refresh, color: Colors.teal),
+//           ),
+//         ],
+//       ),
 //       body: Column(
 //         children: [
-//           SizedBox(height: MediaQuery.of(context).size.height * 0.08),
-//           Padding(
-//             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//             child: Row(
-//               children: [
-//                 GestureDetector(
-//                   onTap: () => _showOrganizationDialog(),
-//                   child: Container(
-//                     padding: const EdgeInsets.symmetric(horizontal: 16),
-//                     height: 40,
-//                     decoration: BoxDecoration(
-//                       color: Colors.teal.shade300,
-//                       borderRadius: BorderRadius.circular(10),
-//                     ),
-//                     child: Row(
-//                       children: [
-//                         const Icon(Iconsax.add, color: Colors.white),
-//                         const SizedBox(width: 8),
-//                         Text(
-//                           "Add New",
-//                           style: GoogleFonts.poppins(
-//                             color: Colors.white,
-//                             fontWeight: FontWeight.w500,
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-//                 const SizedBox(width: 16),
-//                 Expanded(
-//                   child: TextField(
-//                     controller: _searchController,
-//                     onChanged: _filterOrganizations,
-//                     decoration: InputDecoration(
-//                       prefixIcon: const Icon(Icons.search),
-//                       hintText: "Search by name",
-//                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(10),
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//           Container(
-//             height: MediaQuery.of(context).size.height * 0.07,
-//             width: double.infinity,
-//             padding: const EdgeInsets.symmetric(horizontal: 16),
-//             decoration: BoxDecoration(
-//               color: Colors.teal.shade400,
-//               borderRadius: const BorderRadius.only(
-//                 bottomLeft: Radius.circular(20),
-//                 bottomRight: Radius.circular(20),
-//               ),
-//             ),
-//             child: Row(
-//               children: [
-//                 Expanded(flex: columnFlex[0], child: _headerItem("Name")),
-//                 // Expanded(flex: columnFlex[1], child: _headerItem("Block Status")),
-//                 Expanded(
-//                   flex: columnFlex[1],
-//                   child: _headerItem("Approval Status"),
-//                 ),
-//                 Expanded(flex: columnFlex[2], child: _headerItem("Actions")),
-//                 Expanded(flex: columnFlex[2], child: _headerItem("Apps")),
-//                 Expanded(flex: columnFlex[4], child: _headerItem("Created At")),
-//               ],
-//             ),
-//           ),
+//           _buildSearchAndAddSection(),
 //           Expanded(
-//             child: isLoading
-//                 ? Center(
-//                     child: Lottie.network(
-//                       'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722683/Organization_yqbizz.json',
-//                       height: 500,
-//                       width: 500,
-//                       options: LottieOptions(enableMergePaths: false),
-//                     ),
-//                   )
-//                 : filteredOrganizations.isEmpty
-//                 ? Center(
-//                     child: Text(
-//                       "No organizations found",
-//                       style: GoogleFonts.poppins(fontSize: 16),
-//                     ),
-//                   )
-//                 : ListView.builder(
-//                     itemCount: filteredOrganizations.length,
-//                     itemBuilder: (context, index) {
-//                       final org = filteredOrganizations[index];
-//                       return OrganizationRow(
-//                         organization: org,
-//                         onDelete: () async {
-//                           final success =
-//                               await OrganizationController.deleteOrganization(
-//                                 org['_id'],
-//                               );
-//                           if (success) await _loadOrganizations();
-//                         },
-//                         onEdit: (org) =>
-//                             _showOrganizationDialog(org: org), // ✅ FIXED
-//                       );
-//                     },
-//                   ),
+//             child: isLoading ? _buildLoadingState() : _buildOrganizationList(),
 //           ),
 //         ],
 //       ),
 //     );
+//   }
+//
+//   Widget _buildSearchAndAddSection() {
+//     return Container(
+//       color: Colors.white,
+//       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+//       child: Row(
+//         children: [
+//           Expanded(
+//             child: Container(
+//               decoration: BoxDecoration(
+//                 color: Colors.grey.shade100,
+//                 borderRadius: BorderRadius.circular(15),
+//               ),
+//               child: TextField(
+//                 controller: _searchController,
+//                 onChanged: _filterOrganizations,
+//                 decoration: const InputDecoration(
+//                   hintText: "Search by name...",
+//                   prefixIcon: Icon(Iconsax.search_normal, color: Colors.grey),
+//                   border: InputBorder.none,
+//                   contentPadding: EdgeInsets.symmetric(vertical: 12),
+//                 ),
+//               ),
+//             ),
+//           ),
+//           const SizedBox(width: 12),
+//           GestureDetector(
+//             onTap: () => _showOrganizationDialog(),
+//             child: Container(
+//               height: 48,
+//               width: 48,
+//               decoration: BoxDecoration(
+//                 color: Colors.teal,
+//                 borderRadius: BorderRadius.circular(15),
+//                 boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+//               ),
+//               child: const Icon(Iconsax.add, color: Colors.white),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildLoadingState() {
+//     return Center(
+//       child: Lottie.network(
+//         'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722683/Organization_yqbizz.json',
+//         height: 300,
+//         errorBuilder: (context, error, stackTrace) => const CircularProgressIndicator(color: Colors.teal),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildOrganizationList() {
+//     if (filteredOrganizations.isEmpty) {
+//       return Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             const Icon(Iconsax.ghost, size: 60, color: Colors.grey),
+//             const SizedBox(height: 10),
+//             Text("No results found", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)),
+//           ],
+//         ),
+//       );
+//     }
+//
+//     return ListView.builder(
+//       padding: const EdgeInsets.all(16),
+//       itemCount: filteredOrganizations.length,
+//       itemBuilder: (context, index) {
+//         final org = filteredOrganizations[index];
+//         return _buildOrgCard(org);
+//       },
+//     );
+//   }
+//
+//   Widget _buildOrgCard(Map<String, dynamic> org) {
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 16),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(20),
+//         boxShadow: [
+//           BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5)),
+//         ],
+//       ),
+//       child: Padding(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           children: [
+//             Row(
+//               children: [
+//                 Container(
+//                   padding: const EdgeInsets.all(10),
+//                   decoration: BoxDecoration(color: Colors.teal.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+//                   child: const Icon(Iconsax.building_4, color: Colors.teal),
+//                 ),
+//                 const SizedBox(width: 12),
+//                 Expanded(
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       Text(
+//                         org['name'] ?? "Unknown",
+//                         style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+//                       ),
+//                       Text(org['email'] ?? "No email provided", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13)),
+//                     ],
+//                   ),
+//                 ),
+//                 _buildStatusIndicator(),
+//               ],
+//             ),
+//             const Padding(
+//               padding: EdgeInsets.symmetric(vertical: 12),
+//               child: Divider(thickness: 0.5),
+//             ),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Row(
+//                   children: [
+//                     const Icon(Iconsax.call, size: 16, color: Colors.grey),
+//                     const SizedBox(width: 6),
+//                     Text(org['phone'] ?? "N/A", style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500)),
+//                   ],
+//                 ),
+//                 Row(
+//                   children: [
+//                     IconButton(
+//                       icon: const Icon(Iconsax.edit, color: Colors.blueAccent, size: 20),
+//                       onPressed: () => _showOrganizationDialog(org: org),
+//                     ),
+//                     IconButton(
+//                       icon: const Icon(Iconsax.trash, color: Colors.redAccent, size: 20),
+//                       onPressed: () => _confirmDeletion(org),
+//                     ),
+//                   ],
+//                 ),
+//               ],
+//             )
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildStatusIndicator() {
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+//       child: Text("ACTIVE", style: GoogleFonts.poppins(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
+//     );
+//   }
+//
+//   Future<void> _confirmDeletion(Map<String, dynamic> org) async {
+//     final bool? result = await showDialog<bool>(
+//       context: context,
+//       builder: (ctx) => AlertDialog(
+//         title: const Text("Delete Organization?"),
+//         content: Text("Are you sure you want to remove ${org['name']}? This action cannot be undone."),
+//         actions: [
+//           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
+//           ElevatedButton(
+//             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+//             onPressed: () => Navigator.pop(ctx, true),
+//             child: const Text("Delete", style: TextStyle(color: Colors.white)),
+//           ),
+//         ],
+//       ),
+//     );
+//
+//     if (result == true) {
+//       final success = await OrganizationController.deleteOrganization(org['_id']);
+//       if (success) await _loadOrganizations();
+//     }
 //   }
 // }
 
@@ -359,6 +746,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
+import '../View_model/organization_popup.dart';
 import '../controller/organization_controller.dart';
 
 class Organization extends StatefulWidget {
@@ -369,10 +757,10 @@ class Organization extends StatefulWidget {
 }
 
 class _OrganizationState extends State<Organization> {
-  // --- STATE VARIABLES (Retained) ---
   List<Map<String, dynamic>> allOrganizations = [];
   List<Map<String, dynamic>> filteredOrganizations = [];
   final TextEditingController _searchController = TextEditingController();
+  final columnFlex = [3, 2, 2, 2, 3];
   bool isLoading = true;
 
   @override
@@ -381,7 +769,6 @@ class _OrganizationState extends State<Organization> {
     _loadOrganizations();
   }
 
-  // --- LOGIC FUNCTIONS (Retained) ---
   Future<void> _loadOrganizations() async {
     setState(() => isLoading = true);
     try {
@@ -397,7 +784,7 @@ class _OrganizationState extends State<Organization> {
         isLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading organizations: $e");
+      print("Error loading organizations: $e");
       setState(() => isLoading = false);
     }
   }
@@ -405,7 +792,10 @@ class _OrganizationState extends State<Organization> {
   void _filterOrganizations(String query) {
     setState(() {
       filteredOrganizations = allOrganizations
-          .where((org) => org['name'].toLowerCase().contains(query.trim().toLowerCase()))
+          .where(
+            (org) =>
+            org['name'].toLowerCase().contains(query.trim().toLowerCase()),
+      )
           .toList();
     });
   }
@@ -424,7 +814,13 @@ class _OrganizationState extends State<Organization> {
       password: password,
       phone: phone,
     );
-    if (error == null) await _loadOrganizations();
+
+    if (error == null) {
+      await _loadOrganizations();
+    }
+    // else {
+    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    // }
   }
 
   Future<void> _updateOrganization({
@@ -441,302 +837,263 @@ class _OrganizationState extends State<Organization> {
       email: email,
       phone: phone,
     );
-    if (success) await _loadOrganizations();
+
+    if (success) {
+      await _loadOrganizations();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update organization')),
+      );
+    }
   }
 
-  // --- MODERN UI DIALOG ---
   void _showOrganizationDialog({Map<String, dynamic>? org}) {
     final _orgNameController = TextEditingController(text: org?['name'] ?? '');
-    final _usernameController = TextEditingController(text: org?['username'] ?? '');
+    final _usernameController = TextEditingController(
+      text: org?['username'] ?? '',
+    );
     final _emailController = TextEditingController(text: org?['email'] ?? '');
     final _passwordController = TextEditingController();
     final _phoneController = TextEditingController(text: org?['phone'] ?? '');
     final _formKey = GlobalKey<FormState>();
 
+    InputDecoration _inputDecoration(String label) => InputDecoration(
+      labelText: label,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+    );
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          org == null ? "Register Organization" : "Edit Details",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
+        title: Text(org == null ? "Add New Organization" : "Edit Organization"),
         content: SingleChildScrollView(
           child: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildField(_orgNameController, "Organization Name", Iconsax.building),
-                _buildField(_usernameController, "Admin Username", Iconsax.user),
-                _buildField(_emailController, "Email Address", Iconsax.sms, TextInputType.emailAddress),
-                if (org == null) _buildField(_passwordController, "Password", Iconsax.lock, TextInputType.text, true),
-                _buildField(_phoneController, "Phone Number", Iconsax.call, TextInputType.phone),
+                TextFormField(
+                  controller: _orgNameController,
+                  decoration: _inputDecoration('Organization'),
+                  validator: (value) =>
+                  value == null || value.trim().isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: _inputDecoration('Username'),
+                  validator: (value) =>
+                  value == null || value.trim().isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: _inputDecoration('Email'),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    final email = value?.trim();
+                    if (email == null || email.isEmpty) return 'Required';
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(email)) return 'Invalid email';
+                    return null;
+                  },
+                ),
+                if (org == null) ...[
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: _inputDecoration('Password'),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Required'
+                        : null,
+                  ),
+                ],
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: _inputDecoration('Phone'),
+                  validator: (value) {
+                    final phone = value?.trim();
+                    if (phone == null || phone.isEmpty) return 'Required';
+                    final phoneRegex = RegExp(r'^[0-9]{10,15}$');
+                    if (!phoneRegex.hasMatch(phone))
+                      return 'Invalid phone number';
+                    return null;
+                  },
+                ),
               ],
             ),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
             onPressed: () async {
               if (_formKey.currentState?.validate() ?? false) {
+                final name = _orgNameController.text.trim();
+                final username = _usernameController.text.trim();
+                final email = _emailController.text.trim();
+                final password = _passwordController.text.trim();
+                final phone = _phoneController.text.trim();
+
                 Navigator.pop(ctx);
                 if (org == null) {
                   await _addNewOrganization(
-                    name: _orgNameController.text.trim(),
-                    username: _usernameController.text.trim(),
-                    email: _emailController.text.trim(),
-                    password: _passwordController.text.trim(),
-                    phone: _phoneController.text.trim(),
+                    name: name,
+                    username: username,
+                    email: email,
+                    password: password,
+                    phone: phone,
                   );
                 } else {
                   await _updateOrganization(
                     id: org['_id'],
-                    name: _orgNameController.text.trim(),
-                    username: _usernameController.text.trim(),
-                    email: _emailController.text.trim(),
-                    phone: _phoneController.text.trim(),
+                    name: name,
+                    username: username,
+                    email: email,
+                    phone: phone,
                   );
                 }
               }
             },
-            child: Text(org == null ? "Create" : "Save Changes", style: const TextStyle(color: Colors.white)),
+            child: Text(org == null ? "Add" : "Update"),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildField(TextEditingController controller, String label, IconData icon, [TextInputType type = TextInputType.text, bool obscure = false]) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: type,
-        obscureText: obscure,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, size: 20),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-        validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+  Widget _headerItem(String title) => Center(
+    child: Text(
+      title,
+      style: GoogleFonts.poppins(
+        fontSize: 15,
+        color: Colors.white,
+        fontWeight: FontWeight.w500,
       ),
-    );
-  }
+    ),
+  );
 
-  // --- MAIN BUILD METHOD ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: false,
-        title: Text(
-          "Organization Hub",
-          style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 22),
-        ),
-        actions: [
-          IconButton(
-            onPressed: _loadOrganizations,
-            icon: const Icon(Iconsax.refresh, color: Colors.teal),
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          _buildSearchAndAddSection(),
-          Expanded(
-            child: isLoading ? _buildLoadingState() : _buildOrganizationList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchAndAddSection() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _filterOrganizations,
-                decoration: const InputDecoration(
-                  hintText: "Search by name...",
-                  prefixIcon: Icon(Iconsax.search_normal, color: Colors.grey),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => _showOrganizationDialog(),
-            child: Container(
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                color: Colors.teal,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
-              ),
-              child: const Icon(Iconsax.add, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Lottie.network(
-        'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722683/Organization_yqbizz.json',
-        height: 300,
-        errorBuilder: (context, error, stackTrace) => const CircularProgressIndicator(color: Colors.teal),
-      ),
-    );
-  }
-
-  Widget _buildOrganizationList() {
-    if (filteredOrganizations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Iconsax.ghost, size: 60, color: Colors.grey),
-            const SizedBox(height: 10),
-            Text("No results found", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: filteredOrganizations.length,
-      itemBuilder: (context, index) {
-        final org = filteredOrganizations[index];
-        return _buildOrgCard(org);
-      },
-    );
-  }
-
-  Widget _buildOrgCard(Map<String, dynamic> org) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+          SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.teal.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Iconsax.building_4, color: Colors.teal),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        org['name'] ?? "Unknown",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      Text(org['email'] ?? "No email provided", style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13)),
-                    ],
+                GestureDetector(
+                  onTap: () => _showOrganizationDialog(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Iconsax.add, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Add New",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                _buildStatusIndicator(),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _filterOrganizations,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: "Search by name",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(thickness: 0.5),
+          ),
+          Container(
+            height: MediaQuery.of(context).size.height * 0.07,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.teal.shade400,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    const Icon(Iconsax.call, size: 16, color: Colors.grey),
-                    const SizedBox(width: 6),
-                    Text(org['phone'] ?? "N/A", style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500)),
-                  ],
+                Expanded(flex: columnFlex[0], child: _headerItem("Name")),
+                // Expanded(flex: columnFlex[1], child: _headerItem("Block Status")),
+                Expanded(
+                  flex: columnFlex[1],
+                  child: _headerItem("Approval Status"),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Iconsax.edit, color: Colors.blueAccent, size: 20),
-                      onPressed: () => _showOrganizationDialog(org: org),
-                    ),
-                    IconButton(
-                      icon: const Icon(Iconsax.trash, color: Colors.redAccent, size: 20),
-                      onPressed: () => _confirmDeletion(org),
-                    ),
-                  ],
-                ),
+                Expanded(flex: columnFlex[2], child: _headerItem("Actions")),
+                Expanded(flex: columnFlex[2], child: _headerItem("Apps")),
+                Expanded(flex: columnFlex[4], child: _headerItem("Created At")),
               ],
+            ),
+          ),
+          Expanded(
+            child: isLoading
+                ? Center(
+              child: Lottie.network(
+                'https://res.cloudinary.com/dggylwwqk/raw/upload/v1756722683/Organization_yqbizz.json',
+                height: 500,
+                width: 500,
+                options: LottieOptions(enableMergePaths: false),
+              ),
             )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-      child: Text("ACTIVE", style: GoogleFonts.poppins(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Future<void> _confirmDeletion(Map<String, dynamic> org) async {
-    final bool? result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Delete Organization?"),
-        content: Text("Are you sure you want to remove ${org['name']}? This action cannot be undone."),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Delete", style: TextStyle(color: Colors.white)),
+                : filteredOrganizations.isEmpty
+                ? Center(
+              child: Text(
+                "No organizations found",
+                style: GoogleFonts.poppins(fontSize: 16),
+              ),
+            )
+                : ListView.builder(
+              itemCount: filteredOrganizations.length,
+              itemBuilder: (context, index) {
+                final org = filteredOrganizations[index];
+                return OrganizationRow(
+                  organization: org,
+                  onDelete: () async {
+                    final success =
+                    await OrganizationController.deleteOrganization(
+                      org['_id'],
+                    );
+                    if (success) await _loadOrganizations();
+                  },
+                  onEdit: (org) =>
+                      _showOrganizationDialog(org: org), // ✅ FIXED
+                );
+              },
+            ),
           ),
         ],
       ),
     );
-
-    if (result == true) {
-      final success = await OrganizationController.deleteOrganization(org['_id']);
-      if (success) await _loadOrganizations();
-    }
   }
 }
