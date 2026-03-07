@@ -615,7 +615,7 @@ Future<void> showCreateMediaItemDialog(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "New Media Item",
+                      " New Media Item",
                       style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,

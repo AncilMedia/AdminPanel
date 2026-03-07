@@ -2,7 +2,7 @@
 
 String baseUrl = 'https://backendnew-beige.vercel.app';
 
-String NgrokUrl ="https://646b-116-68-74-83.ngrok-free.app";
+String NgrokUrl ="https://17b2-116-68-74-83.ngrok-free.app";
 
 String AgoraId = "e7f6e9aeecf14b2ba10e3f40be9f56e7";
 String TempAgoraId = "007eJxTYJiv++cX723tHNHzTL/P3bk/efN/hZCAoEUOtx9McvbmublYgcEszcDczNjcMjHFKM3EJDnVwsDS0NzQwDAtzdzMzCTVcJnIysyGQEaGIOZwRkYGCATx2RnyUsvjs1MrGRgAENcg4w==";
