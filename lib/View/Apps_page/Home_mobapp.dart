@@ -675,16 +675,71 @@ class _HomeContentState extends State<HomeContent> {
   void initState() {
     super.initState();
     _loadOrgAndFetchLayout();
+    fetchNavigation();
+    print("organization : $organizationId");
+  }
+
+  List<dynamic> navItems = [];
+  bool navLoading = true;
+
+  Future<void> fetchNavigation() async {
+    try {
+      final url = Uri.parse("$baseUrl/api/navigation/organization/$organizationId");
+
+      final response = await http.get(url);
+
+      // 🔎 Print response info
+      debugPrint("Navigation API URL: $url");
+      debugPrint("Navigation Status Code: ${response.statusCode}");
+      debugPrint("Navigation Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        debugPrint("Decoded Navigation Data: $data");
+
+        setState(() {
+          navItems = data['navItems'] ?? [];
+          navLoading = false;
+        });
+
+        debugPrint("Nav Items Loaded: $navItems");
+      } else {
+        debugPrint("Navigation API failed with status: ${response.statusCode}");
+
+        setState(() {
+          navLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Navigation load error: $e");
+
+      setState(() {
+        navLoading = false;
+      });
+    }
   }
 
   // ================= DATA LOGIC =================
 
   Future<void> _loadOrgAndFetchLayout() async {
     final prefs = await SharedPreferences.getInstance();
-    organizationId = prefs.getString('organizationId');
-    if (organizationId != null) fetchLayoutFromBackend();
-  }
 
+    // Read saved organizationId
+    organizationId = prefs.getString('organizationId');
+
+    debugPrint("Loaded organizationId: $organizationId");
+
+    if (organizationId != null && organizationId!.isNotEmpty) {
+      fetchLayoutFromBackend();
+      fetchNavigation();
+    } else {
+      debugPrint("❌ organizationId not found in SharedPreferences");
+      setState(() {
+        navLoading = false;
+      });
+    }
+  }
   Future<void> fetchLayoutFromBackend() async {
     try {
       final url = Uri.parse("$baseUrl/api/homelayout/$organizationId");
@@ -949,24 +1004,60 @@ class _HomeContentState extends State<HomeContent> {
   Widget _buildMobilePreviewFrame() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20)]),
-      child: Column(children: [
-        Row(children: [
-          const Icon(Iconsax.mobile, size: 18, color: Colors.blueAccent),
-          const SizedBox(width: 8),
-          Text("Live Preview", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        ]),
-        const SizedBox(height: 20),
-        Container(
-          width: 230,
-          height: 460,
-          decoration: BoxDecoration(color: const Color(0xFF1A1A1A), borderRadius: BorderRadius.circular(35), border: Border.all(color: Colors.black, width: 6)),
-          child: ClipRRect(borderRadius: BorderRadius.circular(28), child: Container(color: Colors.white, child: _renderMobileLayout())),
-        ),
-      ]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20)],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Iconsax.mobile, size: 18, color: Colors.blueAccent),
+              const SizedBox(width: 8),
+              Text(
+                "Live Preview",
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          /// PHONE FRAME
+          Container(
+            width: 230,
+            height: 460,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(35),
+              border: Border.all(color: Colors.black, width: 6),
+            ),
+
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+
+              child: Column(
+                children: [
+
+                  /// HOME CONTENT
+                  Expanded(
+                    child: Container(
+                      color: Colors.white,
+                      child: _renderMobileLayout(),
+                    ),
+                  ),
+
+                  /// BOTTOM NAVIGATION PREVIEW
+                  _mobileBottomNavPreview(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
+  
   Widget _buildLayoutSelector() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1073,5 +1164,70 @@ class _HomeContentState extends State<HomeContent> {
       Lottie.asset('assets/Animation - 1749442430422.json', height: 180),
       Text("No items found", style: GoogleFonts.poppins(color: Colors.grey)),
     ]));
+  }
+
+  Widget _mobileBottomNavPreview() {
+    if (navLoading) {
+      return const SizedBox(
+        height: 50,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: navItems.map((item) {
+          return _navItem(
+            getIcon(item['icon'] ?? ''),
+            item['label'] ?? '',
+            navItems.indexOf(item) == 0,
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, String label, bool selected) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: selected ? Colors.blueAccent : Colors.grey,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 7,
+            color: selected ? Colors.blueAccent : Colors.grey,
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData getIcon(String name) {
+    switch (name.toLowerCase()) {
+      case "home":
+        return Iconsax.home;
+      case "clock":
+        return Iconsax.clock;
+      case "video":
+        return Iconsax.video;
+      case "book":
+        return Iconsax.book;
+      case "wallet_check":
+        return Iconsax.wallet_check;
+      default:
+        return Icons.help_outline;
+    }
   }
 }

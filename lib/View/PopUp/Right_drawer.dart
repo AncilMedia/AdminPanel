@@ -768,6 +768,14 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
   String searchQuery = '';
   bool animateButton = false;
 
+  // // ===== EVENT VARIABLES =====
+  // DateTime? startDate;
+  // DateTime? endDate;
+  // TimeOfDay? startTime;
+  // TimeOfDay? endTime;
+  // bool isAllDay = false;
+  // String selectedCalendar = 'Church Calendar';
+
   // ===== EVENT VARIABLES =====
   DateTime? startDate;
   DateTime? endDate;
@@ -776,6 +784,28 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
   bool isAllDay = false;
   String selectedCalendar = 'Church Calendar';
 
+  // ===== COMBINED DATETIME =====
+  DateTime? get startDateTime {
+    if (startDate == null) return null;
+    return DateTime(
+      startDate!.year,
+      startDate!.month,
+      startDate!.day,
+      startTime?.hour ?? 0,
+      startTime?.minute ?? 0,
+    );
+  }
+
+  DateTime? get endDateTime {
+    if (endDate == null) return null;
+    return DateTime(
+      endDate!.year,
+      endDate!.month,
+      endDate!.day,
+      endTime?.hour ?? 0,
+      endTime?.minute ?? 0,
+    );
+  }
   @override
   void initState() {
     super.initState();
@@ -823,9 +853,115 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
     }
   }
 
+  // Future<void> _handleCreateNewList() async {
+  //   if (newTitle.trim().isEmpty) {
+  //     showCustomSnackBar(context, 'Title is required', false);
+  //     return;
+  //   }
+  //
+  //   setState(() => isSaving = true);
+  //
+  //   try {
+  //     ItemModel newItem;
+  //
+  //     debugPrint("📥 Creating new item:");
+  //     debugPrint("  title: $newTitle");
+  //     debugPrint("  subtitle: $newSubtitle");
+  //     debugPrint("  type: ${selected.name}");
+  //     debugPrint("  parentId: ${widget.parentId}");
+  //     debugPrint("  isSublist: ${widget.isInSublist}");
+  //
+  //     if (widget.isInSublist) {
+  //       final newList = await ListController.createList(
+  //         newTitle.trim(),
+  //         newSubtitle.trim(),
+  //         imageBytes: pickedImage,
+  //         parentId: widget.parentId,
+  //         type: selected.name,
+  //         url: selected.isLink ? newUrl.trim() : null,
+  //       );
+  //
+  //       newItem = ItemModel(
+  //         id: newList.id,
+  //         title: newList.title,
+  //         subtitle: newList.subtitle,
+  //         image: newList.image,
+  //         type: newList.type ?? selected.name,
+  //         parentId: newList.parentId,
+  //         index: newList.index,
+  //       );
+  //     } else {
+  //       newItem = await ItemService.createItem(
+  //         title: newTitle.trim(),
+  //         subtitle: newSubtitle.trim(),
+  //         imageBytes: pickedImage,
+  //         type: selected.name,
+  //         url: selected.isLink ? newUrl.trim() : null,
+  //       );
+  //     }
+  //
+  //     // ✅ Get organizationId from local storage
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final organizationId = prefs.getString("organizationId");
+  //
+  //     if (organizationId != null) {
+  //       final notifResponse = await PushNotificationController.sendNotification(
+  //         title: "New ${selected.name.capitalize()} Added",
+  //         body: "A new ${selected.name} has been created: $newTitle",
+  //         event: "create_${selected.name}",
+  //         type: selected.name,
+  //         organizationId: organizationId,
+  //       );
+  //
+  //       final status = notifResponse['status'];
+  //       final data = notifResponse['data'];
+  //
+  //       if (status == 200) {
+  //         debugPrint("📢 Notification sent to organization: $organizationId");
+  //         showCustomSnackBar(context, "Created Successfully !!", true);
+  //       } else if (status == 400 &&
+  //           data['message'].toString().contains("No FCM tokens")) {
+  //         debugPrint("⚠️ No FCM tokens found → cannot send notification");
+  //         showCustomSnackBar(context,
+  //             "⚠️ No mobile devices registered. Notification not sent.", false);
+  //       } else {
+  //         debugPrint("❌ Notification failed: $data");
+  //         showCustomSnackBar(
+  //             context, "❌ Notification failed: ${data['message']}", false);
+  //       }
+  //     } else {
+  //       debugPrint("⚠️ No organizationId found in local storage");
+  //       showCustomSnackBar(context, "Item created, but no organization found for notification", false);
+  //     }
+  //
+  //     widget.onAddItemToHome?.call(newItem);
+  //
+  //     setState(() {
+  //       showCreateForm = false;
+  //       newTitle = '';
+  //       newSubtitle = '';
+  //       newUrl = '';
+  //       pickedImage = null;
+  //     });
+  //
+  //     await _loadLists();
+  //   } catch (e) {
+  //     debugPrint("❌ Create item failed: $e");
+  //     showCustomSnackBar(context, "❌ Failed to save item: $e", false);
+  //   } finally {
+  //     setState(() => isSaving = false);
+  //   }
+  // }
+
+  // ================= CREATE =================
   Future<void> _handleCreateNewList() async {
     if (newTitle.trim().isEmpty) {
-      showCustomSnackBar(context, 'Title is required', false);
+      _snack("Title required", false);
+      return;
+    }
+
+    if (selected.isEvent && startDateTime == null) {
+      _snack("Start date required", false);
       return;
     }
 
@@ -833,13 +969,6 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
 
     try {
       ItemModel newItem;
-
-      debugPrint("📥 Creating new item:");
-      debugPrint("  title: $newTitle");
-      debugPrint("  subtitle: $newSubtitle");
-      debugPrint("  type: ${selected.name}");
-      debugPrint("  parentId: ${widget.parentId}");
-      debugPrint("  isSublist: ${widget.isInSublist}");
 
       if (widget.isInSublist) {
         final newList = await ListController.createList(
@@ -867,41 +996,32 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
           imageBytes: pickedImage,
           type: selected.name,
           url: selected.isLink ? newUrl.trim() : null,
+
+          // ✅ FIXED HERE (IMPORTANT)
+          startDateTime: selected.isEvent && startDateTime != null
+              ? startDateTime!.toIso8601String()
+              : null,
+
+          endDateTime: selected.isEvent && endDateTime != null
+              ? endDateTime!.toIso8601String()
+              : null,
+
+          isAllDay: selected.isEvent ? isAllDay : null,
+          calendar: selected.isEvent ? selectedCalendar : null,
         );
       }
 
-      // ✅ Get organizationId from local storage
       final prefs = await SharedPreferences.getInstance();
-      final organizationId = prefs.getString("organizationId");
+      final orgId = prefs.getString("organizationId");
 
-      if (organizationId != null) {
-        final notifResponse = await PushNotificationController.sendNotification(
+      if (orgId != null) {
+        await PushNotificationController.sendNotification(
           title: "New ${selected.name.capitalize()} Added",
-          body: "A new ${selected.name} has been created: $newTitle",
+          body: "$newTitle created",
           event: "create_${selected.name}",
           type: selected.name,
-          organizationId: organizationId,
+          organizationId: orgId,
         );
-
-        final status = notifResponse['status'];
-        final data = notifResponse['data'];
-
-        if (status == 200) {
-          debugPrint("📢 Notification sent to organization: $organizationId");
-          showCustomSnackBar(context, "Created Successfully !!", true);
-        } else if (status == 400 &&
-            data['message'].toString().contains("No FCM tokens")) {
-          debugPrint("⚠️ No FCM tokens found → cannot send notification");
-          showCustomSnackBar(context,
-              "⚠️ No mobile devices registered. Notification not sent.", false);
-        } else {
-          debugPrint("❌ Notification failed: $data");
-          showCustomSnackBar(
-              context, "❌ Notification failed: ${data['message']}", false);
-        }
-      } else {
-        debugPrint("⚠️ No organizationId found in local storage");
-        showCustomSnackBar(context, "Item created, but no organization found for notification", false);
       }
 
       widget.onAddItemToHome?.call(newItem);
@@ -912,15 +1032,28 @@ class _CustomRightDrawerState extends State<CustomRightDrawer> with SingleTicker
         newSubtitle = '';
         newUrl = '';
         pickedImage = null;
+
+        // reset event fields
+        startDate = null;
+        endDate = null;
+        startTime = null;
+        endTime = null;
+        isAllDay = false;
+        selectedCalendar = 'Church Calendar';
       });
 
       await _loadLists();
+      _snack("Created Successfully", true);
     } catch (e) {
-      debugPrint("❌ Create item failed: $e");
-      showCustomSnackBar(context, "❌ Failed to save item: $e", false);
-    } finally {
-      setState(() => isSaving = false);
+      _snack("Error: $e", false);
     }
+
+    setState(() => isSaving = false);
+  }
+  void _snack(String msg, bool success) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: success ? Colors.green : Colors.red),
+    );
   }
 
 

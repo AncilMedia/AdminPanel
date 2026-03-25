@@ -34,6 +34,61 @@ class ItemService {
     }
   }
 
+  // static Future<ItemModel> createItem({
+  //   required String title,
+  //   String? subtitle,
+  //   String? url,
+  //   required String type,
+  //   String? parentId,
+  //   Uint8List? imageBytes,
+  //   String? imageUrl,
+  // }) async {
+  //   final uri = Uri.parse('$NgrokUrl/api/item');
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final token = prefs.getString('accessToken');
+  //   final userId = prefs.getString('user_Id');
+  //   final organizationId = prefs.getString('organizationId');
+  //
+  //   if (token == null) throw Exception('Not authenticated: No access token');
+  //   if (userId == null) throw Exception('No user ID found');
+  //   if (organizationId == null) throw Exception('Missing organizationId in SharedPreferences');
+  //
+  //   final request = http.MultipartRequest('POST', uri)
+  //     ..headers['Authorization'] = 'Bearer $token'
+  //     ..headers['x-user-id'] = userId
+  //     ..fields['title'] = title
+  //     ..fields['type'] = type
+  //     ..fields['organizationId'] = organizationId;
+  //
+  //   if (subtitle?.isNotEmpty ?? false) request.fields['subtitle'] = subtitle!;
+  //   if (url?.isNotEmpty ?? false) request.fields['url'] = url!;
+  //   if (parentId?.isNotEmpty ?? false) request.fields['parentId'] = parentId!;
+  //   if (imageUrl?.isNotEmpty ?? false) request.fields['image'] = imageUrl!;
+  //
+  //   if (imageBytes != null && imageBytes.isNotEmpty) {
+  //     request.files.add(http.MultipartFile.fromBytes(
+  //       'imageFile',
+  //       imageBytes,
+  //       filename: 'image.jpg',
+  //     ));
+  //   }
+  //
+  //   final response = await request.send();
+  //   final responseBody = await response.stream.bytesToString();
+  //
+  //   if (response.statusCode == 201) {
+  //     final jsonData = json.decode(responseBody);
+  //     final data = jsonData['data'] ?? jsonData;
+  //     if (data is! Map<String, dynamic>) {
+  //       throw Exception('Invalid response format');
+  //     }
+  //     return ItemModel.fromJson(data);
+  //   } else {
+  //     print("❌ Failed to create item: $responseBody");
+  //     throw Exception('Failed to create item: $responseBody');
+  //   }
+  // }
+
   static Future<ItemModel> createItem({
     required String title,
     String? subtitle,
@@ -42,8 +97,15 @@ class ItemService {
     String? parentId,
     Uint8List? imageBytes,
     String? imageUrl,
+
+    // ✅ EVENT FIELDS
+    String? startDateTime,
+    String? endDateTime,
+    bool? isAllDay,
+    String? calendar,
   }) async {
-    final uri = Uri.parse('$NgrokUrl/api/item');
+    final uri = Uri.parse('$baseUrl/api/item');
+// add ngrok here for realtime item
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('accessToken');
     final userId = prefs.getString('user_Id');
@@ -51,7 +113,7 @@ class ItemService {
 
     if (token == null) throw Exception('Not authenticated: No access token');
     if (userId == null) throw Exception('No user ID found');
-    if (organizationId == null) throw Exception('Missing organizationId in SharedPreferences');
+    if (organizationId == null) throw Exception('Missing organizationId');
 
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
@@ -60,17 +122,51 @@ class ItemService {
       ..fields['type'] = type
       ..fields['organizationId'] = organizationId;
 
-    if (subtitle?.isNotEmpty ?? false) request.fields['subtitle'] = subtitle!;
-    if (url?.isNotEmpty ?? false) request.fields['url'] = url!;
-    if (parentId?.isNotEmpty ?? false) request.fields['parentId'] = parentId!;
-    if (imageUrl?.isNotEmpty ?? false) request.fields['image'] = imageUrl!;
+    // ✅ OPTIONAL FIELDS
+    if (subtitle?.isNotEmpty ?? false) {
+      request.fields['subtitle'] = subtitle!;
+    }
 
+    if (url?.isNotEmpty ?? false) {
+      request.fields['url'] = url!;
+    }
+
+    if (parentId?.isNotEmpty ?? false) {
+      request.fields['parentId'] = parentId!;
+    }
+
+    if (imageUrl?.isNotEmpty ?? false) {
+      request.fields['image'] = imageUrl!;
+    }
+
+    // ✅ EVENT DATA (ONLY IF EVENT)
+    if (type == 'event') {
+      if (startDateTime != null) {
+        request.fields['startDateTime'] = startDateTime;
+      }
+
+      if (endDateTime != null) {
+        request.fields['endDateTime'] = endDateTime;
+      }
+
+      if (isAllDay != null) {
+        request.fields['isAllDay'] = isAllDay.toString();
+      }
+
+      if (calendar != null) {
+        request.fields['calendar'] = calendar;
+      }
+    }
+
+    // ✅ IMAGE UPLOAD
     if (imageBytes != null && imageBytes.isNotEmpty) {
-      request.files.add(http.MultipartFile.fromBytes(
-        'imageFile',
-        imageBytes,
-        filename: 'image.jpg',
-      ));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'imageFile',
+          imageBytes,
+          filename: 'image.jpg',
+        ),
+      );
     }
 
     final response = await request.send();
@@ -78,17 +174,19 @@ class ItemService {
 
     if (response.statusCode == 201) {
       final jsonData = json.decode(responseBody);
+
       final data = jsonData['data'] ?? jsonData;
+
       if (data is! Map<String, dynamic>) {
         throw Exception('Invalid response format');
       }
+
       return ItemModel.fromJson(data);
     } else {
       print("❌ Failed to create item: $responseBody");
       throw Exception('Failed to create item: $responseBody');
     }
   }
-
   static Future<void> deleteItem(String id) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('user_Id');

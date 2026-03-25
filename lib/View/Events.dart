@@ -19,29 +19,81 @@ class _EventsState extends State<Events> {
   List<ItemModel> events = [];
   bool isLoading = true;
 
+  String formatTo12Hour(String? dateTimeString) {
+    try {
+      if (dateTimeString == null || dateTimeString.isEmpty) return 'No time';
+
+      final dateTime = DateTime.parse(dateTimeString).toLocal();
+      return DateFormat('hh:mm a').format(dateTime);
+    } catch (e) {
+      return 'Invalid';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadEvents();
   }
 
+  // Future<void> _loadEvents() async {
+  //   if (!mounted) return;
+  //   setState(() => isLoading = true);
+  //   try {
+  //     // ✅ Fetching using your ItemService
+  //     final allItems = await ItemService.fetchItems();
+  //
+  //     if (mounted) {
+  //       setState(() {
+  //         // ✅ FILTER: Only items where type is 'event'
+  //         events = allItems.where((item) => item.type == 'event').toList();
+  //         isLoading = false;
+  //       });
+  //     }
+  //   } catch (e) {
+  //     debugPrint("❌ Error Loading Events: $e");
+  //     if (mounted) setState(() => isLoading = false);
+  //   }
+  // }
+
   Future<void> _loadEvents() async {
     if (!mounted) return;
+
     setState(() => isLoading = true);
+
     try {
-      // ✅ Fetching using your ItemService
       final allItems = await ItemService.fetchItems();
 
-      if (mounted) {
-        setState(() {
-          // ✅ FILTER: Only items where type is 'event'
-          events = allItems.where((item) => item.type == 'event').toList();
-          isLoading = false;
-        });
+      if (!mounted) return;
+
+      final eventItems =
+      allItems.where((item) => item.type == 'event').toList();
+
+      print("📅 Total events: ${eventItems.length}");
+
+      for (var item in eventItems) {
+        print("🟢 Event:");
+        print("   ID: ${item.id}");
+        print("   Title: ${item.title}");
+        print("   Type: ${item.type}");
+        print("   Raw Start: ${item.startDateTime}");
+        print("   Raw End: ${item.endDateTime}");
+        print("   Start (12h): ${formatTo12Hour(item.startDateTime)}");
+        print("   End (12h): ${formatTo12Hour(item.endDateTime)}");
+        print("----------------------");
       }
+
+      setState(() {
+        events = eventItems;
+        isLoading = false;
+      });
+
     } catch (e) {
       debugPrint("❌ Error Loading Events: $e");
-      if (mounted) setState(() => isLoading = false);
+
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -130,7 +182,7 @@ class _EventsState extends State<Events> {
 
   Widget _buildAttractiveCard(ItemModel item) {
     // 📅 Date Parsing Logic
-    DateTime eventDate = DateTime.tryParse(item.createdAt ?? "") ?? DateTime.now();
+    DateTime eventDate = DateTime.tryParse(item.startDateTime ?? "") ?? DateTime.now();
     String day = DateFormat('dd').format(eventDate);
     String month = DateFormat('MMM').format(eventDate).toUpperCase();
     String time = DateFormat('hh:mm a').format(eventDate);
