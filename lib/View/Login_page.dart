@@ -12,6 +12,7 @@ import '../View_model/Authentication_state.dart';
 import '../View_model/Custom_snackbar.dart';
 import '../View_model/Splash_Animation.dart';
 import '../Controller/Login_controller.dart';
+import 'Mainlayout.dart';
 import 'Register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -105,20 +106,82 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    setState(() => _isLoading = true);
-    final result = await AuthService().login(identifierController.text.trim(), passwordController.text);
-    setState(() => _isLoading = false);
+  // Future<void> _handleLogin() async {
+  //   setState(() => _isLoading = true);
+  //   final result = await AuthService().login(identifierController.text.trim(), passwordController.text);
+  //   setState(() => _isLoading = false);
+  //
+  //   if (result['status'] == 200 && result['parsed']['accessToken'] != null) {
+  //     if (mounted) {
+  //       // 🔹 2. Navigate and clear history so they can't "Back" into Login
+  //       context.go('/home');
+  //     }
+  //   } else {
+  //     if (mounted) {
+  //       showCustomSnackBar(context, result['parsed']['message'] ?? "Login failed", false);
+  //     }
+  //   }
+  // }
 
-    if (result['status'] == 200 && result['parsed']['accessToken'] != null) {
-      if (mounted) {
-        // 🔹 2. Navigate and clear history so they can't "Back" into Login
-        context.go('/home');
-      }
+  // Future<void> _handleLogin() async {
+  //   setState(() => _isLoading = true);
+  //
+  //   final result = await AuthService()
+  //       .login(identifierController.text.trim(), passwordController.text);
+  //
+  //   setState(() => _isLoading = false);
+  //
+  //   if (result['status'] == 200 && result['parsed']['accessToken'] != null) {
+  //
+  //     final prefs = await SharedPreferences.getInstance();
+  //
+  //     // ✅ Save token immediately
+  //     await prefs.setString(
+  //         'accessToken', result['parsed']['accessToken']);
+  //
+  //     if (mounted) {
+  //       context.go('/home');
+  //     }
+  //
+  //   } else {
+  //     if (mounted) {
+  //       showCustomSnackBar(
+  //           context,
+  //           result['parsed']['message'] ?? "Login failed",
+  //           false);
+  //     }
+  //   }
+  // }
+
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final identifier = identifierController.text.trim();
+    final password = passwordController.text;
+
+    final result = await AuthService().login(identifier, password);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    final status = result['status'];
+    final parsed = result['parsed'];
+
+    if (status == 200 && parsed['accessToken'] != null) {
+      if (!context.mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainLayout(initialPage: 'home',)),
+      );
     } else {
-      if (mounted) {
-        showCustomSnackBar(context, result['parsed']['message'] ?? "Login failed", false);
-      }
+      if (!context.mounted) return;
+
+      final errorMessage = parsed['error'] ?? parsed['message'] ?? "Login failed. Please try again.";
+      showCustomSnackBar(context, errorMessage, false);
     }
   }
 

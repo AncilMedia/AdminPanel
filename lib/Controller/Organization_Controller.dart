@@ -462,28 +462,31 @@ class OrganizationController {
   static Future<bool> assignAppToOrganization(String orgId, String appId) async {
     final response = await _makeAuthorizedRequest(
           (token) => http.patch(
-        Uri.parse("$_orgUrl/$orgId/assign-app"),
+        Uri.parse("$_orgUrl/$orgId/assign-apps"), // 👈 also check endpoint name
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'appId': appId}),
+        body: jsonEncode({
+          'appIds': [appId] // ✅ send as array
+        }),
       ),
     );
 
     return response?.statusCode == 200;
   }
-
   // Unassign app
   static Future<bool> unassignAppFromOrganization(String orgId, String appId) async {
     final response = await _makeAuthorizedRequest(
           (token) => http.patch(
-        Uri.parse("$_orgUrl/$orgId/unassign-app"),
+        Uri.parse("$_orgUrl/$orgId/unassign-apps"), // 👈 check endpoint
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'appId': appId}),
+        body: jsonEncode({
+          'appIds': [appId] // ✅ same fix here
+        }),
       ),
     );
 
