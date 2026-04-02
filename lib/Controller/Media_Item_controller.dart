@@ -140,6 +140,26 @@ class MediaItemService {
     throw Exception("Failed to fetch media items: ${response.statusCode}");
   }
 
+  Future<void> deleteMediaItem(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/api/media/item/$id"),
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Media item deleted successfully: $id");
+        print("Response: ${response.body}");
+      } else {
+        print("❌ Delete failed");
+        print("Status Code: ${response.statusCode}");
+        print("Response: ${response.body}");
+        throw Exception("Delete failed: ${response.body}");
+      }
+    } catch (e) {
+      print("🚨 Error deleting media item: $e");
+      rethrow;
+    }
+  }
   // ✅ Get media items by user or organization
   Future<List<dynamic>> getMediaItemsByUserOrOrg({
     String? userId,
