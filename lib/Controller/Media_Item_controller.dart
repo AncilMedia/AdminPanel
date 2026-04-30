@@ -128,6 +128,153 @@ class MediaItemService {
     }
   }
 
+  Future<Map<String, dynamic>> updateMediaItem({
+    required String id,
+    String? title,
+    String? description,
+    DateTime? selectedDate,
+    List<String>? speakers,
+    List<String>? topics,
+    List<String>? scriptures,
+    File? file,
+    PlatformFile? webFile,
+  }) async {
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString("userId");
+    final orgId = prefs.getString("organizationId");
+    final roleId = prefs.getString("roleId");
+
+    final uri = Uri.parse("$baseUrl/api/media/item/$id");
+
+    /// 🚀 If NO FILE → use normal JSON PUT (fast & reliable)
+    if (file == null && webFile == null) {
+
+      final body = <String, dynamic>{};
+
+      if (title != null && title.isNotEmpty) body["title"] = title;
+      if (description != null && description.isNotEmpty) body["description"] = description;
+
+      if (selectedDate != null) {
+        body["date"] = selectedDate.toIso8601String();
+      }
+
+      if (speakers != null && speakers.isNotEmpty) {
+        body["speakers"] = speakers;
+      }
+
+      if (topics != null && topics.isNotEmpty) {
+        body["topics"] = topics;
+      }
+
+      if (scriptures != null && scriptures.isNotEmpty) {
+        body["scriptures"] = scriptures;
+      }
+
+      body["createdBy"] = userId;
+      body["organization"] = orgId;
+      body["role"] = roleId;
+
+      print("PUT JSON URL: $uri");
+      print("BODY SENT: $body");
+
+      final response = await http.put(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode(body),
+      );
+
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception("Update failed: ${response.body}");
+      }
+    }
+
+    /// 🚀 If FILE exists → use Multipart
+    var request = http.MultipartRequest("PUT", uri);
+
+    request.headers['Accept'] = 'application/json';
+
+    if (title != null && title.isNotEmpty) {
+      request.fields["title"] = title;
+    }
+
+    if (description != null && description.isNotEmpty) {
+      request.fields["description"] = description;
+    }
+
+    if (selectedDate != null) {
+      request.fields["date"] = selectedDate.toIso8601String();
+    }
+
+    if (speakers != null && speakers.isNotEmpty) {
+      request.fields["speakers"] = jsonEncode(speakers);
+    }
+
+    if (topics != null && topics.isNotEmpty) {
+      request.fields["topics"] = jsonEncode(topics);
+    }
+
+    if (scriptures != null && scriptures.isNotEmpty) {
+      request.fields["scriptures"] = jsonEncode(scriptures);
+    }
+
+    request.fields["createdBy"] = userId ?? "";
+    request.fields["organization"] = orgId ?? "";
+    request.fields["role"] = roleId ?? "";
+
+    /// FILE UPLOAD
+    if (kIsWeb && webFile != null && webFile.bytes != null) {
+
+      final mimeType = lookupMimeType(webFile.name) ?? 'application/octet-stream';
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          "file",
+          webFile.bytes!,
+          filename: webFile.name,
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
+
+    } else if (!kIsWeb && file != null) {
+
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          "file",
+          file.path,
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
+    }
+
+    print("PUT MULTIPART URL: $uri");
+    print("FIELDS SENT: ${request.fields}");
+    print("FILES SENT: ${request.files.map((e) => e.filename).toList()}");
+
+    final response = await request.send();
+    final resBody = await response.stream.bytesToString();
+
+    print("STATUS: ${response.statusCode}");
+    print("BODY: $resBody");
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return jsonDecode(resBody);
+    } else {
+      throw Exception("Update failed: $resBody");
+    }
+  }
+
+
   // ✅ Get all media items
   Future<List<dynamic>> getMediaItems() async {
     final uri = Uri.parse("$baseUrl/api/media/item");

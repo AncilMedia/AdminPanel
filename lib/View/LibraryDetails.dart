@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
@@ -62,6 +63,11 @@ class _LibraryDetailsState extends State<LibraryDetails> with TickerProviderStat
   List<String> selectedTopicIds = [];
   List<String> selectedScriptureIds = [];
 
+  String? videoUrl;
+  String? thumbnailUrl;
+
+  PlatformFile? selectedPlatformVideo;
+
   final Map<String, Color> deviceColors = {
     "ios": Colors.amber, "android": Colors.blue, "appleTv": Colors.purple,
     "roku": Colors.orange, "webApp": Colors.green, "webEmbed": Colors.teal, "other": Colors.grey,
@@ -69,6 +75,138 @@ class _LibraryDetailsState extends State<LibraryDetails> with TickerProviderStat
 
   late MediaItemService mediaDataController;
   final TextStyle baseStyle = GoogleFonts.poppins();
+
+
+  Future<void> fetchMediaItemDetails() async {
+    try {
+      print("\n================ MEDIA ITEM FETCH =================");
+      print("📌 Media Item ID : ${widget.mediaitemid}");
+      print("---------------------------------------------------");
+
+      final data = await mediaDataController.getMediaItemById(widget.mediaitemid);
+
+      print("📦 FULL API RESPONSE (Formatted JSON)");
+      print("---------------------------------------------------");
+      print(const JsonEncoder.withIndent('  ').convert(data));
+
+      print("---------------------------------------------------");
+
+      // BASIC DETAILS
+      print("📝 Basic Info:");
+      print("Title : ${data["title"]}");
+      print("Description : ${data["description"]}");
+      print("Date : ${data["date"]}");
+
+      // SPEAKERS
+      if (data["speakers"] != null) {
+        final List sp = data["speakers"];
+
+        print("\n👤 Speakers:");
+        for (var s in sp) {
+          print("   ID: ${s["_id"]} | Name: ${s["name"]}");
+        }
+      }
+
+      // TOPICS
+      if (data["topics"] != null) {
+        final List tp = data["topics"];
+
+        print("\n🏷 Topics:");
+        for (var t in tp) {
+          print("   ID: ${t["_id"]} | Name: ${t["name"]}");
+        }
+      }
+
+      // SCRIPTURES
+      if (data["scriptures"] != null) {
+        final List sc = data["scriptures"];
+
+        print("\n📖 Scriptures:");
+        for (var s in sc) {
+          print("   ID: ${s["_id"]} | ${s["book"]} ${s["chapter"]}");
+        }
+      }
+
+      // MEDIA FILES
+      if (data["media"] != null) {
+        print("\n🎬 Media Files:");
+
+        final media = data["media"];
+
+        if (media["video"] != null) {
+          print("   📹 Video URL : ${media["video"]}");
+        }
+
+        if (media["audio"] != null) {
+          print("   🎧 Audio URL : ${media["audio"]}");
+        }
+
+        if (media["thumbnail"] != null) {
+          print("   🖼 Thumbnail : ${media["thumbnail"]}");
+        }
+      }
+
+      print("===================================================\n");
+
+      if (!mounted) return;
+
+      setState(() {
+        _titleController.text = data["title"] ?? "";
+        _descriptionController.text = data["description"] ?? "";
+
+        // MEDIA FILES
+        videoUrl = data["fileUrl"];
+        thumbnailUrl = data["thumbnailUrl"];
+
+        // Publication date
+        if (data["date"] != null) {
+          final parsedDate = DateTime.tryParse(data["date"]);
+          if (parsedDate != null) {
+            _dateController.text =
+                DateFormat('yyyy-MM-dd').format(parsedDate);
+          }
+        }
+
+        // Speakers
+        if (data["speakers"] != null) {
+          final List sp = data["speakers"];
+          selectedSpeakerIds =
+              sp.map((e) => e["_id"].toString()).toList();
+
+          if (sp.isNotEmpty) {
+            _speakerController.value = sp.first["name"];
+          }
+        }
+
+        // Topics
+        if (data["topics"] != null) {
+          final List tp = data["topics"];
+          selectedTopicIds =
+              tp.map((e) => e["_id"].toString()).toList();
+
+          if (tp.isNotEmpty) {
+            _topicsController.value = tp.first["name"];
+          }
+        }
+
+        // Scriptures
+        if (data["scriptures"] != null) {
+          final List sc = data["scriptures"];
+          selectedScriptureIds =
+              sc.map((e) => e["_id"].toString()).toList();
+
+          _scriptureController.text =
+              sc.map((e) => "${e["book"]} ${e["chapter"]}")
+                  .join(", ");
+        }
+      });
+    } catch (e) {
+      print("\n❌ ERROR FETCHING MEDIA ITEM");
+      print("Media ID : ${widget.mediaitemid}");
+      print("Error : $e");
+      print("=====================================\n");
+    }
+  }
 
   @override
   void initState() {
@@ -80,6 +218,7 @@ class _LibraryDetailsState extends State<LibraryDetails> with TickerProviderStat
       duration: const Duration(milliseconds: 1000),
     );
     fetchInitialData();
+    fetchMediaItemDetails(); // ✅ NEW
     fetchAnalytics();
   }
 
@@ -145,28 +284,60 @@ class _LibraryDetailsState extends State<LibraryDetails> with TickerProviderStat
   }
 
   Future<void> _saveMediaItem() async {
+
     if (_titleController.text.trim().isEmpty) {
       showCustomSnackBar(context, "Please enter a title", false);
       return;
     }
+
     setState(() => isSaving = true);
+
     try {
-      await mediaDataController.createMediaItem(
-        file: selectedVideo,
-        thumbnailFile: selectedAudio,
+
+      DateTime? selectedDate;
+
+      if (_dateController.text.isNotEmpty) {
+        selectedDate = DateTime.tryParse(_dateController.text);
+      }
+
+      print("=========== UPDATE MEDIA ITEM ===========");
+      print("Media ID: ${widget.mediaitemid}");
+      print("Title: ${_titleController.text.trim()}");
+      print("Description: ${_descriptionController.text.trim()}");
+      print("Speakers: $selectedSpeakerIds");
+      print("Topics: $selectedTopicIds");
+      print("Scriptures: $selectedScriptureIds");
+      print("Video File: ${selectedPlatformVideo?.name ?? selectedVideo?.path}");
+      print("=========================================");
+
+      await mediaDataController.updateMediaItem(
+        id: widget.mediaitemid,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
-        speakers: selectedSpeakerIds,
-        topics: selectedTopicIds,
-        scriptures: selectedScriptureIds,
+        selectedDate: selectedDate,
+        speakers: selectedSpeakerIds.isEmpty ? null : selectedSpeakerIds,
+        topics: selectedTopicIds.isEmpty ? null : selectedTopicIds,
+        scriptures: selectedScriptureIds.isEmpty ? null : selectedScriptureIds,
+        file: !kIsWeb ? selectedVideo : null,
+        webFile: kIsWeb ? selectedPlatformVideo : null,
       );
+
       showCustomSnackBar(context, "Media item updated successfully", true);
+
     } catch (e) {
+
+      print("❌ ERROR UPDATING MEDIA ITEM");
+      print(e);
+
       showCustomSnackBar(context, "Error: $e", false);
+
     } finally {
+
       setState(() => isSaving = false);
+
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -349,9 +520,12 @@ class _LibraryDetailsState extends State<LibraryDetails> with TickerProviderStat
                 icon: Iconsax.folder_add,
                 child: Column(
                   children: [
+                    // _buildMediaBox(80, isVideo: true),
+                    // const SizedBox(height: 12),
+                    // _buildMediaBox(80, isVideo: false),
+                    _buildMediaPreview(),
+                    const SizedBox(height: 16),
                     _buildMediaBox(80, isVideo: true),
-                    const SizedBox(height: 12),
-                    _buildMediaBox(80, isVideo: false),
                   ],
                 ),
               )),
@@ -561,6 +735,159 @@ class _LibraryDetailsState extends State<LibraryDetails> with TickerProviderStat
   }
   // --- HELPERS (STYLING) ---
 
+  // Widget _buildMediaPreview() {
+  //   if (videoUrl == null) {
+  //     return const Text("No video uploaded");
+  //   }
+  //
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       if (thumbnailUrl != null)
+  //         ClipRRect(
+  //           borderRadius: BorderRadius.circular(12),
+  //           child: Stack(
+  //             alignment: Alignment.center,
+  //             children: [
+  //               Image.network(
+  //                 thumbnailUrl!,
+  //                 height: 180,
+  //                 width: double.infinity,
+  //                 fit: BoxFit.cover,
+  //               ),
+  //
+  //               Container(
+  //                 decoration: const BoxDecoration(
+  //                   color: Colors.black45,
+  //                   shape: BoxShape.circle,
+  //                 ),
+  //                 padding: const EdgeInsets.all(12),
+  //                 child: const Icon(
+  //                   Icons.play_arrow,
+  //                   color: Colors.white,
+  //                   size: 32,
+  //                 ),
+  //               )
+  //             ],
+  //           ),
+  //         ),
+  //
+  //       const SizedBox(height: 12),
+  //
+  //       Container(
+  //         height: 60,
+  //         decoration: BoxDecoration(
+  //           color: Colors.indigo.withOpacity(0.05),
+  //           borderRadius: BorderRadius.circular(12),
+  //           border: Border.all(color: Colors.indigo),
+  //         ),
+  //         child: Row(
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //           children: [
+  //             const Icon(Iconsax.video_play, color: Colors.indigo),
+  //             const SizedBox(width: 8),
+  //             Text(
+  //               "Video Uploaded",
+  //               style: baseStyle.copyWith(
+  //                 color: Colors.indigo,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             )
+  //           ],
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+
+
+  Widget _buildMediaPreview() {
+    // NEW VIDEO SELECTED
+    if (selectedVideo != null) {
+      return Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Iconsax.video_play, color: Colors.green),
+            const SizedBox(width: 8),
+            Text(
+              "New Video Selected",
+              style: baseStyle.copyWith(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          ],
+        ),
+      );
+    }
+
+    // EXISTING VIDEO
+    if (videoUrl != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (thumbnailUrl != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Image.network(
+                    thumbnailUrl!,
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black45,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: const Icon(Icons.play_arrow,
+                        color: Colors.white, size: 32),
+                  )
+                ],
+              ),
+            ),
+          const SizedBox(height: 12),
+          Container(
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.indigo.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.indigo),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Iconsax.video_play, color: Colors.indigo),
+                const SizedBox(width: 8),
+                Text(
+                  "Video Uploaded",
+                  style: baseStyle.copyWith(
+                    color: Colors.indigo,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return const Text("No video uploaded");
+  }
+
+
   Widget _staggeredEntry(double start, double end, {required Widget child}) {
     final animation = CurvedAnimation(parent: _contentController, curve: Interval(start, end, curve: Curves.easeOutQuart));
     return FadeTransition(opacity: animation, child: SlideTransition(position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation), child: child));
@@ -683,11 +1010,34 @@ class _LibraryDetailsState extends State<LibraryDetails> with TickerProviderStat
   }
 
   Future<void> _pickFile({required bool isVideo}) async {
-    final result = await FilePicker.platform.pickFiles(type: isVideo ? FileType.video : FileType.audio);
-    if (result != null && result.files.single.path != null) {
+
+    final result = await FilePicker.platform.pickFiles(
+      type: isVideo ? FileType.video : FileType.audio,
+      withData: true,
+    );
+
+    if (result != null) {
+
       setState(() {
-        if (isVideo) selectedVideo = File(result.files.single.path!);
-        else selectedAudio = File(result.files.single.path!);
+
+        if (isVideo) {
+
+          if (kIsWeb) {
+            selectedPlatformVideo = result.files.first;
+          } else {
+            selectedVideo = File(result.files.single.path!);
+          }
+
+          videoUrl = null;
+
+        } else {
+
+          if (!kIsWeb) {
+            selectedAudio = File(result.files.single.path!);
+          }
+
+        }
+
       });
     }
   }
