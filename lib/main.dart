@@ -200,7 +200,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setUrlStrategy(PathUrlStrategy());
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  SocketService().initSocket();
+  // SocketService().initSocket();
 
   runApp(
     MultiProvider(
@@ -215,12 +215,12 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => SidebarsubProvider()),
         Provider(create: (context) => ApiClient(context.read<AuthState>())),
       ],
-      child: const MyApp(),
-      // child: MaterialApp(
-      //   debugShowCheckedModeBanner: false,
-      //   // home: LiveDashboard(orgId: '0rg1',),
-      //   home: LiveHostingPanel(),
-      // ),
+      // child: const MyApp(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        // home: LiveDashboard(orgId: '0rg1',),
+        home: SocketTestPage(),
+      ),
     ),
   );
 }

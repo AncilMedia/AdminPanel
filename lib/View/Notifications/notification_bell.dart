@@ -3,8 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-
 import '../../../View_model/Authentication_state.dart';
 import '../../Controller/Notification_controller.dart';
 import '../../Socket_Service.dart';
