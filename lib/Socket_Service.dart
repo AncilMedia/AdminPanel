@@ -328,27 +328,125 @@
 //     _socket?.disconnect();
 //     _socket = null;
 //   }
+// // }
+// import 'dart:async';
+// import 'package:socket_io_client/socket_io_client.dart' as IO;
+// import 'environmental variables.dart';
+//
+// class SocketService {
+//   static final SocketService _instance = SocketService._internal();
+//   factory SocketService() => _instance;
+//
+//   IO.Socket? _socket;
+//   Timer? _heartbeatTimer;
+//
+//   String? _userId;
+//
+//   SocketService._internal();
+//
+//   IO.Socket? get socket => _socket;
+//
+//   void initSocket(String userId) {
+//     _userId = userId;
+//
+//     if (_socket != null && _socket!.connected) return;
+//
+//     final cleanedUrl = NgrokUrl.endsWith('/')
+//         ? NgrokUrl.substring(0, NgrokUrl.length - 1)
+//         : NgrokUrl;
+//
+//     _socket = IO.io(
+//       cleanedUrl,
+//       {
+//         'transports': ['websocket'],
+//         'autoConnect': false,
+//         'reconnection': true,
+//         'reconnectionAttempts': 10,
+//         'reconnectionDelay': 2000,
+//       },
+//     );
+//
+//     _socket!.connect();
+//
+//     _socket!.onConnect((_) {
+//       print("✅ Connected: ${_socket!.id}");
+//
+//       // 🔥 IMPORTANT: Tell server user is online
+//       _socket!.emit("user-online", _userId);
+//
+//       // 🔥 Start heartbeat
+//       _startHeartbeat();
+//     });
+//
+//     _socket!.onDisconnect((_) {
+//       print("❌ Disconnected");
+//       _stopHeartbeat();
+//     });
+//   }
+//
+//   void _startHeartbeat() {
+//     _heartbeatTimer?.cancel();
+//
+//     _heartbeatTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+//       if (_socket != null && _socket!.connected && _userId != null) {
+//         _socket!.emit("heartbeat", _userId);
+//         print("💓 Heartbeat sent");
+//       }
+//     });
+//   }
+//
+//   void _stopHeartbeat() {
+//     _heartbeatTimer?.cancel();
+//   }
+//
+//   /// ✅ SAFE listener (fix for Flutter Web crash)
+//   void on(String event, Function(dynamic) callback) {
+//     _socket?.on(event, (data) {
+//       print("📩 $event raw: $data");
+//
+//       dynamic safeData;
+//
+//       try {
+//         if (data is Map) {
+//           safeData = Map<String, dynamic>.from(data);
+//         } else if (data is List) {
+//           safeData = data.map((e) {
+//             if (e is Map) return Map<String, dynamic>.from(e);
+//             return e;
+//           }).toList();
+//         } else {
+//           safeData = data;
+//         }
+//       } catch (e) {
+//         print("❌ Parse error: $e");
+//         safeData = null;
+//       }
+//
+//       if (safeData != null) {
+//         callback(safeData);
+//       }
+//     });
+//   }
+//
+//   void dispose() {
+//     _heartbeatTimer?.cancel();
+//     _socket?.dispose();
+//     _socket = null;
+//   }
 // }
-import 'dart:async';
+
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'environmental variables.dart';
+import '../environmental variables.dart';
 
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
 
   IO.Socket? _socket;
-  Timer? _heartbeatTimer;
-
-  String? _userId;
 
   SocketService._internal();
 
-  IO.Socket? get socket => _socket;
-
-  void initSocket(String userId) {
-    _userId = userId;
-
+  void initSocket() {
     if (_socket != null && _socket!.connected) return;
 
     final cleanedUrl = NgrokUrl.endsWith('/')
@@ -357,80 +455,46 @@ class SocketService {
 
     _socket = IO.io(
       cleanedUrl,
-      {
+      <String, dynamic>{
         'transports': ['websocket'],
-        'autoConnect': false,
+        'autoConnect': true,
         'reconnection': true,
-        'reconnectionAttempts': 10,
+        'reconnectionAttempts': 5,
         'reconnectionDelay': 2000,
       },
     );
 
     _socket!.connect();
 
-    _socket!.onConnect((_) {
-      print("✅ Connected: ${_socket!.id}");
-
-      // 🔥 IMPORTANT: Tell server user is online
-      _socket!.emit("user-online", _userId);
-
-      // 🔥 Start heartbeat
-      _startHeartbeat();
-    });
-
-    _socket!.onDisconnect((_) {
-      print("❌ Disconnected");
-      _stopHeartbeat();
-    });
+    _socket!.onConnect((_) => print('✅ Connected to socket server'));
+    _socket!.onDisconnect((_) => print('❌ Disconnected from socket server'));
   }
 
-  void _startHeartbeat() {
-    _heartbeatTimer?.cancel();
-
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 20), (_) {
-      if (_socket != null && _socket!.connected && _userId != null) {
-        _socket!.emit("heartbeat", _userId);
-        print("💓 Heartbeat sent");
-      }
-    });
-  }
-
-  void _stopHeartbeat() {
-    _heartbeatTimer?.cancel();
-  }
-
-  /// ✅ SAFE listener (fix for Flutter Web crash)
   void on(String event, Function(dynamic) callback) {
     _socket?.on(event, (data) {
-      print("📩 $event raw: $data");
-
-      dynamic safeData;
-
-      try {
-        if (data is Map) {
-          safeData = Map<String, dynamic>.from(data);
-        } else if (data is List) {
-          safeData = data.map((e) {
-            if (e is Map) return Map<String, dynamic>.from(e);
-            return e;
-          }).toList();
-        } else {
-          safeData = data;
-        }
-      } catch (e) {
-        print("❌ Parse error: $e");
-        safeData = null;
-      }
-
-      if (safeData != null) {
-        callback(safeData);
-      }
+      // sanitize JS objects for Flutter Web
+      dynamic sanitized = _sanitize(data);
+      callback(sanitized);
     });
   }
 
-  void dispose() {
-    _heartbeatTimer?.cancel();
-    _socket?.dispose();
+  dynamic _sanitize(dynamic data) {
+    if (data is Map) {
+      return data.map((key, value) => MapEntry(key.toString(), _sanitize(value)));
+    } else if (data is List) {
+      return data.map((item) => _sanitize(item)).toList();
+    }
+    return data;
+  }
+
+  void emit(String event, dynamic data) {
+    if (_socket?.connected ?? false) {
+      _socket?.emit(event, data);
+    }
+  }
+
+  void disconnect() {
+    _socket?.disconnect();
     _socket = null;
   }
 }

@@ -215,12 +215,12 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => SidebarsubProvider()),
         Provider(create: (context) => ApiClient(context.read<AuthState>())),
       ],
-      // child: const MyApp(),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        // home: LiveDashboard(orgId: '0rg1',),
-        home: SocketTestPage(),
-      ),
+      child: const MyApp(),
+      // child: MaterialApp(
+      //   debugShowCheckedModeBanner: false,
+      //   // home: LiveDashboard(orgId: '0rg1',),
+      //   home: SocketTestPage(),
+      // ),
     ),
   );
 }
