@@ -1,3 +1,205 @@
+// // // import 'dart:convert';
+// // // import 'dart:io';
+// // // import 'package:camera/camera.dart';
+// // // import 'package:flutter/foundation.dart';
+// // // import 'package:http/http.dart' as http;
+// // // import 'package:shared_preferences/shared_preferences.dart';
+// // // import 'package:http_parser/http_parser.dart';
+// // // import 'package:mime/mime.dart';
+// // //
+// // // import '../environmental variables.dart';
+// // //
+// // // class PushNotificationController {
+// // //   // 🔐 Get bearer token
+// // //   static Future<String?> _getToken() async {
+// // //     final prefs = await SharedPreferences.getInstance();
+// // //     return prefs.getString('accessToken');
+// // //   }
+// // //
+// // //   // // ✅ POST: Send notification
+// // //   // static Future<Map<String, dynamic>> sendNotification({
+// // //   //   required String title,
+// // //   //   required String body,
+// // //   //   required String event,
+// // //   //   required String type,
+// // //   //   String? userId,
+// // //   //   String? organizationId,
+// // //   //   String? color,
+// // //   //   String? icon,
+// // //   //   File? imageFile,
+// // //   // }) async {
+// // //   //   final token = await _getToken();
+// // //   //   if (token == null) throw Exception('Auth token not found');
+// // //   //
+// // //   //   final uri = Uri.parse('$baseUrl/api/pushnotification');
+// // //   //   final request = http.MultipartRequest('POST', uri)
+// // //   //     ..headers['Authorization'] = 'Bearer $token'
+// // //   //     ..fields['title'] = title
+// // //   //     ..fields['body'] = body
+// // //   //     ..fields['event'] = event
+// // //   //     ..fields['type'] = type;
+// // //   //
+// // //   //   if (userId != null) request.fields['userId'] = userId;
+// // //   //   if (organizationId != null) request.fields['organizationId'] = organizationId;
+// // //   //   if (color != null) request.fields['color'] = color;
+// // //   //   if (icon != null) request.fields['icon'] = icon;
+// // //   //
+// // //   //   if (imageFile != null) {
+// // //   //     final fileStream = http.ByteStream(imageFile.openRead());
+// // //   //     final length = await imageFile.length();
+// // //   //     final mimeType = lookupMimeType(imageFile.path) ?? 'application/octet-stream';
+// // //   //     final multipartFile = http.MultipartFile(
+// // //   //       'image',
+// // //   //       fileStream,
+// // //   //       length,
+// // //   //       filename: imageFile.path.split('/').last,
+// // //   //       contentType: MediaType.parse(mimeType),
+// // //   //     );
+// // //   //     request.files.add(multipartFile);
+// // //   //   }
+// // //   //
+// // //   //   print('📤 Sending notification with fields: ${request.fields}');
+// // //   //   if (imageFile != null) print('🖼️ Attached image: ${imageFile.path}');
+// // //   //
+// // //   //   try {
+// // //   //     final streamedResponse = await request.send();
+// // //   //     final response = await http.Response.fromStream(streamedResponse);
+// // //   //
+// // //   //     final Map<String, dynamic> responseData = jsonDecode(response.body);
+// // //   //
+// // //   //     if (response.statusCode == 200) {
+// // //   //       print('✅ Notification sent successfully: ${response.body}');
+// // //   //     } else {
+// // //   //       print('❌ Notification failed: ${response.statusCode} - ${response.body}');
+// // //   //     }
+// // //   //
+// // //   //     return {
+// // //   //       'status': response.statusCode,
+// // //   //       'data': responseData,
+// // //   //     };
+// // //   //   } catch (e) {
+// // //   //     print('❌ Error sending notification: $e');
+// // //   //     return {
+// // //   //       'status': 500,
+// // //   //       'data': {'message': 'Client error while sending notification'},
+// // //   //     };
+// // //   //   }
+// // //   // }
+// // //
+// // //   static Future<Map<String, dynamic>> sendNotification({
+// // //     required String title,
+// // //     required String body,
+// // //     required String event,
+// // //     required String type,
+// // //     String? userId,
+// // //     String? organizationId,
+// // //     String? color,
+// // //     String? icon,
+// // //     String? scheduledAt, // UTC Timestamp string
+// // //     XFile? imageFile,    // Use XFile for Web/Mobile compatibility
+// // //   }) async {
+// // //     final token = await _getToken();
+// // //     if (token == null) throw Exception('Auth token not found');
+// // //
+// // //     final uri = Uri.parse('$baseUrl/api/pushnotification');
+// // //     final request = http.MultipartRequest('POST', uri)
+// // //       ..headers['Authorization'] = 'Bearer $token'
+// // //       ..fields['title'] = title
+// // //       ..fields['body'] = body
+// // //       ..fields['event'] = event
+// // //       ..fields['type'] = type;
+// // //
+// // //     if (userId != null) request.fields['userId'] = userId;
+// // //     if (organizationId != null) request.fields['organizationId'] = organizationId;
+// // //     if (color != null) request.fields['color'] = color;
+// // //     if (icon != null) request.fields['icon'] = icon;
+// // //     if (scheduledAt != null) request.fields['scheduledAt'] = scheduledAt;
+// // //
+// // //     if (imageFile != null) {
+// // //       if (kIsWeb) {
+// // //         final bytes = await imageFile.readAsBytes();
+// // //         request.files.add(http.MultipartFile.fromBytes(
+// // //           'image',
+// // //           bytes,
+// // //           filename: imageFile.name,
+// // //           contentType: MediaType.parse(lookupMimeType(imageFile.name) ?? 'image/jpeg'),
+// // //         ));
+// // //       } else {
+// // //         final file = File(imageFile.path);
+// // //         final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+// // //         request.files.add(await http.MultipartFile.fromPath(
+// // //           'image',
+// // //           file.path,
+// // //           contentType: MediaType.parse(mimeType),
+// // //         ));
+// // //       }
+// // //     }
+// // //
+// // //     try {
+// // //       final streamedResponse = await request.send();
+// // //       final response = await http.Response.fromStream(streamedResponse);
+// // //       final Map<String, dynamic> responseData = jsonDecode(response.body);
+// // //
+// // //       return {
+// // //         'status': response.statusCode,
+// // //         'data': responseData,
+// // //       };
+// // //     } catch (e) {
+// // //       return {
+// // //         'status': 500,
+// // //         'data': {'message': 'Client error: $e'},
+// // //       };
+// // //     }
+// // //   }
+// // //
+// // //   // 📥 GET: All notifications
+// // //   static Future<List<Map<String, dynamic>>> fetchNotifications() async {
+// // //     final token = await _getToken();
+// // //     if (token == null) throw Exception('Auth token not found');
+// // //
+// // //     final response = await http.get(
+// // //       Uri.parse("$baseUrl/api/pushnotification"),
+// // //       headers: {
+// // //         'Authorization': 'Bearer $token',
+// // //         'Content-Type': 'application/json',
+// // //       },
+// // //     );
+// // //
+// // //     if (response.statusCode != 200) {
+// // //       print('❌ Failed to fetch notifications: ${response.statusCode} - ${response.body}');
+// // //       throw Exception('Failed to load notifications');
+// // //     }
+// // //
+// // //     print('✅ Notifications fetched successfully');
+// // //     final List<dynamic> data = jsonDecode(response.body);
+// // //     return data.map((e) => e as Map<String, dynamic>).toList();
+// // //   }
+// // //
+// // //   // ❌ DELETE: Notification by ID
+// // //   static Future<void> deleteNotification(String id) async {
+// // //     final token = await _getToken();
+// // //     if (token == null) throw Exception('Auth token not found');
+// // //
+// // //     final url = Uri.parse('$baseUrl/api/pushnotification/$id');
+// // //
+// // //     final response = await http.delete(
+// // //       url,
+// // //       headers: {
+// // //         'Authorization': 'Bearer $token',
+// // //         'Content-Type': 'application/json',
+// // //       },
+// // //     );
+// // //
+// // //     if (response.statusCode == 200) {
+// // //       print('✅ Notification deleted: $id');
+// // //     } else {
+// // //       print('❌ Failed to delete notification: ${response.statusCode} - ${response.body}');
+// // //       throw Exception('Failed to delete notification');
+// // //     }
+// // //   }
+// // // }
+// //
+// //
 // // import 'dart:convert';
 // // import 'dart:io';
 // // import 'package:camera/camera.dart';
@@ -16,76 +218,9 @@
 // //     return prefs.getString('accessToken');
 // //   }
 // //
-// //   // // ✅ POST: Send notification
-// //   // static Future<Map<String, dynamic>> sendNotification({
-// //   //   required String title,
-// //   //   required String body,
-// //   //   required String event,
-// //   //   required String type,
-// //   //   String? userId,
-// //   //   String? organizationId,
-// //   //   String? color,
-// //   //   String? icon,
-// //   //   File? imageFile,
-// //   // }) async {
-// //   //   final token = await _getToken();
-// //   //   if (token == null) throw Exception('Auth token not found');
-// //   //
-// //   //   final uri = Uri.parse('$baseUrl/api/pushnotification');
-// //   //   final request = http.MultipartRequest('POST', uri)
-// //   //     ..headers['Authorization'] = 'Bearer $token'
-// //   //     ..fields['title'] = title
-// //   //     ..fields['body'] = body
-// //   //     ..fields['event'] = event
-// //   //     ..fields['type'] = type;
-// //   //
-// //   //   if (userId != null) request.fields['userId'] = userId;
-// //   //   if (organizationId != null) request.fields['organizationId'] = organizationId;
-// //   //   if (color != null) request.fields['color'] = color;
-// //   //   if (icon != null) request.fields['icon'] = icon;
-// //   //
-// //   //   if (imageFile != null) {
-// //   //     final fileStream = http.ByteStream(imageFile.openRead());
-// //   //     final length = await imageFile.length();
-// //   //     final mimeType = lookupMimeType(imageFile.path) ?? 'application/octet-stream';
-// //   //     final multipartFile = http.MultipartFile(
-// //   //       'image',
-// //   //       fileStream,
-// //   //       length,
-// //   //       filename: imageFile.path.split('/').last,
-// //   //       contentType: MediaType.parse(mimeType),
-// //   //     );
-// //   //     request.files.add(multipartFile);
-// //   //   }
-// //   //
-// //   //   print('📤 Sending notification with fields: ${request.fields}');
-// //   //   if (imageFile != null) print('🖼️ Attached image: ${imageFile.path}');
-// //   //
-// //   //   try {
-// //   //     final streamedResponse = await request.send();
-// //   //     final response = await http.Response.fromStream(streamedResponse);
-// //   //
-// //   //     final Map<String, dynamic> responseData = jsonDecode(response.body);
-// //   //
-// //   //     if (response.statusCode == 200) {
-// //   //       print('✅ Notification sent successfully: ${response.body}');
-// //   //     } else {
-// //   //       print('❌ Notification failed: ${response.statusCode} - ${response.body}');
-// //   //     }
-// //   //
-// //   //     return {
-// //   //       'status': response.statusCode,
-// //   //       'data': responseData,
-// //   //     };
-// //   //   } catch (e) {
-// //   //     print('❌ Error sending notification: $e');
-// //   //     return {
-// //   //       'status': 500,
-// //   //       'data': {'message': 'Client error while sending notification'},
-// //   //     };
-// //   //   }
-// //   // }
-// //
+// //   /* =========================================================
+// //      📤 SEND / SCHEDULE NOTIFICATION
+// //   ========================================================= */
 // //   static Future<Map<String, dynamic>> sendNotification({
 // //     required String title,
 // //     required String body,
@@ -95,13 +230,14 @@
 // //     String? organizationId,
 // //     String? color,
 // //     String? icon,
-// //     String? scheduledAt, // UTC Timestamp string
-// //     XFile? imageFile,    // Use XFile for Web/Mobile compatibility
+// //     String? scheduledAt, // UTC ISO string
+// //     XFile? imageFile,
 // //   }) async {
 // //     final token = await _getToken();
 // //     if (token == null) throw Exception('Auth token not found');
 // //
 // //     final uri = Uri.parse('$baseUrl/api/pushnotification');
+// //
 // //     final request = http.MultipartRequest('POST', uri)
 // //       ..headers['Authorization'] = 'Bearer $token'
 // //       ..fields['title'] = title
@@ -109,42 +245,66 @@
 // //       ..fields['event'] = event
 // //       ..fields['type'] = type;
 // //
+// //     // OPTIONAL FIELDS
 // //     if (userId != null) request.fields['userId'] = userId;
 // //     if (organizationId != null) request.fields['organizationId'] = organizationId;
 // //     if (color != null) request.fields['color'] = color;
 // //     if (icon != null) request.fields['icon'] = icon;
-// //     if (scheduledAt != null) request.fields['scheduledAt'] = scheduledAt;
 // //
+// //     /* ================= 🔥 FIX: SCHEDULE ================= */
+// //     if (scheduledAt != null && scheduledAt.isNotEmpty) {
+// //       request.fields['scheduledAt'] = scheduledAt;
+// //       request.fields['isScheduled'] = 'true'; // ✅ REQUIRED
+// //     }
+// //
+// //     /* ================= IMAGE ================= */
 // //     if (imageFile != null) {
-// //       if (kIsWeb) {
-// //         final bytes = await imageFile.readAsBytes();
-// //         request.files.add(http.MultipartFile.fromBytes(
-// //           'image',
-// //           bytes,
-// //           filename: imageFile.name,
-// //           contentType: MediaType.parse(lookupMimeType(imageFile.name) ?? 'image/jpeg'),
-// //         ));
-// //       } else {
-// //         final file = File(imageFile.path);
-// //         final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
-// //         request.files.add(await http.MultipartFile.fromPath(
-// //           'image',
-// //           file.path,
-// //           contentType: MediaType.parse(mimeType),
-// //         ));
+// //       try {
+// //         if (kIsWeb) {
+// //           final bytes = await imageFile.readAsBytes();
+// //           request.files.add(http.MultipartFile.fromBytes(
+// //             'image',
+// //             bytes,
+// //             filename: imageFile.name,
+// //             contentType: MediaType.parse(
+// //               lookupMimeType(imageFile.name) ?? 'image/jpeg',
+// //             ),
+// //           ));
+// //         } else {
+// //           final file = File(imageFile.path);
+// //           final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+// //
+// //           request.files.add(await http.MultipartFile.fromPath(
+// //             'image',
+// //             file.path,
+// //             contentType: MediaType.parse(mimeType),
+// //           ));
+// //         }
+// //       } catch (e) {
+// //         print('❌ Image upload error: $e');
 // //       }
 // //     }
+// //
+// //     /* ================= DEBUG ================= */
+// //     print('📤 Sending notification...');
+// //     print('📝 Fields: ${request.fields}');
 // //
 // //     try {
 // //       final streamedResponse = await request.send();
 // //       final response = await http.Response.fromStream(streamedResponse);
-// //       final Map<String, dynamic> responseData = jsonDecode(response.body);
+// //
+// //       final Map<String, dynamic> responseData =
+// //       jsonDecode(response.body);
+// //
+// //       print('📥 Response: ${response.statusCode}');
+// //       print('📦 Body: ${response.body}');
 // //
 // //       return {
 // //         'status': response.statusCode,
 // //         'data': responseData,
 // //       };
 // //     } catch (e) {
+// //       print('❌ Request failed: $e');
 // //       return {
 // //         'status': 500,
 // //         'data': {'message': 'Client error: $e'},
@@ -152,7 +312,9 @@
 // //     }
 // //   }
 // //
-// //   // 📥 GET: All notifications
+// //   /* =========================================================
+// //      📥 GET ALL NOTIFICATIONS
+// //   ========================================================= */
 // //   static Future<List<Map<String, dynamic>>> fetchNotifications() async {
 // //     final token = await _getToken();
 // //     if (token == null) throw Exception('Auth token not found');
@@ -165,17 +327,20 @@
 // //       },
 // //     );
 // //
+// //     print('📥 Fetch status: ${response.statusCode}');
+// //     print('📦 Fetch body: ${response.body}');
+// //
 // //     if (response.statusCode != 200) {
-// //       print('❌ Failed to fetch notifications: ${response.statusCode} - ${response.body}');
 // //       throw Exception('Failed to load notifications');
 // //     }
 // //
-// //     print('✅ Notifications fetched successfully');
 // //     final List<dynamic> data = jsonDecode(response.body);
 // //     return data.map((e) => e as Map<String, dynamic>).toList();
 // //   }
 // //
-// //   // ❌ DELETE: Notification by ID
+// //   /* =========================================================
+// //      ❌ DELETE NOTIFICATION
+// //   ========================================================= */
 // //   static Future<void> deleteNotification(String id) async {
 // //     final token = await _getToken();
 // //     if (token == null) throw Exception('Auth token not found');
@@ -190,15 +355,14 @@
 // //       },
 // //     );
 // //
-// //     if (response.statusCode == 200) {
-// //       print('✅ Notification deleted: $id');
-// //     } else {
-// //       print('❌ Failed to delete notification: ${response.statusCode} - ${response.body}');
+// //     print('🗑 Delete status: ${response.statusCode}');
+// //     print('📦 Delete body: ${response.body}');
+// //
+// //     if (response.statusCode != 200) {
 // //       throw Exception('Failed to delete notification');
 // //     }
 // //   }
 // // }
-//
 //
 // import 'dart:convert';
 // import 'dart:io';
@@ -212,7 +376,9 @@
 // import '../environmental variables.dart';
 //
 // class PushNotificationController {
-//   // 🔐 Get bearer token
+//   /* =========================================================
+//      🔐 GET TOKEN
+//   ========================================================= */
 //   static Future<String?> _getToken() async {
 //     final prefs = await SharedPreferences.getInstance();
 //     return prefs.getString('accessToken');
@@ -245,16 +411,16 @@
 //       ..fields['event'] = event
 //       ..fields['type'] = type;
 //
-//     // OPTIONAL FIELDS
+//     /* ================= OPTIONAL FIELDS ================= */
 //     if (userId != null) request.fields['userId'] = userId;
 //     if (organizationId != null) request.fields['organizationId'] = organizationId;
 //     if (color != null) request.fields['color'] = color;
 //     if (icon != null) request.fields['icon'] = icon;
 //
-//     /* ================= 🔥 FIX: SCHEDULE ================= */
+//     /* ================= ✅ FIX: SCHEDULE ================= */
 //     if (scheduledAt != null && scheduledAt.isNotEmpty) {
 //       request.fields['scheduledAt'] = scheduledAt;
-//       request.fields['isScheduled'] = 'true'; // ✅ REQUIRED
+//       request.fields['isScheduled'] = 'true'; // 🔥 VERY IMPORTANT
 //     }
 //
 //     /* ================= IMAGE ================= */
@@ -272,7 +438,8 @@
 //           ));
 //         } else {
 //           final file = File(imageFile.path);
-//           final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+//           final mimeType =
+//               lookupMimeType(file.path) ?? 'application/octet-stream';
 //
 //           request.files.add(await http.MultipartFile.fromPath(
 //             'image',
@@ -285,26 +452,46 @@
 //       }
 //     }
 //
-//     /* ================= DEBUG ================= */
-//     print('📤 Sending notification...');
-//     print('📝 Fields: ${request.fields}');
+//     /* ================= 🔥 DEBUG LOGS ================= */
+//     print("======================================");
+//     print("📤 SENDING NOTIFICATION REQUEST");
+//     print("🌐 URL: $uri");
+//
+//     print("📝 Fields:");
+//     request.fields.forEach((key, value) {
+//       print("   $key : $value");
+//     });
+//
+//     if (imageFile != null) {
+//       print("🖼 Image attached: ${imageFile.name}");
+//     } else {
+//       print("🖼 No image attached");
+//     }
+//
+//     print("======================================");
 //
 //     try {
 //       final streamedResponse = await request.send();
 //       final response = await http.Response.fromStream(streamedResponse);
 //
+//       print("======================================");
+//       print("📥 RESPONSE RECEIVED");
+//       print("📊 Status Code: ${response.statusCode}");
+//       print("📦 Body: ${response.body}");
+//       print("======================================");
+//
 //       final Map<String, dynamic> responseData =
 //       jsonDecode(response.body);
-//
-//       print('📥 Response: ${response.statusCode}');
-//       print('📦 Body: ${response.body}');
 //
 //       return {
 //         'status': response.statusCode,
 //         'data': responseData,
 //       };
 //     } catch (e) {
-//       print('❌ Request failed: $e');
+//       print("======================================");
+//       print("❌ REQUEST FAILED: $e");
+//       print("======================================");
+//
 //       return {
 //         'status': 500,
 //         'data': {'message': 'Client error: $e'},
@@ -327,8 +514,9 @@
 //       },
 //     );
 //
-//     print('📥 Fetch status: ${response.statusCode}');
-//     print('📦 Fetch body: ${response.body}');
+//     print("📥 FETCH NOTIFICATIONS");
+//     print("Status: ${response.statusCode}");
+//     print("Body: ${response.body}");
 //
 //     if (response.statusCode != 200) {
 //       throw Exception('Failed to load notifications');
@@ -355,14 +543,17 @@
 //       },
 //     );
 //
-//     print('🗑 Delete status: ${response.statusCode}');
-//     print('📦 Delete body: ${response.body}');
+//     print("🗑 DELETE NOTIFICATION");
+//     print("Status: ${response.statusCode}");
+//     print("Body: ${response.body}");
 //
 //     if (response.statusCode != 200) {
 //       throw Exception('Failed to delete notification');
 //     }
 //   }
 // }
+
+
 
 import 'dart:convert';
 import 'dart:io';
@@ -411,16 +602,14 @@ class PushNotificationController {
       ..fields['event'] = event
       ..fields['type'] = type;
 
-    /* ================= OPTIONAL FIELDS ================= */
     if (userId != null) request.fields['userId'] = userId;
     if (organizationId != null) request.fields['organizationId'] = organizationId;
     if (color != null) request.fields['color'] = color;
     if (icon != null) request.fields['icon'] = icon;
 
-    /* ================= ✅ FIX: SCHEDULE ================= */
     if (scheduledAt != null && scheduledAt.isNotEmpty) {
       request.fields['scheduledAt'] = scheduledAt;
-      request.fields['isScheduled'] = 'true'; // 🔥 VERY IMPORTANT
+      request.fields['isScheduled'] = 'true';
     }
 
     /* ================= IMAGE ================= */
@@ -452,46 +641,27 @@ class PushNotificationController {
       }
     }
 
-    /* ================= 🔥 DEBUG LOGS ================= */
+    /* ================= DEBUG ================= */
     print("======================================");
-    print("📤 SENDING NOTIFICATION REQUEST");
-    print("🌐 URL: $uri");
-
-    print("📝 Fields:");
-    request.fields.forEach((key, value) {
-      print("   $key : $value");
-    });
-
-    if (imageFile != null) {
-      print("🖼 Image attached: ${imageFile.name}");
-    } else {
-      print("🖼 No image attached");
-    }
-
+    print("📤 SENDING NOTIFICATION");
+    print("🌐 $uri");
+    request.fields.forEach((k, v) => print("📝 $k : $v"));
+    print(imageFile != null ? "🖼 Image: ${imageFile.name}" : "🖼 No image");
     print("======================================");
 
     try {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      print("======================================");
-      print("📥 RESPONSE RECEIVED");
-      print("📊 Status Code: ${response.statusCode}");
-      print("📦 Body: ${response.body}");
-      print("======================================");
-
-      final Map<String, dynamic> responseData =
-      jsonDecode(response.body);
+      print("📥 RESPONSE: ${response.statusCode}");
+      print("📦 BODY: ${response.body}");
 
       return {
         'status': response.statusCode,
-        'data': responseData,
+        'data': jsonDecode(response.body),
       };
     } catch (e) {
-      print("======================================");
-      print("❌ REQUEST FAILED: $e");
-      print("======================================");
-
+      print("❌ ERROR: $e");
       return {
         'status': 500,
         'data': {'message': 'Client error: $e'},
@@ -506,7 +676,7 @@ class PushNotificationController {
     final token = await _getToken();
     if (token == null) throw Exception('Auth token not found');
 
-    final response = await http.get(
+    final res = await http.get(
       Uri.parse("$baseUrl/api/pushnotification"),
       headers: {
         'Authorization': 'Bearer $token',
@@ -514,16 +684,115 @@ class PushNotificationController {
       },
     );
 
-    print("📥 FETCH NOTIFICATIONS");
-    print("Status: ${response.statusCode}");
-    print("Body: ${response.body}");
+    print("📥 FETCH STATUS: ${res.statusCode}");
+    print("📦 BODY: ${res.body}");
 
-    if (response.statusCode != 200) {
+    if (res.statusCode != 200) {
       throw Exception('Failed to load notifications');
     }
 
-    final List<dynamic> data = jsonDecode(response.body);
-    return data.map((e) => e as Map<String, dynamic>).toList();
+    final List data = jsonDecode(res.body);
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  /* =========================================================
+     📊 GET DELIVERY STATS
+  ========================================================= */
+  static Future<Map<String, dynamic>> getDeliveryStats(String id) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Auth token not found');
+
+    final res = await http.get(
+      Uri.parse("$baseUrl/api/pushnotification/$id/stats"),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print("📊 STATS STATUS: ${res.statusCode}");
+    print("📦 BODY: ${res.body}");
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to get stats');
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  /* =========================================================
+     ✏️ UPDATE NOTIFICATION
+  ========================================================= */
+  static Future<Map<String, dynamic>> updateNotification({
+    required String id,
+    String? title,
+    String? body,
+    String? event,
+    String? type,
+    String? scheduledAt,
+    String? color,
+    String? icon,
+  }) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Auth token not found');
+
+    final uri = Uri.parse('$baseUrl/api/pushnotification/$id');
+
+    final bodyData = {
+      if (title != null) "title": title,
+      if (body != null) "body": body,
+      if (event != null) "event": event,
+      if (type != null) "type": type,
+      if (scheduledAt != null) "scheduledAt": scheduledAt,
+      if (color != null) "color": color,
+      if (icon != null) "icon": icon,
+    };
+
+    print("✏️ UPDATE REQUEST");
+    print("🆔 ID: $id");
+    print("📦 BODY: $bodyData");
+
+    final res = await http.put(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(bodyData),
+    );
+
+    print("📥 RESPONSE: ${res.statusCode}");
+    print("📦 BODY: ${res.body}");
+
+    return {
+      'status': res.statusCode,
+      'data': jsonDecode(res.body),
+    };
+  }
+
+  /* =========================================================
+     🚫 CANCEL NOTIFICATION
+  ========================================================= */
+  static Future<void> cancelNotification(String id) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Auth token not found');
+
+    final uri = Uri.parse('$baseUrl/api/pushnotification/$id/cancel');
+
+    print("🚫 CANCEL NOTIFICATION: $id");
+
+    final res = await http.patch(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print("📥 STATUS: ${res.statusCode}");
+    print("📦 BODY: ${res.body}");
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to cancel notification');
+    }
   }
 
   /* =========================================================
@@ -533,21 +802,21 @@ class PushNotificationController {
     final token = await _getToken();
     if (token == null) throw Exception('Auth token not found');
 
-    final url = Uri.parse('$baseUrl/api/pushnotification/$id');
+    final uri = Uri.parse('$baseUrl/api/pushnotification/$id');
 
-    final response = await http.delete(
-      url,
+    print("🗑 DELETE: $id");
+
+    final res = await http.delete(
+      uri,
       headers: {
         'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
       },
     );
 
-    print("🗑 DELETE NOTIFICATION");
-    print("Status: ${response.statusCode}");
-    print("Body: ${response.body}");
+    print("📥 STATUS: ${res.statusCode}");
+    print("📦 BODY: ${res.body}");
 
-    if (response.statusCode != 200) {
+    if (res.statusCode != 200) {
       throw Exception('Failed to delete notification');
     }
   }

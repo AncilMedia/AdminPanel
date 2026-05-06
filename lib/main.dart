@@ -212,7 +212,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AuthState()),
         ChangeNotifierProvider(create: (_) => NotificationState()),
         ChangeNotifierProvider(create: (_) => RolesController()),
-        ChangeNotifierProvider(create: (_) => SidebarsubProvider()),
+        // ChangeNotifierProvider(create: (_) => SidebarsubProvider()),
         Provider(create: (context) => ApiClient(context.read<AuthState>())),
       ],
       child: const MyApp(),
