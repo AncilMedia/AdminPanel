@@ -578,6 +578,97 @@ class PushNotificationController {
   /* =========================================================
      📤 SEND / SCHEDULE NOTIFICATION
   ========================================================= */
+  // static Future<Map<String, dynamic>> sendNotification({
+  //   required String title,
+  //   required String body,
+  //   required String event,
+  //   required String type,
+  //   String? userId,
+  //   String? organizationId,
+  //   String? color,
+  //   String? icon,
+  //   String? scheduledAt, // UTC ISO string
+  //   XFile? imageFile,
+  // }) async {
+  //   final token = await _getToken();
+  //   if (token == null) throw Exception('Auth token not found');
+  //
+  //   final uri = Uri.parse('$baseUrl/api/pushnotification');
+  //
+  //   final request = http.MultipartRequest('POST', uri)
+  //     ..headers['Authorization'] = 'Bearer $token'
+  //     ..fields['title'] = title
+  //     ..fields['body'] = body
+  //     ..fields['event'] = event
+  //     ..fields['type'] = type;
+  //
+  //   if (userId != null) request.fields['userId'] = userId;
+  //   if (organizationId != null) request.fields['organizationId'] = organizationId;
+  //   if (color != null) request.fields['color'] = color;
+  //   if (icon != null) request.fields['icon'] = icon;
+  //
+  //   if (scheduledAt != null && scheduledAt.isNotEmpty) {
+  //     request.fields['scheduledAt'] = scheduledAt;
+  //     request.fields['isScheduled'] = 'true';
+  //   }
+  //
+  //   /* ================= IMAGE ================= */
+  //   if (imageFile != null) {
+  //     try {
+  //       if (kIsWeb) {
+  //         final bytes = await imageFile.readAsBytes();
+  //         request.files.add(http.MultipartFile.fromBytes(
+  //           'image',
+  //           bytes,
+  //           filename: imageFile.name,
+  //           contentType: MediaType.parse(
+  //             lookupMimeType(imageFile.name) ?? 'image/jpeg',
+  //           ),
+  //         ));
+  //       } else {
+  //         final file = File(imageFile.path);
+  //         final mimeType =
+  //             lookupMimeType(file.path) ?? 'application/octet-stream';
+  //
+  //         request.files.add(await http.MultipartFile.fromPath(
+  //           'image',
+  //           file.path,
+  //           contentType: MediaType.parse(mimeType),
+  //         ));
+  //       }
+  //     } catch (e) {
+  //       print('❌ Image upload error: $e');
+  //     }
+  //   }
+  //
+  //   /* ================= DEBUG ================= */
+  //   print("======================================");
+  //   print("📤 SENDING NOTIFICATION");
+  //   print("🌐 $uri");
+  //   request.fields.forEach((k, v) => print("📝 $k : $v"));
+  //   print(imageFile != null ? "🖼 Image: ${imageFile.name}" : "🖼 No image");
+  //   print("======================================");
+  //
+  //   try {
+  //     final streamedResponse = await request.send();
+  //     final response = await http.Response.fromStream(streamedResponse);
+  //
+  //     print("📥 RESPONSE: ${response.statusCode}");
+  //     print("📦 BODY: ${response.body}");
+  //
+  //     return {
+  //       'status': response.statusCode,
+  //       'data': jsonDecode(response.body),
+  //     };
+  //   } catch (e) {
+  //     print("❌ ERROR: $e");
+  //     return {
+  //       'status': 500,
+  //       'data': {'message': 'Client error: $e'},
+  //     };
+  //   }
+  // }
+
   static Future<Map<String, dynamic>> sendNotification({
     required String title,
     required String body,
@@ -587,71 +678,183 @@ class PushNotificationController {
     String? organizationId,
     String? color,
     String? icon,
-    String? scheduledAt, // UTC ISO string
+    String? scheduledAt,
     XFile? imageFile,
   }) async {
+
     final token = await _getToken();
-    if (token == null) throw Exception('Auth token not found');
+
+    if (token == null) {
+      throw Exception('Auth token not found');
+    }
 
     final uri = Uri.parse('$baseUrl/api/pushnotification');
 
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['title'] = title
-      ..fields['body'] = body
-      ..fields['event'] = event
-      ..fields['type'] = type;
+    /* =========================================================
+     ✅ NORMAL JSON REQUEST (NO IMAGE)
+  ========================================================= */
 
-    if (userId != null) request.fields['userId'] = userId;
-    if (organizationId != null) request.fields['organizationId'] = organizationId;
-    if (color != null) request.fields['color'] = color;
-    if (icon != null) request.fields['icon'] = icon;
+    if (imageFile == null) {
 
-    if (scheduledAt != null && scheduledAt.isNotEmpty) {
+      final bodyData = {
+        'title': title,
+        'body': body,
+        'event': event,
+        'type': type,
+
+        if (userId != null) 'userId': userId,
+        if (organizationId != null)
+          'organizationId': organizationId,
+
+        if (color != null) 'color': color,
+        if (icon != null) 'icon': icon,
+
+        if (scheduledAt != null &&
+            scheduledAt.isNotEmpty) ...{
+          'scheduledAt': scheduledAt,
+          'isScheduled': true,
+        }
+      };
+
+      print("======================================");
+      print("📤 SENDING JSON NOTIFICATION");
+      print("🌐 $uri");
+      print("📦 BODY: $bodyData");
+      print("======================================");
+
+      try {
+
+        final response = await http.post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(bodyData),
+        );
+
+        print("📥 RESPONSE: ${response.statusCode}");
+        print("📦 BODY: ${response.body}");
+
+        return {
+          'status': response.statusCode,
+          'data': jsonDecode(response.body),
+        };
+
+      } catch (e) {
+
+        print("❌ JSON REQUEST ERROR: $e");
+
+        return {
+          'status': 500,
+          'data': {
+            'message': 'Client error: $e'
+          }
+        };
+      }
+    }
+
+    /* =========================================================
+     🖼 MULTIPART REQUEST (WITH IMAGE)
+  ========================================================= */
+
+    final request = http.MultipartRequest(
+      'POST',
+      uri,
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.fields['title'] = title;
+    request.fields['body'] = body;
+    request.fields['event'] = event;
+    request.fields['type'] = type;
+
+    if (userId != null) {
+      request.fields['userId'] = userId;
+    }
+
+    if (organizationId != null) {
+      request.fields['organizationId'] = organizationId;
+    }
+
+    if (color != null) {
+      request.fields['color'] = color;
+    }
+
+    if (icon != null) {
+      request.fields['icon'] = icon;
+    }
+
+    if (scheduledAt != null &&
+        scheduledAt.isNotEmpty) {
+
       request.fields['scheduledAt'] = scheduledAt;
       request.fields['isScheduled'] = 'true';
     }
 
     /* ================= IMAGE ================= */
-    if (imageFile != null) {
-      try {
-        if (kIsWeb) {
-          final bytes = await imageFile.readAsBytes();
-          request.files.add(http.MultipartFile.fromBytes(
+
+    try {
+
+      if (kIsWeb) {
+
+        final bytes = await imageFile.readAsBytes();
+
+        request.files.add(
+          http.MultipartFile.fromBytes(
             'image',
             bytes,
             filename: imageFile.name,
             contentType: MediaType.parse(
-              lookupMimeType(imageFile.name) ?? 'image/jpeg',
+              lookupMimeType(imageFile.name)
+                  ?? 'image/jpeg',
             ),
-          ));
-        } else {
-          final file = File(imageFile.path);
-          final mimeType =
-              lookupMimeType(file.path) ?? 'application/octet-stream';
+          ),
+        );
 
-          request.files.add(await http.MultipartFile.fromPath(
+      } else {
+
+        final file = File(imageFile.path);
+
+        final mimeType =
+            lookupMimeType(file.path)
+                ?? 'application/octet-stream';
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
             'image',
             file.path,
             contentType: MediaType.parse(mimeType),
-          ));
-        }
-      } catch (e) {
-        print('❌ Image upload error: $e');
+          ),
+        );
       }
+
+    } catch (e) {
+
+      print("❌ IMAGE ERROR: $e");
     }
 
-    /* ================= DEBUG ================= */
     print("======================================");
-    print("📤 SENDING NOTIFICATION");
+    print("📤 SENDING MULTIPART NOTIFICATION");
     print("🌐 $uri");
-    request.fields.forEach((k, v) => print("📝 $k : $v"));
-    print(imageFile != null ? "🖼 Image: ${imageFile.name}" : "🖼 No image");
+
+    request.fields.forEach((k, v) {
+      print("📝 $k : $v");
+    });
+
+    print("🖼 IMAGE: ${imageFile.name}");
     print("======================================");
 
     try {
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+
+      final streamedResponse =
+      await request.send();
+
+      final response =
+      await http.Response.fromStream(
+        streamedResponse,
+      );
 
       print("📥 RESPONSE: ${response.statusCode}");
       print("📦 BODY: ${response.body}");
@@ -660,11 +863,16 @@ class PushNotificationController {
         'status': response.statusCode,
         'data': jsonDecode(response.body),
       };
+
     } catch (e) {
-      print("❌ ERROR: $e");
+
+      print("❌ MULTIPART ERROR: $e");
+
       return {
         'status': 500,
-        'data': {'message': 'Client error: $e'},
+        'data': {
+          'message': 'Client error: $e'
+        }
       };
     }
   }

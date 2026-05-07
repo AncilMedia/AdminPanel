@@ -1989,8 +1989,11 @@ class _PushNotificationState extends State<PushNotification> {
     setState(() => isSending = true);
     try {
       // Convert IST UI picker back to UTC for server
+      // String? utcTime = isScheduled
+      //     ? scheduledDateTime?.subtract(const Duration(hours: 5, minutes: 30)).toUtc().toIso8601String()
+      //     : null;
       String? utcTime = isScheduled
-          ? scheduledDateTime?.subtract(const Duration(hours: 5, minutes: 30)).toUtc().toIso8601String()
+          ? scheduledDateTime?.toUtc().toIso8601String()
           : null;
 
       if (widget.initialData != null) {
@@ -2031,7 +2034,10 @@ class _PushNotificationState extends State<PushNotification> {
     }
     setState(() => isSending = true);
     try {
-      String? utcTime = isScheduled ? scheduledDateTime?.subtract(const Duration(hours: 5, minutes: 30)).toUtc().toIso8601String() : null;
+      // String? utcTime = isScheduled ? scheduledDateTime?.subtract(const Duration(hours: 5, minutes: 30)).toUtc().toIso8601String() : null;
+      String? utcTime = isScheduled
+          ? scheduledDateTime?.toUtc().toIso8601String()
+          : null;
       await PushNotificationController.sendNotification(
         title: titleController.text,
         body: bodyController.text,

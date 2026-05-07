@@ -866,8 +866,53 @@ class _MasterIntelligenceHubState extends State<MasterIntelligenceHub> {
           return const Center(child: CircularProgressIndicator());
         }
         final allData = snapshot.data ?? [];
-        final scheduled = allData.where((n) => n['status'] == 'pending').toList();
-        final history = allData.where((n) => n['status'] == 'sent' || n['status'] == 'processing').toList();
+        // final scheduled = allData.where((n) => n['status'] == 'pending').toList();
+        // final history = allData.where((n) => n['status'] == 'sent' || n['status'] == 'processing').toList();
+
+        final now = DateTime.now();
+
+        final scheduled = allData.where((n) {
+          if (n['status'] != 'pending') return false;
+
+          if (n['scheduledAt'] == null) return false;
+
+          final scheduledDate = DateTime.parse(n['scheduledAt']).toLocal();
+
+          return scheduledDate.isAfter(now);
+        }).toList();
+
+        final history = allData.where((n) {
+
+          // instant notifications
+          if (n['isScheduled'] == false) return true;
+
+          // completed / cancelled / failed
+          if (
+          n['status'] == 'completed' ||
+              n['status'] == 'processing' ||
+              n['status'] == 'sent' ||
+              n['status'] == 'failed' ||
+              n['status'] == 'cancelled'
+          ) {
+            return true;
+          }
+
+          // expired pending schedules
+          if (n['scheduledAt'] != null) {
+
+            final scheduledDate =
+            DateTime.parse(n['scheduledAt']).toLocal();
+
+            if (
+            scheduledDate.isBefore(now) ||
+                scheduledDate.isAtSameMomentAs(now)
+            ) {
+              return true;
+            }
+          }
+
+          return false;
+        }).toList();
 
         final currentList = activeTab == 0 ? scheduled : history;
         if (currentList.isEmpty) return _emptyState();

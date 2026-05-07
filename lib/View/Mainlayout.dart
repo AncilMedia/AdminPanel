@@ -526,6 +526,7 @@ class _MainLayoutState extends State<MainLayout> {
     'organization': Iconsax.building,
     'applications': Iconsax.box_2,
     'pushnotification': Iconsax.notification_bing,
+    'notification_history': Iconsax.notification,
     'media': Iconsax.video,
     'notification': Iconsax.message_text,
     'role': Iconsax.smileys,

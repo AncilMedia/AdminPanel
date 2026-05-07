@@ -51,6 +51,10 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const MainLayout(initialPage: 'pushnotification'),
     ),
     GoRoute(
+      path: '/notification_history',
+      builder: (context, state) => const MainLayout(initialPage: 'notification_history'),
+    ),
+    GoRoute(
       path: '/role',
       builder: (context, state) => const MainLayout(initialPage: 'role'),
     ),
