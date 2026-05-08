@@ -80,6 +80,7 @@ dependencies:
   better_player: ^0.0.84
   firebase_messaging: ^16.1.2
   flutter_animate: ^4.5.2
+  icalendar_parser: ^2.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
