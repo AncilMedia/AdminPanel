@@ -516,6 +516,7 @@ class _MainLayoutState extends State<MainLayout> {
   String? orgImage;
   late String selectedKey;
   bool isNotificationExpanded = false;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // For mobile drawer control
 
   final Map<String, IconData> iconMap = {
     'home': Iconsax.home,
@@ -539,8 +540,6 @@ class _MainLayoutState extends State<MainLayout> {
   void initState() {
     super.initState();
     selectedKey = widget.initialPage;
-
-    // Check if we should auto-expand the Notification menu
     if (selectedKey == 'pushnotification' || selectedKey == 'notification_history') {
       isNotificationExpanded = true;
     }
@@ -574,38 +573,58 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final sidebarController = Provider.of<SidebarController>(context);
-    final isDesktop = MediaQuery.of(context).size.width >= 1100;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
-      appBar: isDesktop ? null : _buildMobileAppBar(sidebarController),
-      body: Row(
-        children: [
-          if (isDesktop && selectedKey != "apps" && selectedKey != "media")
-            _buildModernSidebar(sidebarController),
-          Expanded(
-            child: Container(
-              margin: isDesktop ? const EdgeInsets.all(16) : EdgeInsets.zero,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: isDesktop ? BorderRadius.circular(30) : BorderRadius.zero,
-                boxShadow: [
-                  if (isDesktop)
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    )
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: isDesktop ? BorderRadius.circular(30) : BorderRadius.zero,
-                child: _getContent(selectedKey),
-              ),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Breakpoint for Desktop/Tablet vs Mobile
+        final bool isDesktop = constraints.maxWidth >= 1100;
+
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: const Color(0xFFF0F2F5),
+          // Show AppBar only on Mobile
+          appBar: isDesktop ? null : _buildMobileAppBar(sidebarController),
+          // On mobile, the sidebar becomes a Drawer
+          drawer: isDesktop ? null : Drawer(
+            width: 280,
+            backgroundColor: const Color(0xFFF0F2F5),
+            child: _buildModernSidebar(sidebarController, isMobile: true),
           ),
-        ],
-      ),
+          body: Row(
+            children: [
+              // Show sidebar permanently only on Desktop
+              if (isDesktop && selectedKey != "apps" && selectedKey != "media")
+                SizedBox(
+                  width: constraints.maxWidth * 0.18,
+                  child: _buildModernSidebar(sidebarController, isMobile: false),
+                ),
+
+              // Main Content Area
+              Expanded(
+                child: Container(
+                  margin: isDesktop ? const EdgeInsets.all(16) : EdgeInsets.zero,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: isDesktop ? BorderRadius.circular(30) : BorderRadius.zero,
+                    boxShadow: [
+                      if (isDesktop)
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        )
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: isDesktop ? BorderRadius.circular(30) : BorderRadius.zero,
+                    child: _getContent(selectedKey),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -615,15 +634,19 @@ class _MainLayoutState extends State<MainLayout> {
         "Admin Panel",
         style: GoogleFonts.poppins(color: Colors.black87, fontWeight: FontWeight.w600),
       ),
+      leading: IconButton(
+        icon: const Icon(Icons.menu),
+        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
       backgroundColor: Colors.white,
       elevation: 0.5,
       iconTheme: const IconThemeData(color: Colors.black87),
     );
   }
 
-  Widget _buildModernSidebar(SidebarController controller) {
+  // Modified to handle both Drawer (Mobile) and Sidebar (Desktop)
+  Widget _buildModernSidebar(SidebarController controller, {required bool isMobile}) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.18,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
@@ -633,7 +656,7 @@ class _MainLayoutState extends State<MainLayout> {
           Expanded(
             child: controller.isLoading
                 ? Center(child: Lottie.network("https://res.cloudinary.com/dggylwwqk/raw/upload/v1772002591/Weather_Wind_zdbufx.json"))
-                : _buildSidebarList(controller),
+                : _buildSidebarList(controller, isMobile: isMobile),
           ),
           _buildLogoutSection(),
           const SizedBox(height: 16),
@@ -685,7 +708,7 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  Widget _buildSidebarList(SidebarController controller) {
+  Widget _buildSidebarList(SidebarController controller, {required bool isMobile}) {
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
       itemCount: controller.roleSidebarItems.length,
@@ -706,6 +729,7 @@ class _MainLayoutState extends State<MainLayout> {
             index: i,
             icon: iconMap[key] ?? Iconsax.notification_bing,
             label: item['label'],
+            isMobile: isMobile,
           );
         }
 
@@ -718,6 +742,7 @@ class _MainLayoutState extends State<MainLayout> {
           onTap: () {
             setState(() => selectedKey = key);
             html.window.history.pushState(null, '', '/$key');
+            if (isMobile) Navigator.pop(context); // Close drawer on selection
           },
         );
       },
@@ -777,6 +802,7 @@ class _MainLayoutState extends State<MainLayout> {
     required int index,
     required IconData icon,
     required String label,
+    required bool isMobile,
   }) {
     bool isChildSelected = selectedKey == 'pushnotification' || selectedKey == 'notification_history';
 
@@ -812,6 +838,7 @@ class _MainLayoutState extends State<MainLayout> {
                   onTap: () {
                     setState(() => selectedKey = 'pushnotification');
                     html.window.history.pushState(null, '', '/pushnotification');
+                    if (isMobile) Navigator.pop(context);
                   },
                 ),
                 _buildSubTile(
@@ -820,6 +847,7 @@ class _MainLayoutState extends State<MainLayout> {
                   onTap: () {
                     setState(() => selectedKey = 'notification_history');
                     html.window.history.pushState(null, '', '/notification_history');
+                    if (isMobile) Navigator.pop(context);
                   },
                 ),
               ],
