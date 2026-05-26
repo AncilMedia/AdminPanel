@@ -31,6 +31,31 @@ class UserController {
     }
   }
 
+  /// Fetch single user by ID
+  static Future<UserModel?> fetchUserById({
+    required AuthState authState,
+    required String userId,
+  }) async {
+    try {
+      final api = ApiClient(authState);
+
+      final uri = '$baseUrl/api/users/$userId';
+
+      final response = await api.get(uri);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        return UserModel.fromJson(data);
+      } else {
+        print('Failed to fetch user: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching user by ID: $e');
+      return null;
+    }
+  }
   /// Fetch available roles
   static Future<List<String>> fetchRoles({required AuthState authState}) async {
     final api = ApiClient(authState);
