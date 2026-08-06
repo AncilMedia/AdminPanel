@@ -8,19 +8,14 @@ import '../Services/api_client.dart';
 import '../View_model/Authentication_state.dart';
 
 class NotificationController {
-
   // ======================================================
   // GET ACCESS TOKEN FROM SHARED PREFERENCES
   // ======================================================
 
   static Future<String?> _getAccessToken() async {
+    final prefs = await SharedPreferences.getInstance();
 
-    final prefs =
-    await SharedPreferences.getInstance();
-
-    return prefs.getString(
-      'accessToken',
-    );
+    return prefs.getString('accessToken');
   }
 
   // ======================================================
@@ -28,17 +23,12 @@ class NotificationController {
   // ======================================================
 
   static Future<Map<String, String>> _headers() async {
-
-    final token =
-    await _getAccessToken();
+    final token = await _getAccessToken();
 
     return {
+      'Authorization': 'Bearer $token',
 
-      'Authorization':
-      'Bearer $token',
-
-      'Content-Type':
-      'application/json',
+      'Content-Type': 'application/json',
     };
   }
 
@@ -46,52 +36,29 @@ class NotificationController {
   // GET ALL NOTIFICATIONS
   // ======================================================
 
-  static Future<List<dynamic>> getAll(
-      AuthState authState,
-      ) async {
-
+  static Future<List<dynamic>> getAll(AuthState authState) async {
     try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/notifications'),
 
-      final response =
-      await http.get(
-
-        Uri.parse(
-          '$baseUrl/api/notifications',
-        ),
-
-        headers:
-        await _headers(),
+        headers: await _headers(),
       );
 
-      print(
-        '📥 [getAll] Status: ${response.statusCode}',
-      );
+      print('📥 [getAll] Status: ${response.statusCode}');
 
-      print(
-        '📦 [getAll] Body: ${response.body}',
-      );
+      print('📦 [getAll] Body: ${response.body}');
 
       if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
 
-        final decoded =
-        jsonDecode(
-          response.body,
-        );
-
-        final data =
-        decoded['data'];
+        final data = decoded['data'];
 
         if (data is List) {
-
           return data;
         }
       }
-
     } catch (e) {
-
-      print(
-        '❌ getAll failed: $e',
-      );
+      print('❌ getAll failed: $e');
     }
 
     return [];
@@ -101,52 +68,29 @@ class NotificationController {
   // GET UNREAD NOTIFICATIONS
   // ======================================================
 
-  static Future<List<dynamic>> getUnread(
-      AuthState authState,
-      ) async {
-
+  static Future<List<dynamic>> getUnread(AuthState authState) async {
     try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/notifications/unread'),
 
-      final response =
-      await http.get(
-
-        Uri.parse(
-          '$baseUrl/api/notifications/unread',
-        ),
-
-        headers:
-        await _headers(),
+        headers: await _headers(),
       );
 
-      print(
-        '📥 [getUnread] Status: ${response.statusCode}',
-      );
+      print('📥 [getUnread] Status: ${response.statusCode}');
 
-      print(
-        '📦 [getUnread] Body: ${response.body}',
-      );
+      print('📦 [getUnread] Body: ${response.body}');
 
       if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
 
-        final decoded =
-        jsonDecode(
-          response.body,
-        );
-
-        final data =
-        decoded['data'];
+        final data = decoded['data'];
 
         if (data is List) {
-
           return data;
         }
       }
-
     } catch (e) {
-
-      print(
-        '❌ getUnread failed: $e',
-      );
+      print('❌ getUnread failed: $e');
     }
 
     return [];
@@ -156,28 +100,15 @@ class NotificationController {
   // GET UNREAD COUNT
   // ======================================================
 
-  static Future<int> getUnreadCount(
-      AuthState authState,
-      ) async {
-
+  static Future<int> getUnreadCount(AuthState authState) async {
     try {
+      final unread = await getUnread(authState);
 
-      final unread =
-      await getUnread(
-        authState,
-      );
-
-      print(
-        '🔢 [getUnreadCount] Count: ${unread.length}',
-      );
+      print('🔢 [getUnreadCount] Count: ${unread.length}');
 
       return unread.length;
-
     } catch (e) {
-
-      print(
-        '❌ getUnreadCount failed: $e',
-      );
+      print('❌ getUnreadCount failed: $e');
 
       return 0;
     }
@@ -187,61 +118,33 @@ class NotificationController {
   // MARK SINGLE NOTIFICATION AS READ
   // ======================================================
 
-  static Future<bool> markAsRead(
-      AuthState authState,
-      String id,
-      ) async {
-
+  static Future<bool> markAsRead(AuthState authState, String id) async {
     try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/notifications/read/$id'),
 
-      final response =
-      await http.put(
-
-        Uri.parse(
-          '$baseUrl/api/notifications/read/$id',
-        ),
-
-        headers:
-        await _headers(),
+        headers: await _headers(),
       );
 
-      print(
-        '✅ [markAsRead] Status: ${response.statusCode}',
-      );
+      print('✅ [markAsRead] Status: ${response.statusCode}');
 
-      print(
-        '📦 [markAsRead] Body: ${response.body}',
-      );
+      print('📦 [markAsRead] Body: ${response.body}');
 
       if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
 
-        final decoded =
-        jsonDecode(
-          response.body,
-        );
+        print('✅ Notification saved as read in backend');
 
-        print(
-          '✅ Notification saved as read in backend',
-        );
-
-        print(
-          '📄 Updated Notification: ${decoded['data']}',
-        );
+        print('📄 Updated Notification: ${decoded['data']}');
 
         return true;
       }
 
-      print(
-        '❌ markAsRead failed with status ${response.statusCode}',
-      );
+      print('❌ markAsRead failed with status ${response.statusCode}');
 
       return false;
-
     } catch (e) {
-
-      print(
-        '❌ markAsRead failed for $id: $e',
-      );
+      print('❌ markAsRead failed for $id: $e');
 
       return false;
     }
@@ -251,47 +154,27 @@ class NotificationController {
   // MARK ALL NOTIFICATIONS AS READ
   // ======================================================
 
-  static Future<bool> markAllAsRead(
-      AuthState authState,
-      ) async {
-
+  static Future<bool> markAllAsRead(AuthState authState) async {
     try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/api/notifications/read-all'),
 
-      final response =
-      await http.patch(
-
-        Uri.parse(
-          '$baseUrl/api/notifications/read-all',
-        ),
-
-        headers:
-        await _headers(),
+        headers: await _headers(),
       );
 
-      print(
-        '✅ [markAllAsRead] Status: ${response.statusCode}',
-      );
+      print('✅ [markAllAsRead] Status: ${response.statusCode}');
 
-      print(
-        '📦 [markAllAsRead] Body: ${response.body}',
-      );
+      print('📦 [markAllAsRead] Body: ${response.body}');
 
       if (response.statusCode == 200) {
-
-        print(
-          '✅ All notifications marked as read',
-        );
+        print('✅ All notifications marked as read');
 
         return true;
       }
 
       return false;
-
     } catch (e) {
-
-      print(
-        '❌ markAllAsRead failed: $e',
-      );
+      print('❌ markAllAsRead failed: $e');
 
       return false;
     }
@@ -301,39 +184,21 @@ class NotificationController {
   // ACCEPT NOTIFICATION
   // ======================================================
 
-  static Future<bool> accept(
-      AuthState authState,
-      String id,
-      ) async {
-
+  static Future<bool> accept(AuthState authState, String id) async {
     try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/notifications/accept/$id'),
 
-      final response =
-      await http.put(
-
-        Uri.parse(
-          '$baseUrl/api/notifications/accept/$id',
-        ),
-
-        headers:
-        await _headers(),
+        headers: await _headers(),
       );
 
-      print(
-        '✅ [accept] Status: ${response.statusCode}',
-      );
+      print('✅ [accept] Status: ${response.statusCode}');
 
-      print(
-        '📦 [accept] Body: ${response.body}',
-      );
+      print('📦 [accept] Body: ${response.body}');
 
       return response.statusCode == 200;
-
     } catch (e) {
-
-      print(
-        '❌ accept failed for $id: $e',
-      );
+      print('❌ accept failed for $id: $e');
 
       return false;
     }
@@ -343,39 +208,21 @@ class NotificationController {
   // DELETE NOTIFICATION
   // ======================================================
 
-  static Future<bool> delete(
-      AuthState authState,
-      String id,
-      ) async {
-
+  static Future<bool> delete(AuthState authState, String id) async {
     try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/notifications/$id'),
 
-      final response =
-      await http.delete(
-
-        Uri.parse(
-          '$baseUrl/api/notifications/$id',
-        ),
-
-        headers:
-        await _headers(),
+        headers: await _headers(),
       );
 
-      print(
-        '🗑️ [delete] Status: ${response.statusCode}',
-      );
+      print('🗑️ [delete] Status: ${response.statusCode}');
 
-      print(
-        '📦 [delete] Body: ${response.body}',
-      );
+      print('📦 [delete] Body: ${response.body}');
 
       return response.statusCode == 200;
-
     } catch (e) {
-
-      print(
-        '❌ delete failed for $id: $e',
-      );
+      print('❌ delete failed for $id: $e');
 
       return false;
     }
@@ -386,52 +233,31 @@ class NotificationController {
   // ======================================================
 
   static Future<Map<String, dynamic>?> getSingle(
-      AuthState authState,
-      String id,
-      ) async {
-
+    AuthState authState,
+    String id,
+  ) async {
     try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/notifications/$id'),
 
-      final response =
-      await http.get(
-
-        Uri.parse(
-          '$baseUrl/api/notifications/$id',
-        ),
-
-        headers:
-        await _headers(),
+        headers: await _headers(),
       );
 
-      print(
-        '📥 [getSingle] Status: ${response.statusCode}',
-      );
+      print('📥 [getSingle] Status: ${response.statusCode}');
 
-      print(
-        '📦 [getSingle] Body: ${response.body}',
-      );
+      print('📦 [getSingle] Body: ${response.body}');
 
       if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
 
-        final decoded =
-        jsonDecode(
-          response.body,
-        );
-
-        final data =
-        decoded['data'];
+        final data = decoded['data'];
 
         if (data is Map<String, dynamic>) {
-
           return data;
         }
       }
-
     } catch (e) {
-
-      print(
-        '❌ getSingle failed: $e',
-      );
+      print('❌ getSingle failed: $e');
     }
 
     return null;
